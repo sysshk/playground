@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+// @ts-expect-error - 타입 정의 없음
 import "./globals.css";
 
 const geistSans = Geist({
