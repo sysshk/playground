@@ -45,7 +45,7 @@ export default function JoinPage() {
       } else {
         router.push("/login")
       }
-    } catch (error) {
+    } catch {
       setError("회원가입 중 오류가 발생했습니다.")
     } finally {
       setLoading(false)

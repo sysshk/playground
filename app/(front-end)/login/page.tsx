@@ -27,10 +27,10 @@ export default function LoginPage() {
       if (result?.error) {
         setError("이메일 또는 비밀번호가 올바르지 않습니다.")
       } else {
-        router.push("/playground")
+        router.push("/main")
         router.refresh()
       }
-    } catch (error) {
+    } catch {
       setError("로그인 중 오류가 발생했습니다.")
     } finally {
       setLoading(false)
