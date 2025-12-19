@@ -4,22 +4,22 @@ import { prisma } from "@/lib/prisma"
 
 export async function POST(request: Request) {
   try {
-    const { email, password, name } = await request.json()
+    const { user_id, password, name } = await request.json()
 
-    if (!email || !password) {
+    if (!user_id || !password) {
       return NextResponse.json(
-        { error: "이메일과 비밀번호는 필수입니다." },
+        { error: "아이디와 비밀번호는 필수입니다." },
         { status: 400 }
       )
     }
 
     const existingUser = await prisma.user.findUnique({
-      where: { email },
+      where: { email: user_id }, // DB에서는 email 컬럼 사용
     })
 
     if (existingUser) {
       return NextResponse.json(
-        { error: "이미 존재하는 이메일입니다." },
+        { error: "이미 존재하는 아이디입니다." },
         { status: 400 }
       )
     }
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
 
     const user = await prisma.user.create({
       data: {
-        email,
+        email: user_id, // DB에서는 email 컬럼에 user_id 저장
         password: hashedPassword,
         name,
       },
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         message: "회원가입이 완료되었습니다.",
-        user: { id: user.id, email: user.email, name: user.name }
+        user: { id: user.id, user_id: user.email, name: user.name }
       },
       { status: 201 }
     )

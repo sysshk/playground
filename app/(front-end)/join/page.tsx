@@ -7,7 +7,7 @@ import Link from "next/link"
 export default function JoinPage() {
   const router = useRouter()
   const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState("")
@@ -35,7 +35,7 @@ export default function JoinPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password, name }),
+        body: JSON.stringify({ user_id: username, password, name }),
       })
 
       const data = await response.json()
@@ -77,18 +77,18 @@ export default function JoinPage() {
               />
             </div>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                이메일
+              <label htmlFor="user_id" className="block text-sm font-medium text-gray-700">
+                아이디
               </label>
               <input
-                id="email"
-                name="email"
-                type="email"
+                id="user_id"
+                name="user_id"
+                type="text"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="이메일을 입력하세요"
+                placeholder="아이디를 입력하세요"
               />
             </div>
             <div>
