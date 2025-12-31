@@ -2,17 +2,37 @@
 
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
+
+interface Idea {
+  id: string
+  text: string
+  author: string
+  likes: number
+  isLiked: boolean
+  date: string
+}
 
 export default function MainPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<"timeline" | "achievements" | "legacy" | "ideas">("timeline")
   const [newIdea, setNewIdea] = useState("")
-  const [ideas, setIdeas] = useState([
-    { id: 1, text: "Great Park 앱 만들기", author: "Park", likes: 5, date: "2024.12.30" },
-    { id: 2, text: "새로운 프로젝트 아이디어 브레인스토밍", author: "Park", likes: 3, date: "2024.12.29" },
-  ])
+  const [ideas, setIdeas] = useState<Idea[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+
+  // 아이디어 목록 불러오기
+  const fetchIdeas = useCallback(async () => {
+    try {
+      const res = await fetch("/api/ideas")
+      if (res.ok) {
+        const data = await res.json()
+        setIdeas(data)
+      }
+    } catch (error) {
+      console.error("Failed to fetch ideas:", error)
+    }
+  }, [])
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -20,20 +40,47 @@ export default function MainPage() {
     }
   }, [status, router])
 
-  const handleAddIdea = () => {
-    if (newIdea.trim()) {
-      setIdeas([
-        { id: Date.now(), text: newIdea, author: session?.user?.name || "익명", likes: 0, date: new Date().toLocaleDateString('ko-KR') },
-        ...ideas
-      ])
-      setNewIdea("")
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetchIdeas()
+    }
+  }, [status, fetchIdeas])
+
+  const handleAddIdea = async () => {
+    if (!newIdea.trim() || isLoading) return
+    setIsLoading(true)
+    try {
+      const res = await fetch("/api/ideas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: newIdea }),
+      })
+      if (res.ok) {
+        const idea = await res.json()
+        setIdeas([idea, ...ideas])
+        setNewIdea("")
+      }
+    } catch (error) {
+      console.error("Failed to add idea:", error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const handleLike = (id: number) => {
-    setIdeas(ideas.map(idea =>
-      idea.id === id ? { ...idea, likes: idea.likes + 1 } : idea
-    ))
+  const handleLike = async (id: string) => {
+    try {
+      const res = await fetch(`/playground/api/ideas/${id}/like`, { method: "POST" })
+      if (res.ok) {
+        const { liked } = await res.json()
+        setIdeas(ideas.map(idea =>
+          idea.id === id
+            ? { ...idea, likes: liked ? idea.likes + 1 : idea.likes - 1, isLiked: liked }
+            : idea
+        ))
+      }
+    } catch (error) {
+      console.error("Failed to toggle like:", error)
+    }
   }
 
   if (status === "loading") {

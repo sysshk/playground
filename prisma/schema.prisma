@@ -25,6 +25,8 @@ model User {
   achievements  Achievement[]
   activities    Activity[]
   stats         UserStats?
+  ideas         Idea[]
+  ideaLikes     IdeaLike[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }
@@ -96,4 +98,23 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Idea {
+  id        String     @id @default(cuid())
+  text      String
+  authorId  String
+  author    User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  likes     IdeaLike[]
+  createdAt DateTime   @default(now())
+}
+
+model IdeaLike {
+  id      String @id @default(cuid())
+  ideaId  String
+  userId  String
+  idea    Idea   @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([ideaId, userId])
 }
