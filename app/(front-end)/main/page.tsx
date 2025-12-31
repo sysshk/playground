@@ -24,7 +24,7 @@ export default function MainPage() {
   // 아이디어 목록 불러오기
   const fetchIdeas = useCallback(async () => {
     try {
-      const res = await fetch("/api/ideas")
+      const res = await fetch("/playground/api/ideas")
       if (res.ok) {
         const data = await res.json()
         setIdeas(data)
@@ -50,7 +50,7 @@ export default function MainPage() {
     if (!newIdea.trim() || isLoading) return
     setIsLoading(true)
     try {
-      const res = await fetch("/api/ideas", {
+      const res = await fetch("/playground/api/ideas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: newIdea }),
