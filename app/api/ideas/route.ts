@@ -18,7 +18,7 @@ export async function GET() {
     const formattedIdeas = ideas.map(idea => ({
       id: idea.id,
       text: idea.text,
-      author: idea.author.name || "익명",
+      author: "익명",
       likes: idea.likes.length,
       isLiked: session?.user?.id ? idea.likes.some(like => like.userId === session.user?.id) : false,
       date: idea.createdAt.toLocaleDateString("ko-KR"),
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       id: idea.id,
       text: idea.text,
-      author: idea.author.name || "익명",
+      author: "익명",
       likes: 0,
       isLiked: false,
       date: idea.createdAt.toLocaleDateString("ko-KR"),
