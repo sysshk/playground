@@ -4,12 +4,12 @@ import { signOut } from "next-auth/react"
 
 export default function FrontTopbar() {
   return (
-    <nav className="bg-gray-900">
+    <nav className="bg-slate-900 border-b border-emerald-800/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-12 items-center">
           <div className="flex items-center space-x-3">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-orange-500">
+              <h1 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-300">
                 Great Park
               </h1>
             </div>

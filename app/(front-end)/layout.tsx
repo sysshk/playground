@@ -22,11 +22,11 @@ export default function FrontEndLayout({
 
   return (
     <SessionProvider>
-      <div className='flex flex-col overflow-hidden'>
+      <div className='h-screen flex flex-col'>
         <FrontTopbar />
-        <div className='flex-1'>
+        <main className='flex-1 overflow-y-auto'>
           {children}
-        </div>
+        </main>
       </div>
     </SessionProvider>
   )
