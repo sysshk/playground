@@ -3,7 +3,7 @@
 ## Custom Rules
 <!-- 프로젝트별 규칙을 여기에 작성하세요. 이 영역은 자동 업데이트되지 않습니다. -->
 
-<!-- alioth:auto-start hash:1a0d98445a27 -->
+<!-- alioth:auto-start hash:b953be3fb703 -->
 ## Architecture (auto-generated)
 
 **Stack**: typescript (react, nextjs) / pkg: npm
@@ -14,27 +14,12 @@
   - `prisma`
 - `components/mes/status-badge.tsx` (imported by 3 files)
   - `StatusBadge({ label, color, dot = true, }: { label: string; color: string; dot?: boolean; })`
-- `lib/mock.ts` (imported by 3 files)
-  - `cultureSeries(seed = 42, hours = 120): Series[]`
-  - `dashboardStats()`
-  - `BATCH_STATUS_LABEL`
-  - `BATCH_STATUS_COLOR`
-  - `REACTOR_STATUS_LABEL`
-  - `REACTOR_STATUS_COLOR`
-  - `STEP_STATUS_LABEL`
-  - `batches`
-  - `reactors`
-  - `processSteps`
 - `components/mes/line-chart.tsx` (imported by 2 files)
   - `LineChart({ data, color = "#2DD4BF", unit = "", height = 180, showAxis = true, xLabel, }: LineChartProps)`
 - `components/custom/session-provider.tsx` (imported by 1 files)
   - `SessionProvider({ children }: { children: ReactNode })`
 - `components/mes/app-shell.tsx` (imported by 1 files)
   - `AppShell({ children }: { children: ReactNode })`
-- `components/mes/batch-upload.tsx` (imported by 1 files)
-  - `BatchUpload()`
-- `components/mes/batch-charts.tsx` (imported by 1 files)
-  - `BatchCharts({ data }: { data: ChartPoint[] })`
 - `components/mes/stat-card.tsx` (imported by 1 files)
   - `StatCard({ label, value, unit, hint, accent = "var(--primary)", icon, }: { label: string; value: string | number; unit?: string; hint?: string; accent?: string…`
 

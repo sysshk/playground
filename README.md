@@ -1,109 +1,71 @@
-# MES — 공정관리 시스템 (Manufacturing Execution System)
+# 📑 통합 프로젝트 분석 리포트
 
-발효 및 배양 공정을 효율적으로 실행하고 모니터링하기 위한 **MES 프레임워크**입니다. 
-본 프로젝트는 최신 Next.js 16.1 및 React 19 스택을 기반으로 하며, 서버리스 데이터베이스 환경에서 대규모 시계열 배양 데이터를 처리하고 시각화하는 데 최적화되어 있습니다.
-
-## 🚀 기술 스택
-
-### Core
-- **Framework**: Next.js 16.1 (App Router)
-- **Library**: React 19
-- **Language**: TypeScript 5.9
-- **Styling**: Tailwind CSS 4
-
-### Backend & Database
-- **ORM**: Prisma 7
-- **Database**: PostgreSQL (Neon Serverless)
-- **Adapter**: `@prisma/adapter-neon` (서버리스 연결 최적화)
-- **Auth**: NextAuth.js v5 (Beta)
-
-### Visualization & Tools
-- **Charts**: Recharts, Custom SVG LineChart (경량 시계열 렌더링)
-- **Data Parsing**: PapaParse (CSV 처리)
-- **Animation**: Framer Motion
+본 리포트는 `work` (MES 공정 관리 시스템)와 `sysshk-zestify` (B2C 청소 서비스 앱) 두 프로젝트의 기술 스택, 데이터 모델, UI/UX 구조를 통합 분석한 결과입니다.
 
 ---
 
-## 📂 프로젝트 구조
+## 1. 프로젝트 개요 및 비교
 
-```text
-/work
-├── app/
-│   ├── (front-end)/          # 사용자 인터페이스 그룹
-│   │   ├── layout.tsx        # SessionProvider 및 AppShell 적용 (Client Component)
-│   │   ├── dashboard/        # 공정 요약 및 KPI 대시보드
-│   │   ├── batches/          # 배치 목록 및 상세 시계열 분석
-│   │   ├── monitoring/       # 실시간 설비 모니터링
-│   │   └── equipment/        # 발효조/설비 관리
-│   ├── api/
-│   │   └── auth/             # NextAuth 인증 핸들러
-│   ├── layout.tsx            # 루트 레이아웃 (Server Component)
-│   └── globals.css           # Tailwind 4 기반 전역 스타일
-├── components/
-│   ├── custom/               # 공통 유틸리티 컴포넌트 (SessionProvider 등)
-│   └── mes/                  # MES 도메인 전용 UI (StatCard, LineChart, StatusBadge 등)
-├── lib/
-│   ├── prisma.ts             # Neon 어댑터가 적용된 Prisma Client 싱글톤
-│   └── mock.ts               # 하이드레이션 일관성을 위한 결정적(Deterministic) 목업 데이터
-├── prisma/
-│   └── schema.prisma         # Batch, Record, User 모델 정의
-├── public/                   # 정적 자산 (이미지, 아이콘)
-└── scripts/                  # 데이터 파이프라인 (MAT → CSV → SQL)
-```
+| 구분 | `work` (MES) | `sysshk-zestify` (Cleanup) |
+| :--- | :--- | :--- |
+| **서비스 성격** | B2B 산업용 발효 공정 관리 시스템 | B2C 전문 청소 서비스 예약 플랫폼 |
+| **핵심 목적** | 실시간 모니터링, 수율 분석, 공정 제어 | 서비스 탐색, 간편 예약, 고객 전환 |
+| **주요 사용자** | 공정 운영자, 슈퍼바이저, 관리자 | 일반 고객, 청소 파트너 |
+| **기술 스택** | Next.js 16, TypeScript, Prisma, PostgreSQL | Flutter, Dart, Firebase (Auth, Firestore) |
+| **인증 방식** | NextAuth v5 (Session/JWT) | Firebase Auth (Token/Provider) |
+| **데이터 특성** | 고밀도 시계열 데이터, 정형 관계형 데이터 | 트랜잭션 중심, 비정형/반정형 문서 데이터 |
 
 ---
 
-## 🛠 핵심 설계 및 코딩 규칙
+## 2. `work` 프로젝트 상세 분석 (MES)
 
-### 1. Next.js 16.1 & React 19 아키텍처
-- **Base Path**: `next.config.ts`에 `basePath: "/mes"`가 설정되어 있어 모든 라우트는 `/mes` 하위에서 동작합니다.
-- **Component Boundary**:
-    - **Server Components**: 데이터 패칭 및 초기 렌더링을 담당하여 TTI(Time to Interactive)를 최적화합니다.
-    - **Client Components**: `'use client'` 지시어를 사용하여 상태 관리 및 사용자 인터랙션을 처리합니다.
-- **Hydration Strategy**: `lib/mock.ts`에서는 `Math.random()` 사용을 금지하고 시드 기반의 데이터를 생성하여, 서버와 클라이언트 간의 렌더링 결과 불일치(Hydration Mismatch)를 원천 차단합니다.
+### 🛠 기술 아키텍처
+- **Frontend**: Next.js 16 (App Router) 기반의 서버 컴포넌트 중심 설계.
+- **Backend**: Route Handlers 및 Server Actions를 통한 API 구현.
+- **Database**: Prisma ORM $\rightarrow$ PostgreSQL (Neon Serverless).
 
-### 2. 데이터 모델 및 DB 전략
-- **Prisma Neon Adapter**: 서버리스 환경의 Cold Start 및 연결 제한 문제를 해결하기 위해 `@prisma/adapter-neon`을 사용하여 HTTP 기반 쿼리를 수행합니다.
-- **시계열 데이터 최적화**: `Record` 모델에 `[batchId, timeHr]` 복합 인덱스를 설정하여 대량의 배양 데이터 조회 성능을 확보했습니다.
+### 🗄 데이터 모델 (`prisma/schema.prisma`)
+- **인증 도메인**: `User` (역할 기반 권한 관리: `operator`, `supervisor`, `admin`), `Account`, `Session`.
+- **공정 도메인**:
+    - `Batch`: 배치 메타데이터 (배치 번호, 제어 방식, 최종 수율).
+    - `Record`: 시계열 측정 데이터 (시간별 온도, pH, DO, 기질, Penicillin 농도). `[batchId, timeHr]` 복합 인덱스로 조회 최적화.
 
-### 3. 인증 체계
-- **NextAuth v5**: 최신 Beta 버전을 사용하여 서버 액션 및 미들웨어 기반의 인증을 구현했습니다.
-- **Role-based Access**: `User` 모델의 `role` 필드(`operator`, `supervisor`, `admin`)를 통해 권한별 접근 제어를 수행합니다.
-
----
-
-## 📊 데이터 파이프라인 (IndPenSim)
-
-본 시스템은 `.mat` 형태의 연구 데이터를 실제 DB에 적재하여 분석하는 파이프라인을 제공합니다.
-
-**흐름: `.mat` 파일 $\rightarrow$ CSV 변환 $\rightarrow$ UI 업로드 $\rightarrow$ Neon DB 저장 $\rightarrow$ 시각화**
-
-### 데이터 적재 방법
-1. **CSV 변환 (Local)**:
-   ```bash
-   pip install scipy numpy pandas
-   python scripts/mat_to_csv.py IndPenSim.mat batch1.csv --batch 1 --control recipe
-   ```
-2. **DB 반영**:
-   ```bash
-   npx prisma db push
-   ```
-3. **UI 업로드**: `/mes/batches` 화면의 **＋ CSV 업로드** 기능을 통해 데이터를 적재합니다.
+### 📱 UI/UX 및 표현 영역
+- **라우팅**: `(front-end)` 라우트 그룹을 통해 `/dashboard`, `/batches`, `/equipment`, `/monitoring` 등으로 구성.
+- **디자인 전략**: 데이터 밀도가 높은 산업용 UI. 상태별 색상 토큰(`--run`, `--ok`, `--warn`)을 활용한 직관적 가시성 확보.
+- **핵심 컴포넌트**:
+    - `StatCard`: KPI 지표 요약.
+    - `LineChart`: `recharts` 기반 시계열 역가(Titer) 추이 시각화.
+    - `StatusBadge`: 공정 상태(`RUNNING`, `COMPLETED` 등) 표시.
 
 ---
 
-## 💻 개발 가이드
+## 3. `sysshk-zestify` 프로젝트 상세 분석 (Cleanup)
 
-### 환경 변수 설정 (`.env`)
-```env
-DATABASE_URL=postgresql://...   # Neon Postgres 연결 문자열
-AUTH_SECRET=...                 # openssl rand -base64 32
-```
+### 🛠 기술 아키텍처
+- **Frontend**: Flutter 기반의 크로스 플랫폼 모바일 앱.
+- **Backend**: Firebase SDK를 이용한 Client-to-Backend 직접 통신.
+- **State/Routing**: `Provider`를 통한 상태 관리, `go_router`를 통한 선언적 라우팅.
 
-### 주요 실행 명령어
-```bash
-npm install              # 의존성 설치
-npm run dev              # 개발 서버 실행 (http://localhost:3000/mes)
-npm run build            # 프로덕션 빌드 (Prisma Generate 포함)
-npm run seed:admin       # 관리자 계정 생성 스크립트 실행
-```
+### 🗄 데이터 모델 (`firestore_service.dart`)
+- **NoSQL 구조**: Firestore의 `bookings` 컬렉션 중심.
+- **핵심 모델**:
+    - `Booking`: 고객 전화번호(`customerPhone`)를 키로 하며, 서비스 타입(`living`, `moving`), 주소, 일정, 옵션, 결제 상태 등을 포함하는 JSON 문서.
+- **데이터 흐름**: `saveBooking()` (생성) $\rightarrow$ `getBookingsByPhone()` (조회 및 내림차순 정렬).
+
+### 📱 UI/UX 및 표현 영역
+- **라우팅**: `/` (홈) $\rightarrow$ `/services/{type}` $\rightarrow$ `/booking/{type}` (5단계 스텝) $\rightarrow$ `/booking/complete`.
+- **디자인 전략**: 브랜드 이미지 제고를 위한 감성적 디자인. Primary Blue와 Accent Teal 그라데이션 활용.
+- **핵심 컴포넌트**:
+    - `_HeroSection`: `flutter_animate`를 활용한 인터랙티브 진입 영역.
+    - `ServiceCard`: 서비스 선택 및 예약 유도 카드.
+    - `BookingStep`: 주소 $\rightarrow$ 일정 $\rightarrow$ 옵션 $\rightarrow$ 정보 $\rightarrow$ 결제 순의 선형적 UX.
+
+---
+
+## 4. 종합 분석 결론
+
+두 프로젝트는 **"데이터의 성격"**과 **"사용자의 목적"**에 따라 완전히 다른 기술적 선택을 하고 있습니다.
+
+1. **`work`**는 **정밀도와 분석**이 중요하므로, 강력한 타입 시스템(TypeScript)과 관계형 DB(PostgreSQL), 그리고 서버 사이드 렌더링(Next.js)을 통해 데이터 일관성과 초기 로딩 성능을 확보했습니다.
+2. **`sysshk-zestify`**는 **속도와 전환**이 중요하므로, 빠른 개발 사이클의 Flutter와 실시간 동기화가 강점인 Firebase를 선택하여 매끄러운 사용자 경험(UX)과 유연한 데이터 구조를 구현했습니다.
