@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   },
   // 파비콘은 브라우저가 오래 캐시한다. 로고를 바꾸면 v를 올려야 탭 아이콘이 바뀐다.
   icons: {
-    icon: "/pt-manager/favicon.svg?v=2",
+    icon: "/pt-manager/favicon.ico?v=2",
     apple: "/pt-manager/icons/apple-touch-icon.png?v=2",
   },
 };

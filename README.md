@@ -151,8 +151,9 @@ npx tsc --noEmit     # 타입 검사
 
 ### PWA 아이콘
 
-`public/icons/`의 PNG(192/512/180px)와 `public/favicon.svg`는 이미 만들어져 커밋돼 있습니다.
-바꾸려면 그 파일들을 직접 교체하고 `public/manifest.json`의 경로만 맞추면 됩니다.
+`public/icons/`의 PNG(192/512/180px, 마스커블 512px)와 탭 아이콘 `app/favicon.ico`(16/32/48px)는 이미 만들어져 있습니다.
+바꾸려면 그 파일들을 직접 교체하고 `public/manifest.json`의 경로를 맞춘 뒤,
+`app/layout.tsx`의 `icons`에 붙은 `?v=` 숫자를 올립니다. 올리지 않으면 브라우저가 예전 아이콘을 계속 보여줍니다.
 
 ---
 

@@ -60,6 +60,6 @@ export const config = {
     // API·정적 자산·PWA 파일은 건드리지 않는다.
     // 특히 images·fonts는 비로그인 방문자가 보는 소개 페이지의 사진과 글꼴이라
     // 여기서 막으면 랜딩에 사진이 안 뜨고 글꼴이 기본 글꼴로 떨어진다.
-    "/((?!api|_next/static|_next/image|images|fonts|icons|favicon.ico|favicon.svg|manifest.json|sw.js).*)",
+    "/((?!api|_next/static|_next/image|images|fonts|icons|favicon.ico|manifest.json|sw.js).*)",
   ],
 };

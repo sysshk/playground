@@ -7,7 +7,7 @@ import { useId } from "react";
 // (어두운 배경에서는 하늘색→흰색) 그라데이션을 준다.
 // 시안은 .pencil/design.pen의 "Logo 시안" D2.
 //
-// public/favicon.svg와 public/icons/*.png도 같은 도형이다. 여기를 바꾸면 함께 바꾼다.
+// app/favicon.ico와 public/icons/*.png도 같은 도형이다. 여기를 바꾸면 함께 바꾼다.
 
 /** 32×32 좌표계. 끝의 V6V26은 기둥을 되짚어 올라갔다 내려오는 것이라 한 획으로 그려진다. */
 export const LOGO_PATH = "M5.25 6H20.25A6.5 6.5 0 0 1 20.25 19H16.25V6V26";
