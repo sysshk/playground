@@ -1,6 +1,5 @@
-// MES — Prisma schema
-// 발효 배치(IndPenSim) 데이터 + next-auth 인증 모델
-// learn more: https://pris.ly/d/prisma-schema
+// PT 매니저 — Prisma schema
+// 트레이너(User) 계정별로 회원/운동기록/체중/코칭메모/영양 데이터를 분리해 보관한다.
 
 generator client {
   provider = "prisma-client-js"
@@ -22,9 +21,10 @@ model User {
   emailVerified DateTime?
   password      String
   image         String?
-  role          String    @default("operator") // operator | supervisor | admin
+  role          String    @default("trainer") // trainer | admin
   accounts      Account[]
   sessions      Session[]
+  members       Member[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -65,30 +65,128 @@ model VerificationToken {
 }
 
 // ─────────────────────────────────────────────
-// 발효 배치 (IndPenSim)
+// PT 도메인
 // ─────────────────────────────────────────────
 
-/// 발효 배치 (배치 단위 메타데이터)
-model Batch {
-  id          String   @id @default(cuid())
-  batchNumber Int      @unique // 배치 번호
-  controlType String? // 제어 방식 (recipe / operator 등)
-  finalYield  Float? // 최종 penicillin 값 (마지막 시점)
-  createdAt   DateTime @default(now())
-  records     Record[]
+/// 회원 (트레이너가 관리하는 PT 회원)
+model Member {
+  id                String   @id @default(cuid())
+  trainerId         String
+  trainer           User     @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  name              String
+  phone             String
+  goal              String? // 체중 감량, 근력 향상 등
+  remainingSessions Int      @default(0) // 남은 PT 세션
+  memo              String? // 특이사항 (컨디션, 일정, 주의사항 등)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  workouts    Workout[]
+  weights     WeightRecord[]
+  notes       CoachingNote[]
+  completions SessionCompletion[]
+  nutrition   NutritionProfile?
+
+  @@index([trainerId, createdAt])
 }
 
-/// 시간별 측정 레코드 (한 배치의 시계열 데이터)
-model Record {
-  id           String @id @default(cuid())
-  batchId      String
-  batch        Batch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
-  timeHr       Float // 경과 시간 (h)
-  temperature  Float // 온도
-  ph           Float // pH
-  dissolvedO2  Float // 용존산소
-  substrate    Float // 기질 농도
-  penicillin   Float // penicillin 농도
+/// 하루치 운동 기록 (종목 여러 개를 묶는다)
+model Workout {
+  id        String   @id @default(cuid())
+  memberId  String
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  date      String // YYYY-MM-DD
+  memo      String? // 폼 체크, 컨디션 등
+  createdAt DateTime @default(now())
 
-  @@index([batchId, timeHr])
+  exercises Exercise[]
+
+  @@index([memberId, date])
+}
+
+/// 운동 종목 (세트/횟수/무게)
+model Exercise {
+  id        String  @id @default(cuid())
+  workoutId String
+  workout   Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  name      String // 종목명 (벤치프레스, 스쿼트 등)
+  sets      Int
+  reps      Int
+  weight    Float? // 바디웨이트면 null
+  unit      String  @default("kg") // kg | bodyweight
+  order     Int     @default(0)
+
+  @@index([workoutId, order])
+}
+
+/// 체중 기록
+model WeightRecord {
+  id        String   @id @default(cuid())
+  memberId  String
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  date      String // YYYY-MM-DD
+  weight    Float
+  memo      String? // 공복 측정, 운동 후 측정 등
+  createdAt DateTime @default(now())
+
+  @@index([memberId, date])
+}
+
+/// 코칭 메모 (통증 / 자세 / 움직임 / 숙제)
+model CoachingNote {
+  id        String   @id @default(cuid())
+  memberId  String
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  date      String // YYYY-MM-DD
+  pain      String? // 통증 부위, 강도, 발생 상황
+  posture   String? // 골반, 어깨, 척추 정렬 등
+  movement  String? // 스쿼트, 힙힌지, 보행 등 움직임 관찰
+  homework  String? // 다음 수업 전 수행할 운동이나 습관
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([memberId, date])
+}
+
+/// 수업 완료 내역 (완료 시 남은 세션 1회 차감)
+model SessionCompletion {
+  id          String   @id @default(cuid())
+  memberId    String
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  completedAt DateTime @default(now())
+
+  @@index([memberId, completedAt])
+}
+
+/// 칼로리 및 영양 계산 결과 (회원당 1건, 다시 계산하면 덮어쓴다)
+model NutritionProfile {
+  id       String @id @default(cuid())
+  memberId String @unique
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 입력값
+  gender              String // male | female
+  age                 Int
+  height              Float // cm
+  weight              Float // kg
+  bodyFatPercentage   Float?
+  skeletalMuscleMass  Float? // 골격근량 kg
+  leanBodyMass        Float? // 직접 입력한 제지방량 kg
+  activityLevel       String // sedentary | light | moderate | veryActive | extraActive
+  goal                String // loss | maintain | gain
+
+  // 계산 결과
+  calculatedLeanBodyMass Float?
+  leanBodyMassSource     String // direct | bodyFat | unavailable
+  bmr                    Int
+  maintenanceCalories    Int
+  targetCalories         Int
+  protein                Int
+  proteinMin             Int
+  proteinMax             Int
+  carbs                  Int
+  fat                    Int
+  calculationBasis       String[] // 계산 기준 설명 줄들
+
+  updatedAt DateTime @updatedAt
 }

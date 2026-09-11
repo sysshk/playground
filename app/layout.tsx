@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
 
@@ -9,8 +9,25 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "MES | 공정관리 시스템",
-  description: "공정 실행·모니터링 시스템 (Manufacturing Execution System)",
+  title: "PT 매니저",
+  description: "개인 트레이너를 위한 회원 및 운동기록 관리 앱",
+  // basePath가 붙어 있어 manifest/아이콘 경로는 직접 지정한다.
+  manifest: "/pt-manager/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "PT 매니저",
+    statusBarStyle: "default",
+  },
+  icons: {
+    icon: "/pt-manager/favicon.svg",
+    apple: "/pt-manager/icons/apple-touch-icon.png",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#059669",
 };
 
 export default function RootLayout({
@@ -20,9 +37,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className={`${outfit.variable} font-[Outfit] antialiased`}>
-        {children}
-      </body>
+      <body className={outfit.variable}>{children}</body>
     </html>
   );
 }

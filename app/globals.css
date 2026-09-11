@@ -1,64 +1,68 @@
 @import "tailwindcss";
 
-:root {
-  /* Industrial / bio-process dark theme */
-  --background: #0B0F14;
-  --surface: #10161D;
-  --foreground: #E6EDF3;
+/*
+ * PT 매니저 — 라이트 에메랄드 테마
+ * @theme으로 선언한 토큰이 그대로 유틸리티가 된다:
+ *   --color-primary → bg-primary / text-primary
+ *   --color-line    → border-line
+ *   --shadow-card   → shadow-card
+ */
+@theme {
+  --color-primary: #10b981;
+  --color-primary-dark: #059669;
+  --color-primary-light: #d1fae5;
 
-  --primary: #2DD4BF;        /* teal - 공정/배양 accent */
-  --primary-dark: #14B8A6;
-  --primary-light: #99F6E4;
+  --color-canvas: #f8fafc;
+  --color-surface: #ffffff;
+  --color-ink: #0f172a;
+  --color-muted: #64748b;
+  --color-line: #e2e8f0;
+  --color-danger: #ef4444;
+  --color-danger-dark: #dc2626;
+  --color-warning: #f59e0b;
 
-  --card: #131A22;
-  --card-hover: #18212B;
-  --muted: #1A232D;
-  --border: #1E2A35;
-  --border-strong: #2C3A48;
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-raised: 0 4px 12px rgba(15, 23, 42, 0.08);
+  --shadow-float: 0 10px 30px rgba(15, 23, 42, 0.1);
 
-  --text-primary: #E6EDF3;
-  --text-secondary: #9FB0BF;
-  --text-tertiary: #5E6E7D;
+  --radius-card: 16px;
 
-  /* status colors */
-  --ok: #34D399;       /* 정상 */
-  --run: #38BDF8;      /* 진행중 */
-  --warn: #FBBF24;     /* 주의 */
-  --danger: #F87171;   /* 알람/이상 */
-  --idle: #64748B;     /* 대기 */
+  --font-sans: var(--font-outfit), "Pretendard", -apple-system,
+    BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-surface: var(--surface);
-  --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-primary-dark: var(--primary-dark);
-  --color-primary-light: var(--primary-light);
-  --color-card: var(--card);
-  --color-card-hover: var(--card-hover);
-  --color-muted: var(--muted);
-  --color-border: var(--border);
-  --color-border-strong: var(--border-strong);
-  --color-ok: var(--ok);
-  --color-run: var(--run);
-  --color-warn: var(--warn);
-  --color-danger: var(--danger);
-  --color-idle: var(--idle);
-  --font-outfit: "Outfit", sans-serif;
+* {
+  box-sizing: border-box;
 }
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: "Outfit", Arial, Helvetica, sans-serif;
+  margin: 0;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  /* 홈 화면 앱에서 하단 안전영역 확보 */
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* thin custom scrollbar */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -67,6 +71,16 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border-strong);
+  background: #cbd5e1;
   border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

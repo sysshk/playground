@@ -30,8 +30,10 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env.local
+# env files — 비밀값(DB 비밀번호, AUTH_SECRET)이 들어가므로 절대 커밋하지 않는다.
+# 예시 파일만 예외로 둔다.
+.env*
+!.env.example
 
 # vercel
 .vercel
@@ -45,3 +47,4 @@ next-env.d.ts
 # pencil
 .pencil/*
 .claude
+.vscode/*
