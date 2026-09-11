@@ -65,12 +65,20 @@ npm run dev          # http://localhost:3000/pt-manager
 
 ### 환경 변수
 
-`.env`(로컬), `.env.production`(빌드) 두 파일 모두 필요합니다.
+`.env.example`을 복사해 `.env`를 만들고 값을 채우세요.
+
+```bash
+cp .env.example .env
+```
 
 ```bash
 DATABASE_URL=postgresql://...@....neon.tech/neondb?sslmode=require
-AUTH_SECRET=...   # openssl rand -base64 32
+AUTH_SECRET=...   # node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
+
+`.env*`는 `.gitignore`에 걸려 있어 커밋되지 않습니다(`.env.example`만 예외).
+**배포에서는 파일을 쓰지 않습니다** — Vercel 대시보드의 Environment Variables가
+빌드·런타임 환경에 직접 주입됩니다.
 
 ---
 
@@ -135,7 +143,7 @@ DB를 리셋하면 계정도 사라지므로, 다시 가입해서 만드세요.
 ## 기타 명령어
 
 ```bash
-npm run build        # .env.production 기준 prisma generate + next build
+npm run build        # prisma generate + next build
 npm run start        # 프로덕션 빌드 실행
 npm run lint         # ESLint
 npx tsc --noEmit     # 타입 검사
@@ -152,7 +160,13 @@ npx tsc --noEmit     # 타입 검사
 
 - `next.config.ts`의 `basePath: "/pt-manager"` — 모든 경로 앞에 `/pt-manager`가 붙습니다.
 - `vercel.json`이 루트(`/`) 접속을 `/pt-manager`로 리다이렉트합니다.
-- Vercel 프로젝트에 `DATABASE_URL`, `AUTH_SECRET` 환경변수가 있어야 합니다.
+- Vercel 프로젝트(`shk-zestify/mes`)에 `DATABASE_URL`, `AUTH_SECRET`이 등록돼 있습니다.
+  확인: `vercel env ls` · 추가: `vercel env add`
+- `.env` 파일은 배포에 관여하지 않습니다. 빌드는 대시보드 환경변수만 씁니다.
+
+> ⚠️ `.env`와 `.env.production`이 한동안 공개 저장소에 커밋돼 있었습니다.
+> 현재는 추적을 끊었지만 **과거 커밋에는 남아 있습니다.** Neon 비밀번호와
+> `AUTH_SECRET`을 재발급하기 전까지는 그 값들이 유효한 상태입니다.
 
 ### basePath 때문에 주의할 점
 

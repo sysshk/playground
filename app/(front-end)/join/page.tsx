@@ -55,10 +55,10 @@ export default function JoinPage() {
   return (
     <div className="flex min-h-screen flex-col bg-canvas">
       <div className="flex items-center gap-3 px-5 py-4">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          aria-label="뒤로"
+        {/* 링크로 둔다. router.back()은 /join으로 바로 들어온 경우 사이트 밖으로 나간다. */}
+        <Link
+          href="/"
+          aria-label="홈으로"
           className="grid h-9 w-9 place-items-center rounded-xl text-muted transition-colors hover:bg-slate-100 hover:text-ink"
         >
           <svg
@@ -74,7 +74,7 @@ export default function JoinPage() {
           >
             <path d="m15 18-6-6 6-6" />
           </svg>
-        </button>
+        </Link>
         <h2 className="text-[17px] font-bold tracking-tight">회원가입</h2>
       </div>
 

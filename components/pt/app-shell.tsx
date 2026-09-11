@@ -16,7 +16,11 @@ function isActive(pathname: string, href: string) {
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+
+  // "/"는 비로그인도 볼 수 있는 랜딩이라, 세션 없이 렌더될 수 있다.
+  // 세션을 확인하는 동안 로그인/로그아웃이 깜빡이지 않도록 loading을 구분한다.
+  const loggedIn = status === "authenticated";
   const name =
     session?.user?.name || session?.user?.email?.split("@")[0] || "트레이너";
 
@@ -38,51 +42,72 @@ export default function AppShell({ children }: { children: ReactNode }) {
             </span>
           </Link>
 
-          {/* 데스크톱 내비 */}
+          {/* 데스크톱 내비 — 로그인한 경우에만 */}
           <nav className="hidden items-center gap-1 sm:flex">
-            {NAV.map((item) => {
-              const active = isActive(pathname, item.href);
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={active ? "page" : undefined}
-                  className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-[14px] font-semibold transition-colors ${
-                    active
-                      ? "bg-primary-light text-primary-dark"
-                      : "text-muted hover:bg-slate-100 hover:text-ink"
-                  }`}
-                >
-                  <Icon />
-                  {item.label}
-                </Link>
-              );
-            })}
+            {loggedIn &&
+              NAV.map((item) => {
+                const active = isActive(pathname, item.href);
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    aria-current={active ? "page" : undefined}
+                    className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-[14px] font-semibold transition-colors ${
+                      active
+                        ? "bg-primary-light text-primary-dark"
+                        : "text-muted hover:bg-slate-100 hover:text-ink"
+                    }`}
+                  >
+                    <Icon />
+                    {item.label}
+                  </Link>
+                );
+              })}
           </nav>
 
           <div className="flex shrink-0 items-center gap-2">
-            <span className="hidden max-w-[140px] truncate text-[13px] font-semibold sm:inline">
-              {name}
-            </span>
-            <button
-              type="button"
-              onClick={() => signOut({ callbackUrl: "/login" })}
-              title="로그아웃"
-              aria-label="로그아웃"
-              className="grid h-9 w-9 place-items-center rounded-xl text-muted transition-colors hover:bg-slate-100 hover:text-danger"
-            >
-              <IconLogout />
-            </button>
+            {status === "loading" ? (
+              // 세션 확인 중 — 자리만 잡아두고 아무것도 단정하지 않는다.
+              <span className="h-9 w-9" aria-hidden="true" />
+            ) : loggedIn ? (
+              <>
+                <span className="hidden max-w-[140px] truncate text-[13px] font-semibold sm:inline">
+                  {name}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => signOut({ callbackUrl: "/login" })}
+                  title="로그아웃"
+                  aria-label="로그아웃"
+                  className="grid h-9 w-9 place-items-center rounded-xl text-muted transition-colors hover:bg-slate-100 hover:text-danger"
+                >
+                  <IconLogout />
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className="rounded-xl bg-primary px-4 py-2 text-[14px] font-bold text-white transition-colors hover:bg-primary-dark"
+              >
+                로그인
+              </Link>
+            )}
           </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[1200px] flex-1 px-4 pb-24 pt-5 sm:px-6 sm:pb-10 sm:pt-7">
+      {/* 하단 탭이 있는 경우에만 그만큼 아래 여백을 준다. */}
+      <main
+        className={`mx-auto w-full max-w-[1200px] flex-1 px-4 pt-5 sm:px-6 sm:pb-10 sm:pt-7 ${
+          loggedIn ? "pb-24" : "pb-10"
+        }`}
+      >
         {children}
       </main>
 
-      {/* 모바일 하단 탭 */}
+      {/* 모바일 하단 탭 — 로그인한 경우에만 */}
+      {loggedIn && (
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md sm:hidden">
         <div className="flex h-[72px] items-stretch">
           {NAV.map((item) => {
@@ -106,6 +131,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           })}
         </div>
       </nav>
+      )}
     </div>
   );
 }

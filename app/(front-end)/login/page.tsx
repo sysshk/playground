@@ -39,8 +39,28 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-canvas px-5 py-10">
-      <div className="w-full max-w-[400px]">
+    <div className="flex min-h-screen flex-col bg-canvas px-5 py-6">
+      <Link
+        href="/"
+        className="inline-flex w-fit items-center gap-1.5 rounded-xl px-2 py-1.5 text-[13px] font-semibold text-muted transition-colors hover:bg-slate-100 hover:text-ink"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="m15 18-6-6 6-6" />
+        </svg>
+        홈으로
+      </Link>
+
+      <div className="mx-auto w-full max-w-[400px] flex-1 content-center py-6">
         <div className="flex flex-col items-center gap-3 text-center">
           <span className="grid h-14 w-14 place-items-center rounded-2xl bg-primary text-white shadow-raised">
             <svg

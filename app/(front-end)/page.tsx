@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/pt/ui";
 import InstallPrompt from "@/components/pt/install-prompt";
 
@@ -44,6 +45,9 @@ const FEATURES = [
 ];
 
 export default function HomePage() {
+  const { status } = useSession();
+  const loggedIn = status === "authenticated";
+
   return (
     <div className="flex flex-col gap-8">
       {/* Hero */}
@@ -61,9 +65,22 @@ export default function HomePage() {
           편리하게 관리하세요.
         </p>
         <div className="mt-7 flex flex-wrap gap-3">
-          <Link href="/members">
-            <Button className="px-6">회원 관리 시작하기 →</Button>
-          </Link>
+          {loggedIn ? (
+            <Link href="/members">
+              <Button className="px-6">회원 관리 시작하기 →</Button>
+            </Link>
+          ) : (
+            <>
+              <Link href="/join">
+                <Button className="px-6">무료로 시작하기 →</Button>
+              </Link>
+              <Link href="/login">
+                <Button variant="ghost" className="px-6">
+                  로그인
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
       </section>
 

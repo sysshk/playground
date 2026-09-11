@@ -8,7 +8,11 @@ import { NextResponse, type NextRequest } from "next/server";
 //
 // Next 16부터 middleware.ts 대신 proxy.ts 규약을 쓴다.
 
-const PUBLIC_PATHS = ["/login", "/join"];
+/** 로그인 없이 볼 수 있는 화면. "/"는 서비스 소개 겸 랜딩이라 공개한다. */
+const PUBLIC_PATHS = ["/", "/login", "/join"];
+
+/** 이미 로그인했다면 머무를 이유가 없는 화면 */
+const AUTH_PATHS = ["/login", "/join"];
 
 function hasSessionCookie(request: NextRequest) {
   return (
@@ -20,17 +24,16 @@ function hasSessionCookie(request: NextRequest) {
 export function proxy(request: NextRequest) {
   // basePath는 pathname에서 이미 벗겨진 상태로 들어온다.
   const { pathname } = request.nextUrl;
-  const isPublic = PUBLIC_PATHS.includes(pathname);
   const loggedIn = hasSessionCookie(request);
 
-  if (!loggedIn && !isPublic) {
+  if (!loggedIn && !PUBLIC_PATHS.includes(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.search = "";
     return NextResponse.redirect(url);
   }
 
-  if (loggedIn && isPublic) {
+  if (loggedIn && AUTH_PATHS.includes(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/members";
     url.search = "";
@@ -41,8 +44,11 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // API·정적 자산·PWA 파일은 건드리지 않는다.
   matcher: [
+    // 루트는 따로 적어야 한다. 아래 패턴은 path-to-regexp에서 빈 세그먼트에
+    // 걸리지 않아 "/"가 가드를 그냥 빠져나간다.
+    "/",
+    // API·정적 자산·PWA 파일은 건드리지 않는다.
     "/((?!api|_next/static|_next/image|favicon.ico|favicon.svg|manifest.json|icons|sw.js).*)",
   ],
 };
