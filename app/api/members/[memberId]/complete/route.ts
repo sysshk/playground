@@ -1,17 +1,45 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireOwnedMember, requireTrainerId, serverError } from "@/lib/api";
+import {
+  badRequest,
+  requireOwnedMember,
+  requireTrainerId,
+  serverError,
+} from "@/lib/api";
 
 type Params = { params: Promise<{ memberId: string }> };
 
-/** 수업 완료 처리 — 남은 세션 1회 차감 후 완료 내역을 남긴다. */
-export async function POST(_request: Request, { params }: Params) {
+/**
+ * 수업 완료 처리 — 남은 수업 1회 차감 후 완료 내역을 남긴다.
+ *
+ * 수업 중에는 바빠서 끝난 뒤에 누르는 경우가 많다. 그래서 시각을 직접
+ * 지정할 수 있게 열어두고, 없으면 지금 시각을 쓴다.
+ */
+export async function POST(request: Request, { params }: Params) {
   const { memberId } = await params;
   const { trainerId, error } = await requireTrainerId();
   if (error) return error;
 
   const owned = await requireOwnedMember(memberId, trainerId);
   if (owned.error) return owned.error;
+
+  let completedAt: Date | undefined;
+  try {
+    const body = await request.json().catch(() => ({}));
+    if (body?.completedAt) {
+      const parsed = new Date(body.completedAt);
+      if (Number.isNaN(parsed.getTime())) {
+        return badRequest("완료 시각이 올바르지 않습니다.");
+      }
+      // 미래로 기록하면 이력이 뒤엉킨다. 약간의 시계 오차만 허용한다.
+      if (parsed.getTime() > Date.now() + 5 * 60 * 1000) {
+        return badRequest("완료 시각은 미래로 지정할 수 없습니다.");
+      }
+      completedAt = parsed;
+    }
+  } catch {
+    return badRequest("요청을 읽지 못했습니다.");
+  }
 
   try {
     const result = await prisma.$transaction(async (tx) => {
@@ -24,7 +52,7 @@ export async function POST(_request: Request, { params }: Params) {
       if (decremented.count === 0) return null;
 
       const completion = await tx.sessionCompletion.create({
-        data: { memberId },
+        data: { memberId, ...(completedAt ? { completedAt } : {}) },
       });
       const member = await tx.member.findUnique({ where: { id: memberId } });
 
@@ -33,7 +61,7 @@ export async function POST(_request: Request, { params }: Params) {
 
     if (!result) {
       return NextResponse.json(
-        { error: "남은 세션이 없어 더 이상 차감할 수 없습니다." },
+        { error: "남은 수업이 없어 더 이상 차감할 수 없습니다." },
         { status: 409 },
       );
     }

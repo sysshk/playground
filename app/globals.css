@@ -1,86 +1,218 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* shadcn 컴포넌트의 dark: 변형은 .dark 클래스가 있을 때만 켠다.
+   이렇게 안 하면 OS가 다크 모드일 때 입력칸 같은 곳만 어둡게 바뀐다. */
+@custom-variant dark (&:is(.dark *));
 
 /*
- * PT 매니저 — 라이트 에메랄드 테마
- * @theme으로 선언한 토큰이 그대로 유틸리티가 된다:
- *   --color-primary → bg-primary / text-primary
- *   --color-line    → border-line
- *   --shadow-card   → shadow-card
+ * PT 매니저 — 모노크롬 + 단일 악센트
+ *
+ * 색은 거의 쓰지 않는다. 흰색·회색·검정이 화면을 이루고,
+ * 파란 악센트는 "누를 수 있는 것"과 "지금 중요한 것"에만 쓴다.
+ *
+ * 색 값은 shadcn 변수(--background, --primary …)에만 두고,
+ * 우리가 먼저 쓰던 이름(canvas, ink, line …)은 그 변수를 가리키게 한다.
+ * 그래서 shadcn 컴포넌트와 우리 화면이 같은 색을 쓴다.
+ *
+ * 주의: shadcn의 muted는 연한 회색 "배경"이다. 회색 글자는 muted-foreground.
  */
+:root {
+  --radius: 0.75rem;
+
+  --background: #fafafa;
+  --foreground: #111111;
+  --card: #ffffff;
+  --card-foreground: #111111;
+  --popover: #ffffff;
+  --popover-foreground: #111111;
+  --primary: #1f6feb;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #111111;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #f4f4f5;
+  --accent-foreground: #111111;
+  --destructive: #dc2626;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #1f6feb;
+}
+
+@theme inline {
+  /* shadcn 이름 */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+
+  /* 우리 이름 — 같은 색을 가리킨다 */
+  --color-canvas: var(--background);
+  --color-surface: var(--card);
+  --color-ink: var(--foreground);
+  --color-line: var(--border);
+  --color-raised: var(--muted);
+  --color-danger: var(--destructive);
+}
+
 @theme {
-  --color-primary: #10b981;
-  --color-primary-dark: #059669;
-  --color-primary-light: #d1fae5;
+  /* shadcn에 대응하는 이름이 없는 색 */
+  --color-primary-dark: #1857c4;
+  --color-primary-light: #eaf2fe;
+  --color-subtle: #a1a1aa;
+  --color-line-strong: #d4d4d8;
+  --color-inverse: #0d0d0d;
+  --color-danger-dark: #b91c1c;
+  --color-warning: #b45309;
 
-  --color-canvas: #f8fafc;
-  --color-surface: #ffffff;
-  --color-ink: #0f172a;
-  --color-muted: #64748b;
-  --color-line: #e2e8f0;
-  --color-danger: #ef4444;
-  --color-danger-dark: #dc2626;
-  --color-warning: #f59e0b;
-
-  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.06);
-  --shadow-raised: 0 4px 12px rgba(15, 23, 42, 0.08);
-  --shadow-float: 0 10px 30px rgba(15, 23, 42, 0.1);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-raised: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-float: 0 10px 30px rgba(0, 0, 0, 0.1);
 
   --radius-card: 16px;
 
-  --font-sans: var(--font-outfit), "Pretendard", -apple-system,
+  /*
+   * 타입 스케일. 크기를 그때그때 정하면 화면마다 제각각이 되므로
+   * 쓸 수 있는 단계를 여기서만 정의하고, 화면에서는 이 이름만 쓴다.
+   * 작은 글자일수록 행간을 넉넉히 줘야 한글이 읽힌다.
+   */
+  --text-2xs: 11px;
+  --text-2xs--line-height: 1.45;
+  --text-xs: 12px;
+  --text-xs--line-height: 1.55;
+  --text-sm: 13px;
+  --text-sm--line-height: 1.6;
+  --text-base: 14px;
+  --text-base--line-height: 1.65;
+  --text-md: 15px;
+  --text-md--line-height: 1.7;
+  --text-lg: 17px;
+  --text-lg--line-height: 1.7;
+  --text-xl: 20px;
+  --text-xl--line-height: 1.45;
+  --text-2xl: 24px;
+  --text-2xl--line-height: 1.35;
+  --text-3xl: 30px;
+  --text-3xl--line-height: 1.28;
+  --text-4xl: 38px;
+  --text-4xl--line-height: 1.22;
+  --text-5xl: 48px;
+  --text-5xl--line-height: 1.16;
+  --text-6xl: 60px;
+  --text-6xl--line-height: 1.12;
+
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system,
     BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
 }
 
-* {
-  box-sizing: border-box;
+/*
+ * 같은 크기라도 폰에서는 화면에 얼굴을 가까이 대고 보지만
+ * 데스크톱은 멀리서 본다. 그래서 큰 화면에서 스케일을 한 단계 올린다.
+ * 유틸리티가 이 변수를 참조하므로 여기서만 바꾸면 전체가 따라온다.
+ */
+@media (min-width: 768px) {
+  :root {
+    --text-2xs: 12px;
+    --text-xs: 13px;
+    --text-sm: 14px;
+    --text-base: 15px;
+    --text-md: 16px;
+    --text-lg: 18px;
+    --text-xl: 22px;
+    --text-2xl: 28px;
+    --text-3xl: 34px;
+    --text-4xl: 44px;
+    --text-5xl: 54px;
+    --text-6xl: 68px;
+  }
 }
 
-html {
-  scroll-behavior: smooth;
-  -webkit-text-size-adjust: 100%;
-}
+/*
+ * 리셋은 전부 base 레이어 안에 둔다.
+ * 레이어 밖에 둔 스타일은 레이어 안의 Tailwind 유틸리티보다 항상 이긴다.
+ * 예전에 button { color: inherit } 가 밖에 있어서 모든 버튼에서
+ * text-white·font-bold 같은 클래스가 무시됐다.
+ */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    box-sizing: border-box;
+  }
 
-body {
-  margin: 0;
-  background: var(--color-canvas);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-  /* 홈 화면 앱에서 하단 안전영역 확보 */
-  padding-bottom: env(safe-area-inset-bottom);
-}
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
 
-button,
-input,
-select,
-textarea {
-  font: inherit;
-  color: inherit;
-}
+  body {
+    margin: 0;
+    /* 한글은 기본 줄바꿈이 글자 단위라 "다/음"처럼 단어가 줄 끝에서 쪼개진다.
+       띄어쓰기에서만 끊고, 공백 없이 긴 문자열만 예외로 끊는다. */
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    /* 홈 화면 앱에서 하단 안전영역 확보 */
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 
-button,
-a {
-  -webkit-tap-highlight-color: transparent;
-}
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
 
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-line-strong);
+    border-radius: 4px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }

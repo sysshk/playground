@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { SIGNUP_ENABLED } from "@/lib/config";
 
 // 로그인하지 않은 접근을 /login으로 돌려보내는 UX용 가드다.
 // 실제 권한 검사는 각 API 라우트(requireTrainerId)에서 다시 한다.
@@ -26,6 +27,14 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const loggedIn = hasSessionCookie(request);
 
+  // 가입을 닫아둔 동안은 /join 자체를 열어주지 않는다.
+  if (!SIGNUP_ENABLED && pathname === "/join") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
   if (!loggedIn && !PUBLIC_PATHS.includes(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
@@ -49,6 +58,8 @@ export const config = {
     // 걸리지 않아 "/"가 가드를 그냥 빠져나간다.
     "/",
     // API·정적 자산·PWA 파일은 건드리지 않는다.
-    "/((?!api|_next/static|_next/image|favicon.ico|favicon.svg|manifest.json|icons|sw.js).*)",
+    // 특히 images·fonts는 비로그인 방문자가 보는 소개 페이지의 사진과 글꼴이라
+    // 여기서 막으면 랜딩에 사진이 안 뜨고 글꼴이 기본 글꼴로 떨어진다.
+    "/((?!api|_next/static|_next/image|images|fonts|icons|favicon.ico|favicon.svg|manifest.json|sw.js).*)",
   ],
 };

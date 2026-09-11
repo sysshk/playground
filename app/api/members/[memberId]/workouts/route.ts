@@ -6,20 +6,11 @@ import {
   requireOwnedMember,
   requireTrainerId,
   serverError,
-  toNumber,
   toTrimmed,
 } from "@/lib/api";
+import { parseExercises } from "./parse";
 
 type Params = { params: Promise<{ memberId: string }> };
-
-interface ExerciseInput {
-  name: string;
-  sets: number;
-  reps: number;
-  weight: number | null;
-  unit: "kg" | "bodyweight";
-  order: number;
-}
 
 /** 하루치 운동 기록 추가 (종목 여러 개) */
 export async function POST(request: Request, { params }: Params) {
@@ -35,52 +26,51 @@ export async function POST(request: Request, { params }: Params) {
 
     if (!isValidDate(body.date)) return badRequest("날짜를 선택해 주세요.");
 
-    if (!Array.isArray(body.exercises) || body.exercises.length === 0) {
-      return badRequest("종목을 하나 이상 추가해 주세요.");
-    }
+    const parsed = parseExercises(body.exercises);
+    if ("error" in parsed) return badRequest(parsed.error);
 
-    const exercises: ExerciseInput[] = [];
+    // 저장하면서 수업 1회를 차감할지. 회원 혼자 한 개인 운동을 기록할 때는 끈다.
+    const completeSession = body.completeSession === true;
 
-    for (const [index, raw] of body.exercises.entries()) {
-      const name = toTrimmed(raw?.name);
-      if (!name) return badRequest(`종목 ${index + 1}: 종목명을 입력해 주세요.`);
+    // 오늘 기록이면 지금 시각, 지난 날짜를 나중에 입력하는 거면 그날 정오(한국 시각)로 남긴다.
+    const kstToday = new Date(Date.now() + 9 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10);
+    const completedAt =
+      body.date === kstToday ? new Date() : new Date(`${body.date}T12:00:00+09:00`);
 
-      const sets = toNumber(raw?.sets);
-      if (sets === undefined || sets < 1 || !Number.isInteger(sets)) {
-        return badRequest(`${name}: 세트 수는 1 이상 입력해 주세요.`);
-      }
+    const result = await prisma.$transaction(async (tx) => {
+      const workout = await tx.workout.create({
+        data: {
+          memberId,
+          date: body.date,
+          memo: toTrimmed(body.memo),
+          exercises: { create: parsed.exercises },
+        },
+        include: {
+          exercises: {
+            orderBy: { order: "asc" },
+            include: { sets: { orderBy: { order: "asc" } } },
+          },
+        },
+      });
 
-      const reps = toNumber(raw?.reps);
-      if (reps === undefined || reps < 1 || !Number.isInteger(reps)) {
-        return badRequest(`${name}: 횟수는 1 이상 입력해 주세요.`);
-      }
+      if (!completeSession) return { workout, completed: false };
 
-      const unit: "kg" | "bodyweight" =
-        raw?.unit === "bodyweight" ? "bodyweight" : "kg";
+      // 남은 수업이 없으면 기록만 남기고 차감은 건너뛴다. 기록까지 막을 이유는 없다.
+      const { count } = await tx.member.updateMany({
+        where: { id: memberId, remainingSessions: { gt: 0 } },
+        data: { remainingSessions: { decrement: 1 } },
+      });
+      if (count === 0) return { workout, completed: false };
 
-      let weight: number | null = null;
-      if (unit === "kg") {
-        const parsed = toNumber(raw?.weight);
-        if (parsed === undefined || parsed < 0) {
-          return badRequest(`${name}: 무게는 0 이상 입력해 주세요.`);
-        }
-        weight = parsed;
-      }
-
-      exercises.push({ name, sets, reps, weight, unit, order: index });
-    }
-
-    const workout = await prisma.workout.create({
-      data: {
-        memberId,
-        date: body.date,
-        memo: toTrimmed(body.memo),
-        exercises: { create: exercises },
-      },
-      include: { exercises: { orderBy: { order: "asc" } } },
+      await tx.sessionCompletion.create({
+        data: { memberId, workoutId: workout.id, completedAt },
+      });
+      return { workout, completed: true };
     });
 
-    return NextResponse.json({ workout }, { status: 201 });
+    return NextResponse.json(result, { status: 201 });
   } catch (e) {
     return serverError("workouts.POST", e);
   }

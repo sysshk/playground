@@ -7,8 +7,8 @@
   "scope": "/pt-manager/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f8fafc",
-  "theme_color": "#059669",
+  "background_color": "#fafafa",
+  "theme_color": "#ffffff",
   "icons": [
     {
       "src": "/pt-manager/icons/icon-192.png",
@@ -23,7 +23,7 @@
       "purpose": "any"
     },
     {
-      "src": "/pt-manager/icons/icon-512.png",
+      "src": "/pt-manager/icons/icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

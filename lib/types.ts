@@ -10,14 +10,20 @@ import type {
 
 export type WeightUnit = "kg" | "bodyweight";
 
-export interface Exercise {
+/** 한 세트 — 드롭세트·피라미드처럼 세트마다 수치가 달라질 수 있다. */
+export interface ExerciseSet {
   id: string;
-  name: string;
-  sets: number;
+  order: number;
   reps: number;
   weight: number | null;
   unit: WeightUnit;
+}
+
+export interface Exercise {
+  id: string;
+  name: string;
   order: number;
+  sets: ExerciseSet[];
 }
 
 export interface Workout {
@@ -53,6 +59,8 @@ export interface CoachingNote {
 export interface SessionCompletion {
   id: string;
   memberId: string;
+  /** 운동 기록을 저장하면서 차감했으면 그 기록의 id */
+  workoutId: string | null;
   completedAt: string;
 }
 
@@ -97,6 +105,17 @@ export interface Member {
 export interface MemberSummary extends Member {
   latestWeight: number | null;
   workoutCount: number;
+}
+
+/** 대시보드 상단 지표 */
+export interface MemberStats {
+  total: number;
+  /** 최근 7일 수업 완료 수 */
+  recentCompletions: number;
+  /** 최근 7일 운동 기록 수 */
+  recentWorkouts: number;
+  /** 남은 수업이 3회 이하인 회원 수 */
+  runningLow: number;
 }
 
 /** 회원 상세 화면이 한 번에 받아오는 전체 데이터 */

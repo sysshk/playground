@@ -1,11 +1,14 @@
 'use client';
 
-import SessionProvider from '@/components/custom/session-provider';
-import AppShell from '@/components/pt/app-shell';
 import { usePathname } from 'next/navigation';
+import { Toaster } from '@/components/ui/sonner';
+import AppShell from './_components/app-shell';
+import SessionProvider from './_components/session-provider';
 
-// 인증 화면은 셸 없이, 그 외 화면은 헤더/하단 탭 셸로 감싼다.
-const BARE_ROUTES = ['/login', '/join'];
+// 셸 없이 그리는 화면들.
+// "/"는 소개 페이지라 전폭 히어로와 자체 헤더를 쓴다. 앱 셸의
+// 최대 너비와 여백에 갇히면 랜딩 레이아웃을 만들 수 없다.
+const BARE_ROUTES = ['/', '/login', '/join'];
 
 export default function FrontEndLayout({
   children,
@@ -13,14 +16,12 @@ export default function FrontEndLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-
-  if (BARE_ROUTES.includes(pathname)) {
-    return <SessionProvider>{children}</SessionProvider>;
-  }
+  const bare = BARE_ROUTES.includes(pathname);
 
   return (
     <SessionProvider>
-      <AppShell>{children}</AppShell>
+      {bare ? children : <AppShell>{children}</AppShell>}
+      <Toaster position="bottom-center" />
     </SessionProvider>
   );
 }

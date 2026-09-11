@@ -3,9 +3,11 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Button, Field, inputClass } from "@/components/pt/ui";
+import { Button } from "@/components/ui/button";
+import { Field } from "@/components/custom/form-field";
 import { BASE_PATH } from "@/lib/client";
 
+import { Input } from "@/components/ui/input";
 export default function JoinPage() {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -59,7 +61,7 @@ export default function JoinPage() {
         <Link
           href="/"
           aria-label="홈으로"
-          className="grid h-9 w-9 place-items-center rounded-xl text-muted transition-colors hover:bg-slate-100 hover:text-ink"
+          className="grid h-9 w-9 place-items-center rounded-xl text-muted-foreground transition-colors hover:bg-raised hover:text-ink"
         >
           <svg
             width="22"
@@ -75,73 +77,69 @@ export default function JoinPage() {
             <path d="m15 18-6-6 6-6" />
           </svg>
         </Link>
-        <h2 className="text-[17px] font-bold tracking-tight">회원가입</h2>
+        <h2 className="text-lg font-bold tracking-tight">회원가입</h2>
       </div>
 
       <div className="flex flex-1 justify-center px-5 pb-10">
         <div className="w-full max-w-[400px]">
           <div className="flex flex-col gap-1.5 pt-3">
-            <h1 className="text-[22px] font-extrabold tracking-tight">
+            <h1 className="text-2xl font-extrabold tracking-tight">
               트레이너 계정 만들기
             </h1>
-            <p className="text-[14px] text-muted">
+            <p className="text-base text-muted-foreground">
               회원과 운동 기록을 관리할 계정을 등록하세요.
             </p>
           </div>
 
           <form
             onSubmit={handleSubmit}
-            className="mt-6 flex flex-col gap-4 rounded-2xl border border-line bg-white p-6 shadow-card"
+            className="mt-6 flex flex-col gap-4 rounded-2xl border border-line bg-surface p-6 shadow-card"
           >
             <Field label="이름">
-              <input
+              <Input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="이름을 입력하세요"
-                className={inputClass}
                 autoComplete="name"
               />
             </Field>
 
             <Field label="아이디" required>
-              <input
+              <Input
                 type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="trainer@example.com"
-                className={inputClass}
                 autoComplete="username"
                 required
               />
             </Field>
 
             <Field label="비밀번호" required>
-              <input
+              <Input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="6자 이상 입력하세요"
-                className={inputClass}
                 autoComplete="new-password"
                 required
               />
             </Field>
 
             <Field label="비밀번호 확인" required>
-              <input
+              <Input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="비밀번호를 다시 입력하세요"
-                className={inputClass}
                 autoComplete="new-password"
                 required
               />
             </Field>
 
             {error && (
-              <p className="rounded-xl bg-red-50 px-4 py-3 text-[13px] text-danger">
+              <p className="rounded-xl bg-danger/8 px-4 py-3 text-sm text-danger">
                 {error}
               </p>
             )}
@@ -151,7 +149,7 @@ export default function JoinPage() {
             </Button>
           </form>
 
-          <p className="mt-5 text-center text-[13px] text-muted">
+          <p className="mt-5 text-center text-sm text-muted-foreground">
             이미 계정이 있으신가요?{" "}
             <Link
               href="/login"

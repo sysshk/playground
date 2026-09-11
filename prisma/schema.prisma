@@ -99,24 +99,37 @@ model Workout {
   memo      String? // 폼 체크, 컨디션 등
   createdAt DateTime @default(now())
 
-  exercises Exercise[]
+  exercises  Exercise[]
+  completion SessionCompletion?
 
   @@index([memberId, date])
 }
 
-/// 운동 종목 (세트/횟수/무게)
+/// 운동 종목. 세트별 수치는 ExerciseSet이 따로 갖는다.
+/// 드롭세트·피라미드처럼 세트마다 횟수와 무게가 달라지는 경우가 흔하다.
 model Exercise {
   id        String  @id @default(cuid())
   workoutId String
   workout   Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
   name      String // 종목명 (벤치프레스, 스쿼트 등)
-  sets      Int
-  reps      Int
-  weight    Float? // 바디웨이트면 null
-  unit      String  @default("kg") // kg | bodyweight
   order     Int     @default(0)
 
+  sets ExerciseSet[]
+
   @@index([workoutId, order])
+}
+
+/// 한 세트 (횟수 + 무게)
+model ExerciseSet {
+  id         String   @id @default(cuid())
+  exerciseId String
+  exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  order      Int // 1세트, 2세트 …
+  reps       Int
+  weight     Float? // 바디웨이트면 null
+  unit       String   @default("kg") // kg | bodyweight
+
+  @@index([exerciseId, order])
 }
 
 /// 체중 기록
@@ -148,11 +161,15 @@ model CoachingNote {
   @@index([memberId, date])
 }
 
-/// 수업 완료 내역 (완료 시 남은 세션 1회 차감)
+/// 수업 완료 내역 (완료 시 남은 수업 1회 차감)
+/// 운동 기록을 저장하면서 차감하면 그 기록과 연결된다.
+/// 기록을 지워도 차감 이력은 남는다 — 되돌리려면 이력에서 따로 취소한다.
 model SessionCompletion {
   id          String   @id @default(cuid())
   memberId    String
   member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  workoutId   String?  @unique
+  workout     Workout? @relation(fields: [workoutId], references: [id], onDelete: SetNull)
   completedAt DateTime @default(now())
 
   @@index([memberId, completedAt])

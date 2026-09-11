@@ -23,7 +23,12 @@ export async function GET(_request: Request, { params }: Params) {
       include: {
         workouts: {
           orderBy: [{ date: "desc" }, { createdAt: "desc" }],
-          include: { exercises: { orderBy: { order: "asc" } } },
+          include: {
+            exercises: {
+              orderBy: { order: "asc" },
+              include: { sets: { orderBy: { order: "asc" } } },
+            },
+          },
         },
         weights: { orderBy: [{ date: "desc" }, { createdAt: "desc" }] },
         notes: { orderBy: [{ date: "desc" }, { createdAt: "desc" }] },
@@ -62,7 +67,7 @@ export async function PATCH(request: Request, { params }: Params) {
 
     const remainingSessions = toNumber(body.remainingSessions) ?? 0;
     if (remainingSessions < 0 || !Number.isInteger(remainingSessions)) {
-      return badRequest("남은 세션은 0 이상의 정수로 입력해 주세요.");
+      return badRequest("남은 수업은 0 이상의 정수로 입력해 주세요.");
     }
 
     const member = await prisma.member.update({

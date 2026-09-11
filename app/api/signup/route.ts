@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
+import { SIGNUP_ENABLED } from "@/lib/config"
 
 export async function POST(request: Request) {
+  // 화면을 막는 것만으로는 부족하다. API로 직접 호출해도 막혀야 한다.
+  if (!SIGNUP_ENABLED) {
+    return NextResponse.json(
+      { error: "현재 회원가입을 받고 있지 않습니다." },
+      { status: 403 }
+    )
+  }
+
   try {
     const { user_id, password, name } = await request.json()
 
