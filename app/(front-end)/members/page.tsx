@@ -6,6 +6,8 @@ import { useSession } from "next-auth/react";
 import { Icon } from "@/components/custom/icons";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/custom/empty-state";
+import { ConfirmDialog } from "@/components/custom/confirm-dialog";
+import { toast } from "sonner";
 import { apiFetch, errorMessage } from "@/lib/client";
 import type { MemberStats, MemberSummary } from "@/lib/types";
 
@@ -30,6 +32,10 @@ export default function MembersPage() {
   const [stats, setStats] = useState<MemberStats | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
 
 
   const load = useCallback(async () => {
@@ -64,6 +70,38 @@ export default function MembersPage() {
       alive = false;
     };
   }, []);
+
+  const toggleEditing = () => {
+    setEditing((on) => !on);
+    setPicked(new Set());
+  };
+
+  const togglePick = (id: string) =>
+    setPicked((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const handleDelete = async () => {
+    setBusy(true);
+    const ids = [...picked];
+    try {
+      await Promise.all(
+        ids.map((id) => apiFetch(`/api/members/${id}`, { method: "DELETE" })),
+      );
+      setMembers((prev) => prev?.filter((m) => !picked.has(m.id)) ?? null);
+      toast(`회원 ${ids.length}명을 삭제했습니다.`);
+      setConfirming(false);
+      setEditing(false);
+      setPicked(new Set());
+    } catch (e) {
+      toast(errorMessage(e, "회원 삭제에 실패했습니다."));
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const filtered = useMemo(() => {
     if (!members) return [];
@@ -150,9 +188,20 @@ export default function MembersPage() {
       {/* ── 회원 목록 ─────────────────────── */}
       <section className="flex flex-col gap-3.5">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-lg font-extrabold tracking-[-0.02em]">
-            진행 중 {activeTotal}명
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-extrabold tracking-[-0.02em]">
+              진행 중 {activeTotal}명
+            </h2>
+            {total > 0 && (
+              <button
+                type="button"
+                onClick={toggleEditing}
+                className="text-sm font-bold text-primary transition-colors hover:text-primary-dark"
+              >
+                {editing ? "완료" : "편집"}
+              </button>
+            )}
+          </div>
           {total > 0 && (
             <div className="relative w-full sm:w-[280px]">
               <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-subtle">
@@ -219,7 +268,13 @@ export default function MembersPage() {
         ) : (
           <ul className="flex flex-col">
             {active.map((member) => (
-<MemberCard key={member.id} member={member} />
+<MemberCard
+                key={member.id}
+                member={member}
+                editing={editing}
+                picked={picked.has(member.id)}
+                onPick={togglePick}
+              />
             ))}
           </ul>
         )}
@@ -233,17 +288,56 @@ export default function MembersPage() {
           </h2>
           <ul className="flex flex-col">
             {ended.map((member) => (
-<MemberCard key={member.id} member={member} />
+<MemberCard
+                key={member.id}
+                member={member}
+                editing={editing}
+                picked={picked.has(member.id)}
+                onPick={togglePick}
+              />
             ))}
           </ul>
         </section>
       )}
+      {editing && picked.size > 0 && (
+        <div className="sticky bottom-4 z-10 flex items-center justify-between gap-3 rounded-2xl border-[1.5px] border-edge bg-surface px-4 py-3 shadow-float">
+          <span className="text-sm font-bold">{picked.size}명 선택됨</span>
+          <button
+            type="button"
+            onClick={() => setConfirming(true)}
+            className="rounded-lg bg-danger px-4 py-2 text-sm font-bold text-white transition-opacity hover:opacity-90"
+          >
+            삭제
+          </button>
+        </div>
+      )}
+
+      <ConfirmDialog
+        open={confirming}
+        busy={busy}
+        title="회원 삭제"
+        message={`선택한 회원 ${picked.size}명을 삭제할까요?`}
+        hint="운동 기록, 체중, 코칭 메모, 영양 계산까지 모두 함께 지워집니다. 되돌릴 수 없습니다."
+        icon="trash"
+        onConfirm={handleDelete}
+        onCancel={() => setConfirming(false)}
+      />
     </div>
   );
 }
 
 /** 목록에 놓이는 회원 한 장. 진행 중과 종료 목록이 같은 카드를 쓴다. */
-function MemberCard({ member }: { member: MemberSummary }) {
+function MemberCard({
+  member,
+  editing,
+  picked,
+  onPick,
+}: {
+  member: MemberSummary;
+  editing: boolean;
+  picked: boolean;
+  onPick: (id: string) => void;
+}) {
   const left = member.remainingSessions;
   const totalSessions = left + member.completedSessions;
   /*
@@ -258,12 +352,8 @@ function MemberCard({ member }: { member: MemberSummary }) {
         ? { text: "text-danger" }
         : { text: "text-primary" };
 
-  return (
-    <li className="border-b border-line last:border-0">
-      <Link
-        href={`/members/${member.id}`}
-        className="group flex min-w-0 flex-1 items-center justify-between gap-3 py-3.5"
-      >
+  const inner = (
+    <>
         <span className="flex min-w-0 flex-col gap-1">
           <span className="flex min-w-0 flex-wrap items-center gap-2">
             <span className="truncate text-base font-extrabold tracking-[-0.02em] group-hover:text-primary">
@@ -291,14 +381,45 @@ function MemberCard({ member }: { member: MemberSummary }) {
             </span>
             <span className="text-2xs font-bold text-muted-foreground">회</span>
           </span>
-          <Icon
-            name="chevronRight"
-            size={16}
-            className="text-subtle transition-colors group-hover:text-ink"
-          />
+          {!editing && (
+            <Icon
+              name="chevronRight"
+              size={16}
+              className="text-subtle transition-colors group-hover:text-ink"
+            />
+          )}
         </span>
-      </Link>
+    </>
+  );
 
+  return (
+    <li className="flex items-center gap-3 border-b border-line last:border-0">
+      {editing && (
+        <input
+          type="checkbox"
+          checked={picked}
+          onChange={() => onPick(member.id)}
+          aria-label={`${member.name} 선택`}
+          className="size-4 shrink-0 accent-primary"
+        />
+      )}
+
+      {editing ? (
+        <button
+          type="button"
+          onClick={() => onPick(member.id)}
+          className="group flex min-w-0 flex-1 items-center justify-between gap-3 py-3.5 text-left"
+        >
+          {inner}
+        </button>
+      ) : (
+        <Link
+          href={`/members/${member.id}`}
+          className="group flex min-w-0 flex-1 items-center justify-between gap-3 py-3.5"
+        >
+          {inner}
+        </Link>
+      )}
     </li>
   );
 }

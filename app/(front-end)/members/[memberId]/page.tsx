@@ -266,7 +266,6 @@ export default function MemberDetailPage() {
         }
         onSubmit={handleEditMember}
         onCancel={() => setOpen(null)}
-        onDelete={() => setPending({ type: "deleteMember" })}
       />
 
       <WorkoutSection

@@ -17,7 +17,6 @@ export function MemberSummary({
   onToggleEdit,
   onSubmit,
   onCancel,
-  onDelete,
 }: {
   member: MemberDetail;
   /** 등록한 전체 횟수 (남은 것 + 쓴 것) */
@@ -30,7 +29,6 @@ export function MemberSummary({
   onToggleEdit: () => void;
   onSubmit: (values: MemberPayload) => void;
   onCancel: () => void;
-  onDelete: () => void;
 }) {
   const { remainingSessions: left } = member;
   const used = totalSessions - left;
@@ -75,15 +73,6 @@ export function MemberSummary({
             onCancel={onCancel}
           />
 
-          <div className="mt-5 border-t border-line pt-4">
-            <button
-              type="button"
-              onClick={onDelete}
-              className="rounded-lg px-2 py-1.5 text-xs font-semibold text-subtle transition-colors hover:bg-danger/8 hover:text-danger"
-            >
-              회원 삭제
-            </button>
-          </div>
         </div>
       ) : (
         <>
