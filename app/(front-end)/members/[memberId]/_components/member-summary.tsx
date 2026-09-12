@@ -74,6 +74,16 @@ export function MemberSummary({
             onSubmit={onSubmit}
             onCancel={onCancel}
           />
+
+          <div className="mt-5 border-t border-line pt-4">
+            <button
+              type="button"
+              onClick={onDelete}
+              className="rounded-lg px-2 py-1.5 text-xs font-semibold text-subtle transition-colors hover:bg-danger/8 hover:text-danger"
+            >
+              회원 삭제
+            </button>
+          </div>
         </div>
       ) : (
         <>
@@ -113,13 +123,6 @@ export function MemberSummary({
               {member.memo}
             </p>
           )}
-          <button
-            type="button"
-            onClick={onDelete}
-            className="w-fit rounded-lg px-2 py-1.5 text-xs font-semibold text-subtle transition-colors hover:bg-danger/8 hover:text-danger"
-          >
-            회원 삭제
-          </button>
         </>
       )}
     </section>
