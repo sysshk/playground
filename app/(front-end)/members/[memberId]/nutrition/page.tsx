@@ -86,7 +86,7 @@ export default function NutritionPage() {
       name={member.name}
       subtitle="신체 정보와 목표를 넣으면 일일 섭취 기준을 계산합니다."
     >
-      <div className="rounded-2xl border-[1.5px] border-edge bg-surface p-4 sm:p-5">
+      <div>
         <NutritionForm
           nutrition={member.nutrition}
           suggestedWeight={member.weights[0]?.weight ?? null}

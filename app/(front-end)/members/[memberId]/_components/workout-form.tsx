@@ -10,6 +10,7 @@
 import { FormEvent, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/custom/icons";
+import { ConfirmDialog } from "@/components/custom/confirm-dialog";
 import { DatePicker, HourPicker } from "@/components/custom/date-picker";
 import { completedAtFrom, today } from "@/lib/client";
 import type { WeightUnit, Workout } from "@/lib/types";
@@ -24,8 +25,6 @@ interface SetRow {
 
 interface ExerciseRow {
   name: string;
-  /** 맨몸 운동은 종목 단위로 정한다. 세트마다 바뀌는 경우는 드물다. */
-  unit: WeightUnit;
   sets: SetRow[];
 }
 
@@ -49,7 +48,6 @@ const emptySet = (from?: SetRow): SetRow => ({
 
 const emptyExercise = (): ExerciseRow => ({
   name: "",
-  unit: "kg",
   sets: [emptySet()],
 });
 
@@ -58,7 +56,6 @@ function toRows(workout?: Workout): ExerciseRow[] {
   if (!workout || workout.exercises.length === 0) return [emptyExercise()];
   return workout.exercises.map((e) => ({
     name: e.name,
-    unit: e.sets[0]?.unit ?? "kg",
     sets: e.sets.map((s) => ({
       reps: String(s.reps),
       weight: s.weight === null ? "" : String(s.weight),
@@ -71,6 +68,7 @@ const round1 = (n: number) => Math.round(n * 10) / 10;
 
 export default function WorkoutForm({
   workout,
+  lastSets,
   busy = false,
   serverError,
   onSubmit,
@@ -78,6 +76,8 @@ export default function WorkoutForm({
 }: {
   /** 주면 수정 모드로 연다. */
   workout?: Workout;
+  /** 종목명 → 직전 기록 표시 ("60kg × 12회") */
+  lastSets?: Map<string, string>;
   busy?: boolean;
   serverError?: string | null;
   onSubmit: (payload: WorkoutPayload) => void;
@@ -89,6 +89,7 @@ export default function WorkoutForm({
   const [error, setError] = useState<string | null>(null);
 
   const [hour, setHour] = useState(() => new Date().getHours());
+  const [removing, setRemoving] = useState<number | null>(null);
 
   const patchExercise = (i: number, patch: Partial<ExerciseRow>) => {
     setRows((prev) => prev.map((r, n) => (n === i ? { ...r, ...patch } : r)));
@@ -127,17 +128,20 @@ export default function WorkoutForm({
           return;
         }
 
-        let weight: number | null = null;
-        if (row.unit === "kg") {
-          const parsed = Number(set.weight);
-          if (set.weight === "" || !Number.isFinite(parsed) || parsed < 0) {
-            setError(`${name} ${s + 1}세트: 무게를 입력해 주세요.`);
-            return;
-          }
-          weight = parsed;
+        // 무게 칸이 비어 있으면 맨몸 세트로 남긴다. 한 종목 안에서
+        // 맨몸과 중량 세트가 섞이는 경우가 있어 세트마다 따로 본다.
+        const blank = set.weight.trim() === "";
+        const parsed = Number(set.weight);
+        if (!blank && (!Number.isFinite(parsed) || parsed < 0)) {
+          setError(`${name} ${s + 1}세트: 무게를 다시 입력해 주세요.`);
+          return;
         }
 
-        sets.push({ reps, weight, unit: row.unit });
+        sets.push({
+          reps,
+          weight: blank ? null : parsed,
+          unit: blank ? "bodyweight" : "kg",
+        });
       }
 
       exercises.push({ name, sets });
@@ -165,10 +169,10 @@ export default function WorkoutForm({
       </div>
 
       {rows.map((row, i) => (
-        <div key={i} className="rounded-xl border border-line bg-surface">
+        <div key={i} className="rounded-xl border-[1.5px] border-edge bg-surface">
           {/* 종목 */}
           <div className="flex items-center gap-2 border-b border-line py-1.5 pl-3 pr-1.5">
-            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-raised text-xs font-bold text-muted-foreground">
+            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-canvas text-xs font-bold text-muted-foreground">
               {i + 1}
             </span>
             <input
@@ -178,10 +182,15 @@ export default function WorkoutForm({
               placeholder="종목명 (벤치프레스, 스쿼트 등)"
               aria-label={`${i + 1}번째 종목명`}
             />
+            {lastSets?.get(row.name.trim()) && (
+              <span className="shrink-0 rounded-full bg-primary-light px-2 py-0.5 text-2xs font-bold text-primary-dark dark:text-primary-bright">
+                지난 {lastSets.get(row.name.trim())}
+              </span>
+            )}
             {rows.length > 1 && (
               <button
                 type="button"
-                onClick={() => setRows((p) => p.filter((_, n) => n !== i))}
+                onClick={() => setRemoving(i)}
                 aria-label={`${i + 1}번째 종목 삭제`}
                 className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-subtle transition-colors hover:bg-raised hover:text-danger"
               >
@@ -191,39 +200,12 @@ export default function WorkoutForm({
           </div>
 
           <div className="flex flex-col gap-3 p-3">
-            {/* 중량 / 맨몸 */}
-            <div
-              role="radiogroup"
-              aria-label="무게 방식"
-              className="grid w-full grid-cols-2 rounded-lg bg-raised p-1 sm:w-56"
-            >
-              {(
-                [
-                  ["kg", "중량"],
-                  ["bodyweight", "맨몸"],
-                ] as const
-              ).map(([unit, label]) => (
-                <button
-                  key={unit}
-                  type="button"
-                  role="radio"
-                  aria-checked={row.unit === unit}
-                  onClick={() => patchExercise(i, { unit })}
-                  className={`h-9 rounded-md text-sm font-semibold transition-colors ${
-                    row.unit === unit ? "bg-surface text-ink shadow-card" : "text-muted-foreground"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-
             {/* 세트 */}
             <ol className="flex flex-col gap-2">
               {row.sets.map((set, s) => (
                 <li
                   key={s}
-                  className="grid grid-cols-2 items-center gap-2 rounded-lg border border-line p-2 sm:flex sm:min-w-0 sm:gap-3"
+                  className="grid grid-cols-2 items-center gap-2 rounded-lg p-1 sm:flex sm:min-w-0 sm:gap-3"
                 >
                   <div className="col-span-2 flex items-center justify-between sm:w-14 sm:shrink-0">
                     <span className="text-sm font-bold text-muted-foreground">{s + 1}세트</span>
@@ -251,21 +233,16 @@ export default function WorkoutForm({
                     onChange={(reps) => patchSet(i, s, { reps })}
                   />
 
-                  {row.unit === "kg" ? (
-                    <Stepper
-                      label={`${s + 1}세트 무게`}
-                      unit="kg"
-                      value={set.weight}
-                      step={WEIGHT_STEP}
-                      min={0}
-                      inputMode="decimal"
-                      onChange={(weight) => patchSet(i, s, { weight })}
-                    />
-                  ) : (
-                    <span className="flex h-11 items-center justify-center rounded-lg bg-raised text-sm font-semibold text-muted-foreground sm:flex-1">
-                      맨몸
-                    </span>
-                  )}
+                  <Stepper
+                    label={`${s + 1}세트 무게`}
+                    unit="kg"
+                    value={set.weight}
+                    step={WEIGHT_STEP}
+                    min={0}
+                    inputMode="decimal"
+                    placeholder="맨몸"
+                    onChange={(weight) => patchSet(i, s, { weight })}
+                  />
 
                   {row.sets.length > 1 && (
                     <button
@@ -290,7 +267,7 @@ export default function WorkoutForm({
                   sets: [...row.sets, emptySet(row.sets[row.sets.length - 1])],
                 })
               }
-              className="flex h-11 items-center justify-center gap-1.5 rounded-lg bg-raised text-sm font-bold text-ink transition-colors hover:bg-line"
+              className="flex h-11 items-center justify-center gap-1.5 rounded-lg bg-canvas text-sm font-bold text-ink transition-colors hover:bg-raised"
             >
               <Icon name="plus" size={16} />
               세트 추가
@@ -302,14 +279,14 @@ export default function WorkoutForm({
       <button
         type="button"
         onClick={() => setRows((p) => [...p, emptyExercise()])}
-        className="flex h-12 items-center justify-center gap-1.5 rounded-xl border border-dashed border-line-strong text-sm font-bold text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+        className="flex h-12 items-center justify-center gap-1.5 rounded-xl border-[1.5px] border-dashed border-line-strong bg-surface text-sm font-bold text-muted-foreground transition-colors hover:border-primary hover:text-primary"
       >
         <Icon name="plus" size={16} />
         종목 추가
       </button>
 
       <textarea
-        className="min-h-16 w-full resize-y rounded-xl border border-line bg-surface px-3.5 py-3 text-base outline-none transition-colors placeholder:text-subtle focus:border-primary"
+        className="min-h-20 w-full resize-y rounded-xl border-[1.5px] border-edge bg-surface px-3.5 py-3 text-base outline-none transition-colors placeholder:text-subtle focus:border-primary"
         value={memo}
         onChange={(e) => setMemo(e.target.value)}
         placeholder="메모 — 폼 체크, 컨디션 등"
@@ -321,12 +298,25 @@ export default function WorkoutForm({
         <p className="text-sm text-danger">{error ?? serverError}</p>
       )}
 
+      <ConfirmDialog
+        open={removing !== null}
+        title="종목 삭제"
+        message={`${rows[removing ?? 0]?.name.trim() || `${(removing ?? 0) + 1}번째 종목`}을(를) 지울까요?`}
+        hint="입력한 세트도 함께 사라집니다."
+        icon="trash"
+        onConfirm={() => {
+          setRows((p) => p.filter((_, n) => n !== removing));
+          setRemoving(null);
+        }}
+        onCancel={() => setRemoving(null)}
+      />
+
       <div className="flex gap-2 sm:justify-end">
         <Button type="button" variant="outline" onClick={onCancel} className="px-5">
           취소
         </Button>
         <Button type="submit" loading={busy} className="flex-1 sm:flex-none sm:px-7">
-          {workout ? "수정 저장" : "운동 기록 저장"}
+          {workout ? "수정 저장" : "저장"}
         </Button>
       </div>
     </form>
@@ -341,6 +331,7 @@ function Stepper({
   step,
   min,
   inputMode,
+  placeholder = "0",
   onChange,
 }: {
   label: string;
@@ -349,6 +340,7 @@ function Stepper({
   step: number;
   min: number;
   inputMode: "numeric" | "decimal";
+  placeholder?: string;
   onChange: (value: string) => void;
 }) {
   const current = Number(value) || 0;
@@ -356,7 +348,7 @@ function Stepper({
     onChange(String(Math.max(min, round1(current + delta))));
 
   return (
-    <div className="flex h-11 min-w-0 items-center overflow-hidden rounded-lg border border-line sm:flex-1">
+    <div className="flex h-11 min-w-0 items-center overflow-hidden rounded-lg bg-canvas sm:flex-1">
       <button
         type="button"
         onClick={() => bump(-step)}
@@ -371,7 +363,7 @@ function Stepper({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           inputMode={inputMode}
-          placeholder="0"
+          placeholder={placeholder}
           aria-label={label}
           className="min-w-0 flex-1 bg-transparent text-right text-md font-bold tabular-nums outline-none placeholder:text-line-strong"
         />

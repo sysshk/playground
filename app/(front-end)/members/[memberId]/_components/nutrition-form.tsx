@@ -183,10 +183,10 @@ export default function NutritionForm({
               key={value}
               type="button"
               onClick={() => set("gender", value)}
-              className={`rounded-xl border px-4 py-3 text-base font-semibold transition-colors ${
+              className={`rounded-xl px-4 py-3 text-base font-semibold transition-colors ${
                 form.gender === value
-                  ? "border-primary bg-primary-light text-primary-dark dark:text-primary-bright"
-                  : "border-line bg-surface text-muted-foreground hover:bg-raised"
+                  ? "border-[1.5px] border-primary bg-primary-light text-primary-dark dark:text-primary-bright"
+                  : "border-[1.5px] border-edge bg-surface text-muted-foreground hover:bg-raised"
               }`}
             >
               {value === "male" ? "남성" : "여성"}
@@ -223,7 +223,7 @@ export default function NutritionForm({
         />
       </Field>
 
-      <div className="rounded-xl border border-line p-4">
+      <div className="rounded-xl border-[1.5px] border-edge bg-surface p-4">
         <p className="text-sm font-bold">체성분</p>
         <p className="mt-0.5 text-xs text-muted-foreground">
           선택 입력 · 입력할수록 계산이 정교해집니다
@@ -289,10 +289,10 @@ export default function NutritionForm({
               key={value}
               type="button"
               onClick={() => set("goal", value)}
-              className={`rounded-xl border px-3 py-3 text-base font-semibold transition-colors ${
+              className={`rounded-xl px-3 py-3 text-base font-semibold transition-colors ${
                 form.goal === value
-                  ? "border-primary bg-primary-light text-primary-dark dark:text-primary-bright"
-                  : "border-line bg-surface text-muted-foreground hover:bg-raised"
+                  ? "border-[1.5px] border-primary bg-primary-light text-primary-dark dark:text-primary-bright"
+                  : "border-[1.5px] border-edge bg-surface text-muted-foreground hover:bg-raised"
               }`}
             >
               {GOAL_LABEL[value]}

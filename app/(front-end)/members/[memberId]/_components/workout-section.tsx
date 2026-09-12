@@ -134,7 +134,7 @@ function ExerciseRow({ exercise }: { exercise: Exercise }) {
           >
             <span className="text-2xs font-bold text-subtle">{i + 1}세트</span>
             <span className="font-semibold text-ink">
-              {set.unit === "bodyweight" ? "맨몸" : `${set.weight}kg`}
+              {set.unit === "bodyweight" ? "무게 없음" : `${set.weight}kg`}
             </span>
             <span className="text-subtle">×</span>
             {set.reps}회

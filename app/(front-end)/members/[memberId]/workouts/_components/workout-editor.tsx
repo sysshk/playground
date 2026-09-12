@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { apiFetch, errorMessage, formatDate } from "@/lib/client";
@@ -47,6 +47,32 @@ export function WorkoutEditor({
   const workout = workoutId
     ? member?.workouts.find((w) => w.id === workoutId)
     : undefined;
+
+  /**
+   * 종목별 직전 기록. 무게를 정할 때 지난번 수치를 보러 나갔다 오지 않게
+   * 종목 이름 옆에 띄운다. workouts는 최신순이라 처음 만난 것이 가장 최근이다.
+   */
+  const lastSets = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const w of member?.workouts ?? []) {
+      if (w.id === workoutId) continue;
+      for (const e of w.exercises) {
+        if (map.has(e.name)) continue;
+        const top = e.sets.reduce(
+          (best, s) => ((s.weight ?? 0) > (best.weight ?? 0) ? s : best),
+          e.sets[0],
+        );
+        if (!top) continue;
+        map.set(
+          e.name,
+          top.unit === "bodyweight"
+            ? `${top.reps}회`
+            : `${top.weight}kg × ${top.reps}회`,
+        );
+      }
+    }
+    return map;
+  }, [member, workoutId]);
 
   const handleSubmit = useCallback(
     async (payload: WorkoutPayload) => {
@@ -130,10 +156,24 @@ export function WorkoutEditor({
           ? `${formatDate(workout.date)} 기록을 고칩니다.`
           : "종목과 세트를 남기면 수업이 함께 차감됩니다."
       }
+      aside={
+        !workout && (
+          <p className="flex shrink-0 items-baseline gap-1.5 rounded-xl bg-primary-light px-3 py-2">
+            <span className="text-xs font-bold text-primary-dark dark:text-primary-bright">
+              남은 수업
+            </span>
+            <span className="text-lg font-extrabold leading-none tracking-[-0.02em]">
+              {member.remainingSessions}
+            </span>
+            <span className="text-xs font-bold text-muted-foreground">회</span>
+          </p>
+        )
+      }
     >
       <div>
         <WorkoutForm
           workout={workout}
+          lastSets={lastSets}
           busy={busy}
           serverError={serverError}
           onSubmit={handleSubmit}

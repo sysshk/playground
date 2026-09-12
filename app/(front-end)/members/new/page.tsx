@@ -49,7 +49,7 @@ export default function NewMemberPage() {
         </p>
       </div>
 
-      <div className="rounded-2xl border-[1.5px] border-edge bg-surface p-5">
+      <div>
         <MemberForm
           submitLabel="등록하기"
           busy={busy}

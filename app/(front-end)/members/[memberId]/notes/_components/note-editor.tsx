@@ -116,7 +116,7 @@ export function NoteEditor({
           : "통증, 자세와 움직임 평가를 다음 수업에 활용하세요."
       }
     >
-      <div className="rounded-2xl border-[1.5px] border-edge bg-surface p-4 sm:p-5">
+      <div>
         <CoachingNoteForm
           note={note}
           busy={busy}
