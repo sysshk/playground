@@ -9,13 +9,7 @@ import { Icon } from "@/components/custom/icons";
 import { apiFetch, errorMessage } from "@/lib/client";
 import type { Member } from "@/lib/types";
 
-/**
- * 회원 등록.
- *
- * 목록 위에서 폼을 펼치면 입력하는 동안 회원 카드가 아래로 밀려서,
- * 폰에서는 무엇을 하던 중인지 알기 어렵다. 화면을 따로 두면 뒤로 가기로
- * 빠져나올 수 있고 주소를 그대로 열 수도 있다.
- */
+/** 회원 등록. */
 export default function NewMemberPage() {
   const router = useRouter();
   const [busy, setBusy] = useState(false);

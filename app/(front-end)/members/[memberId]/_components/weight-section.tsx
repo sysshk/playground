@@ -1,6 +1,12 @@
 "use client";
 
 import { EmptyState } from "@/components/custom/empty-state";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { formatDate } from "@/lib/client";
 import type { WeightRecord } from "@/lib/types";
 import { IconButton, Section, SectionAction } from "./section";
@@ -35,33 +41,34 @@ export function WeightSection({
           : "체중 변화를 기록해 보세요."
       }
       action={
-        <SectionAction
-          icon={formOpen ? "close" : "plus"}
-          label={formOpen ? "닫기" : "체중 기록"}
-          active={formOpen}
-          onClick={onToggle}
-        />
+        <SectionAction icon="plus" label="체중 기록" onClick={onToggle} />
       }
     >
-      {formOpen && (
-        <div className="mb-4">
+      <Dialog
+        open={formOpen}
+        onOpenChange={(next) => {
+          if (!next) onCancel();
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>체중 기록</DialogTitle>
+          </DialogHeader>
           <WeightForm
             busy={busy}
             serverError={serverError}
             onSubmit={onSubmit}
             onCancel={onCancel}
           />
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {weights.length === 0 ? (
-        !formOpen && (
-          <EmptyState
-            icon="trend"
-            title="체중 기록이 없습니다"
-            description="첫 체중을 기록하고 변화를 확인해 보세요."
-          />
-        )
+        <EmptyState
+          icon="trend"
+          title="체중 기록이 없습니다"
+          description="첫 체중을 기록하고 변화를 확인해 보세요."
+        />
       ) : (
         <ul className="flex flex-col divide-y divide-line">
           {weights.map((record) => (

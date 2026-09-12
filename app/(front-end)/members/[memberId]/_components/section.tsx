@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { Icon, type IconName } from "@/components/custom/icons";
 import {
@@ -41,23 +42,37 @@ export function SectionAction({
   icon,
   label,
   onClick,
+  href,
   active = false,
 }: {
   icon: IconName;
   label: string;
-  onClick: () => void;
+  onClick?: () => void;
+  /** 주면 링크로 그린다. 작성 화면이 페이지인 섹션이 쓴다. */
+  href?: string;
   active?: boolean;
 }) {
+  const className = `flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition-colors ${
+    active
+      ? "bg-raised text-ink"
+      : "text-muted-foreground hover:bg-raised hover:text-ink"
+  }`;
+
+  if (href) {
+    return (
+      <Link href={href} className={className}>
+        <Icon name={icon} size={16} />
+        {label}
+      </Link>
+    );
+  }
+
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition-colors ${
-        active
-          ? "bg-raised text-ink"
-          : "text-muted-foreground hover:bg-raised hover:text-ink"
-      }`}
+      className={className}
     >
       <Icon name={icon} size={16} />
       {label}
@@ -70,28 +85,41 @@ export function IconButton({
   icon,
   label,
   onClick,
+  href,
   danger = false,
   active = false,
 }: {
   icon: IconName;
   label: string;
-  onClick: () => void;
+  onClick?: () => void;
+  /** 주면 링크로 그린다. */
+  href?: string;
   danger?: boolean;
   active?: boolean;
 }) {
+  const className = `grid size-9 shrink-0 place-items-center rounded-lg transition-colors ${
+    active
+      ? "bg-primary-light text-primary-dark"
+      : danger
+        ? "text-subtle hover:bg-danger/8 hover:text-danger"
+        : "text-subtle hover:bg-raised hover:text-ink"
+  }`;
+
+  if (href) {
+    return (
+      <Link href={href} title={label} aria-label={label} className={className}>
+        <Icon name={icon} size={15} />
+      </Link>
+    );
+  }
+
   return (
     <button
       type="button"
       onClick={onClick}
       title={label}
       aria-label={label}
-      className={`grid size-9 shrink-0 place-items-center rounded-lg transition-colors ${
-        active
-          ? "bg-primary-light text-primary-dark"
-          : danger
-            ? "text-subtle hover:bg-danger/8 hover:text-danger"
-            : "text-subtle hover:bg-raised hover:text-ink"
-      }`}
+      className={className}
     >
       <Icon name={icon} size={15} />
     </button>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
-import AppPreview from "./_components/app-preview";
+import AppPreview from "./app-preview";
 import { Icon } from "@/components/custom/icons";
 import Logo from "@/components/custom/logo";
 import { asset } from "@/lib/client";

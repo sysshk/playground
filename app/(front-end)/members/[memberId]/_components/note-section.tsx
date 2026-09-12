@@ -3,7 +3,6 @@
 import { EmptyState } from "@/components/custom/empty-state";
 import { formatDate } from "@/lib/client";
 import type { CoachingNote } from "@/lib/types";
-import CoachingNoteForm, { type CoachingNotePayload } from "./coaching-note-form";
 import { IconButton, Section, SectionAction } from "./section";
 
 const FIELDS = [
@@ -15,29 +14,16 @@ const FIELDS = [
 
 /** 통증·자세·움직임·숙제를 남겨 다음 수업으로 이어간다. */
 export function NoteSection({
+  memberId,
   notes,
-  editing,
-  formOpen,
-  busy,
-  serverError,
-  onToggle,
-  onEdit,
-  onSubmit,
-  onCancel,
   onDelete,
 }: {
+  memberId: string;
   notes: CoachingNote[];
-  /** 수정 중인 메모. 새로 쓰는 중이면 null */
-  editing: CoachingNote | null;
-  formOpen: boolean;
-  busy: boolean;
-  serverError: string | null;
-  onToggle: () => void;
-  onEdit: (note: CoachingNote) => void;
-  onSubmit: (payload: CoachingNotePayload) => void;
-  onCancel: () => void;
   onDelete: (note: CoachingNote) => void;
 }) {
+  const base = `/members/${memberId}/notes`;
+
   return (
     <Section
       title="코칭 메모"
@@ -47,35 +33,15 @@ export function NoteSection({
           : "통증, 자세와 움직임 평가를 다음 수업에 활용하세요."
       }
       action={
-        <SectionAction
-          icon={formOpen ? "close" : "plus"}
-          label={formOpen ? "닫기" : "메모 작성"}
-          active={formOpen}
-          onClick={onToggle}
-        />
+        <SectionAction icon="plus" label="메모 작성" href={`${base}/new`} />
       }
     >
-      {formOpen && (
-        <div className="mb-4 rounded-xl border border-line bg-raised p-4">
-          <CoachingNoteForm
-            key={editing?.id ?? "new"}
-            note={editing ?? undefined}
-            busy={busy}
-            serverError={serverError}
-            onSubmit={onSubmit}
-            onCancel={onCancel}
-          />
-        </div>
-      )}
-
       {notes.length === 0 ? (
-        !formOpen && (
-          <EmptyState
-            icon="clipboard"
-            title="코칭 메모가 없습니다"
-            description="통증·자세·움직임·숙제를 남겨 다음 수업에 이어가세요."
-          />
-        )
+        <EmptyState
+          icon="clipboard"
+          title="코칭 메모가 없습니다"
+          description="통증·자세·움직임·숙제를 남겨 다음 수업에 이어가세요."
+        />
       ) : (
         <ul className="flex flex-col gap-3">
           {notes.map((note) => (
@@ -86,7 +52,7 @@ export function NoteSection({
                   <IconButton
                     icon="pencil"
                     label="코칭 메모 수정"
-                    onClick={() => onEdit(note)}
+                    href={`${base}/${note.id}`}
                   />
                   <IconButton
                     icon="trash"

@@ -59,7 +59,7 @@ export function WorkoutSection({
               key={workout.id}
               className="overflow-hidden rounded-xl border border-line"
             >
-              <div className="flex items-center justify-between gap-3 border-b border-line bg-raised px-4 py-2.5">
+              <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
                 <p className="text-sm font-bold">
                   {formatDate(workout.date)}
                   <span className="ml-2 text-2xs font-semibold text-muted-foreground">

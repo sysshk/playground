@@ -10,8 +10,8 @@
 import { FormEvent, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/custom/icons";
-import { DatePicker } from "@/components/custom/date-picker";
-import { today } from "@/lib/client";
+import { DatePicker, HourPicker } from "@/components/custom/date-picker";
+import { completedAtFrom, today } from "@/lib/client";
 import type { WeightUnit, Workout } from "@/lib/types";
 
 /** 무게 −/+ 한 번에 움직이는 양. 원판 한 쌍(1.25kg × 2) 기준. */
@@ -32,8 +32,10 @@ interface ExerciseRow {
 export interface WorkoutPayload {
   date: string;
   memo: string | null;
-  /** 저장하면서 수업 1회를 차감할지 (새 기록일 때만 보낸다) */
+  /** 새 기록이면 항상 수업 1회를 차감한다. 잘못 저장했으면 수업 이력에서 되돌린다. */
   completeSession?: boolean;
+  /** 수업이 있었던 시각 (새 기록일 때만 보낸다) */
+  completedAt?: string;
   exercises: {
     name: string;
     sets: { reps: number; weight: number | null; unit: WeightUnit }[];
@@ -69,7 +71,6 @@ const round1 = (n: number) => Math.round(n * 10) / 10;
 
 export default function WorkoutForm({
   workout,
-  remainingSessions = 0,
   busy = false,
   serverError,
   onSubmit,
@@ -77,8 +78,6 @@ export default function WorkoutForm({
 }: {
   /** 주면 수정 모드로 연다. */
   workout?: Workout;
-  /** 남은 수업 수 — 차감 체크에 쓴다. */
-  remainingSessions?: number;
   busy?: boolean;
   serverError?: string | null;
   onSubmit: (payload: WorkoutPayload) => void;
@@ -89,10 +88,7 @@ export default function WorkoutForm({
   const [rows, setRows] = useState<ExerciseRow[]>(() => toRows(workout));
   const [error, setError] = useState<string | null>(null);
 
-  // 새 기록이면 기본으로 수업 1회를 차감한다. 개인 운동을 기록할 때만 끈다.
-  const [completeSession, setCompleteSession] = useState(
-    !workout && remainingSessions > 0,
-  );
+  const [hour, setHour] = useState(() => new Date().getHours());
 
   const patchExercise = (i: number, patch: Partial<ExerciseRow>) => {
     setRows((prev) => prev.map((r, n) => (n === i ? { ...r, ...patch } : r)));
@@ -151,18 +147,21 @@ export default function WorkoutForm({
       date,
       memo: memo.trim() || null,
       exercises,
-      ...(workout ? {} : { completeSession }),
+      ...(workout
+        ? {}
+        : { completeSession: true, completedAt: completedAtFrom(date, hour) }),
     });
   };
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-4 rounded-2xl border border-line bg-raised p-3 sm:p-5"
+      className="flex flex-col gap-4"
     >
-      <div className="flex items-center gap-2.5">
+      <div className="flex flex-wrap items-center gap-2">
         <span className="shrink-0 whitespace-nowrap text-sm font-semibold">날짜</span>
         <DatePicker value={date} onChange={setDate} max={today()} />
+        <HourPicker value={hour} onChange={setHour} ariaLabel="수업 시각" />
       </div>
 
       {rows.map((row, i) => (
@@ -224,7 +223,7 @@ export default function WorkoutForm({
               {row.sets.map((set, s) => (
                 <li
                   key={s}
-                  className="grid grid-cols-2 items-center gap-2 rounded-lg border border-line p-2 sm:flex sm:gap-3"
+                  className="grid grid-cols-2 items-center gap-2 rounded-lg border border-line p-2 sm:flex sm:min-w-0 sm:gap-3"
                 >
                   <div className="col-span-2 flex items-center justify-between sm:w-14 sm:shrink-0">
                     <span className="text-sm font-bold text-muted-foreground">{s + 1}세트</span>
@@ -317,31 +316,6 @@ export default function WorkoutForm({
         aria-label="메모"
       />
 
-      {!workout && (
-        <label
-          className={`flex min-h-12 items-center gap-3 rounded-xl border px-3.5 py-2.5 transition-colors ${
-            completeSession ? "border-primary bg-primary-light" : "border-line bg-surface"
-          } ${remainingSessions === 0 ? "opacity-60" : "cursor-pointer"}`}
-        >
-          <input
-            type="checkbox"
-            checked={completeSession}
-            disabled={remainingSessions === 0}
-            onChange={(e) => setCompleteSession(e.target.checked)}
-            className="h-5 w-5 shrink-0 accent-primary"
-          />
-          <span className="min-w-0 flex-1">
-            <span className="block text-base font-bold">저장하면서 수업 1회 차감</span>
-            <span className="block text-xs text-muted-foreground">
-              {remainingSessions === 0
-                ? "남은 수업이 없어 차감할 수 없습니다."
-                : `남은 수업 ${remainingSessions}회 → ${
-                    remainingSessions - (completeSession ? 1 : 0)
-                  }회 · 회원 혼자 한 개인 운동이면 끄세요`}
-            </span>
-          </span>
-        </label>
-      )}
 
       {(error || serverError) && (
         <p className="text-sm text-danger">{error ?? serverError}</p>
@@ -382,13 +356,13 @@ function Stepper({
     onChange(String(Math.max(min, round1(current + delta))));
 
   return (
-    <div className="flex h-11 items-center rounded-lg border border-line sm:flex-1">
+    <div className="flex h-11 min-w-0 items-center overflow-hidden rounded-lg border border-line sm:flex-1">
       <button
         type="button"
         onClick={() => bump(-step)}
         disabled={current <= min}
         aria-label={`${label} 줄이기`}
-        className="grid h-full w-11 shrink-0 place-items-center rounded-l-lg text-muted-foreground transition-colors hover:bg-raised hover:text-ink disabled:opacity-30"
+        className="grid h-full w-9 shrink-0 place-items-center rounded-l-lg sm:w-11 text-muted-foreground transition-colors hover:bg-raised hover:text-ink disabled:opacity-30"
       >
         <Icon name="minus" size={17} />
       </button>
@@ -399,15 +373,15 @@ function Stepper({
           inputMode={inputMode}
           placeholder="0"
           aria-label={label}
-          className="w-full min-w-0 bg-transparent text-right text-md font-bold tabular-nums outline-none placeholder:text-line-strong"
+          className="min-w-0 flex-1 bg-transparent text-right text-md font-bold tabular-nums outline-none placeholder:text-line-strong"
         />
-        <span className="shrink-0 pr-1 text-xs font-semibold text-muted-foreground">{unit}</span>
+        <span className="shrink-0 pr-1.5 text-xs font-semibold text-muted-foreground">{unit}</span>
       </label>
       <button
         type="button"
         onClick={() => bump(step)}
         aria-label={`${label} 늘리기`}
-        className="grid h-full w-11 shrink-0 place-items-center rounded-r-lg text-muted-foreground transition-colors hover:bg-raised hover:text-ink"
+        className="grid h-full w-9 shrink-0 place-items-center rounded-r-lg sm:w-11 text-muted-foreground transition-colors hover:bg-raised hover:text-ink"
       >
         <Icon name="plus" size={17} />
       </button>

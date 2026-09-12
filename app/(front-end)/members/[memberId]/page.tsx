@@ -7,7 +7,6 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import type { CoachingNotePayload } from "./_components/coaching-note-form";
 import { confirmCopy, type PendingAction } from "./_components/confirm-copy";
 import { ConfirmDialog } from "@/components/custom/confirm-dialog";
 import { MemberSummary } from "./_components/member-summary";
@@ -21,20 +20,13 @@ import type { MemberPayload } from "../_components/member-form";
 import { EmptyState } from "@/components/custom/empty-state";
 import { Icon } from "@/components/custom/icons";
 import { Button } from "@/components/ui/button";
-import { apiFetch, errorMessage } from "@/lib/client";
-import type { CoachingNote, MemberDetail } from "@/lib/types";
-
-/** 고른 날짜(YYYY-MM-DD)와 시(0~23)를 차감 시각으로 바꾼다. 분·초는 0으로 둔다. */
-function completedAtFrom(date: string, hour: number) {
-  const [y, m, d] = date.split("-").map(Number);
-  return new Date(y, m - 1, d, hour).toISOString();
-}
+import { apiFetch, completedAtFrom, errorMessage } from "@/lib/client";
+import type { MemberDetail } from "@/lib/types";
 
 /** 화면에 펼쳐져 있는 입력 폼. 한 번에 하나만 연다. */
 type OpenForm =
   | { kind: "member" }
   | { kind: "weight" }
-  | { kind: "note"; note: CoachingNote | null }
   | null;
 
 export default function MemberDetailPage() {
@@ -213,18 +205,6 @@ export default function MemberDetailPage() {
       "체중 기록 저장에 실패했습니다.",
     );
 
-  const handleSaveNote = (payload: CoachingNotePayload) => {
-    const editing = open?.kind === "note" ? open.note : null;
-    return save(
-      editing
-        ? `/api/members/${memberId}/notes/${editing.id}`
-        : `/api/members/${memberId}/notes`,
-      { method: editing ? "PATCH" : "POST", body: JSON.stringify(payload) },
-      editing ? "코칭 메모를 수정했습니다." : "코칭 메모를 저장했습니다.",
-      "코칭 메모 저장에 실패했습니다.",
-    );
-  };
-
   // ── 로딩 / 오류 ─────────────────────────────
 
   if (notFound) {
@@ -309,8 +289,7 @@ export default function MemberDetailPage() {
         }
       />
 
-      {/* 데스크톱에서는 기록을 넓게 쓰고, 이력·메모는 옆 레일로 보낸다. */}
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(380px,440px)] xl:items-start">
       <div className="flex min-w-0 flex-col gap-4">
       <WorkoutSection
         id="workouts"
@@ -318,6 +297,15 @@ export default function MemberDetailPage() {
         workouts={member.workouts}
         linkedWorkoutIds={linkedWorkoutIds}
         onDelete={(workout) => setPending({ type: "deleteWorkout", workout })}
+      />
+
+      </div>
+
+      <div className="flex min-w-0 flex-col gap-4">
+      <NoteSection
+        memberId={member.id}
+        notes={member.notes}
+        onDelete={(note) => setPending({ type: "deleteNote", note })}
       />
 
       <WeightSection
@@ -333,17 +321,8 @@ export default function MemberDetailPage() {
         }
       />
 
-      <NutritionPanel
-        memberId={member.id}
-        nutrition={member.nutrition}
-        suggestedWeight={latestWeight}
-        onSaved={(nutrition) =>
-          setMember((prev) => (prev ? { ...prev, nutrition } : prev))
-        }
-      />
-      </div>
+      <NutritionPanel memberId={member.id} nutrition={member.nutrition} />
 
-      <div className="flex min-w-0 flex-col gap-4">
       <SessionHistorySection
         id="session-history"
         remainingSessions={member.remainingSessions}
@@ -361,21 +340,6 @@ export default function MemberDetailPage() {
         onCancelCompletion={(completion) =>
           setPending({ type: "cancelCompletion", completion })
         }
-      />
-
-      <NoteSection
-        notes={member.notes}
-        editing={open?.kind === "note" ? open.note : null}
-        formOpen={open?.kind === "note"}
-        busy={busy}
-        serverError={formError}
-        onToggle={() =>
-          show(open?.kind === "note" ? null : { kind: "note", note: null })
-        }
-        onEdit={(note) => show({ kind: "note", note })}
-        onSubmit={handleSaveNote}
-        onCancel={() => setOpen(null)}
-        onDelete={(note) => setPending({ type: "deleteNote", note })}
       />
       </div>
       </div>

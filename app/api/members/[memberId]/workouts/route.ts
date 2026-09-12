@@ -32,12 +32,27 @@ export async function POST(request: Request, { params }: Params) {
     // 저장하면서 수업 1회를 차감할지. 회원 혼자 한 개인 운동을 기록할 때는 끈다.
     const completeSession = body.completeSession === true;
 
-    // 오늘 기록이면 지금 시각, 지난 날짜를 나중에 입력하는 거면 그날 정오(한국 시각)로 남긴다.
+    // 차감 시각은 폼에서 받는다. 없으면 오늘은 지금, 지난 날짜는 그날 정오(한국 시각).
     const kstToday = new Date(Date.now() + 9 * 60 * 60 * 1000)
       .toISOString()
       .slice(0, 10);
-    const completedAt =
-      body.date === kstToday ? new Date() : new Date(`${body.date}T12:00:00+09:00`);
+
+    let completedAt: Date;
+    if (body.completedAt) {
+      const picked = new Date(body.completedAt);
+      if (Number.isNaN(picked.getTime())) {
+        return badRequest("차감 시각이 올바르지 않습니다.");
+      }
+      if (picked.getTime() > Date.now() + 5 * 60 * 1000) {
+        return badRequest("차감 시각은 미래로 지정할 수 없습니다.");
+      }
+      completedAt = picked;
+    } else {
+      completedAt =
+        body.date === kstToday
+          ? new Date()
+          : new Date(`${body.date}T12:00:00+09:00`);
+    }
 
     const result = await prisma.$transaction(async (tx) => {
       const workout = await tx.workout.create({

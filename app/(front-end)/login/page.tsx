@@ -48,7 +48,6 @@ export default function LoginPage() {
 
   return (
     <div className="relative isolate flex min-h-screen flex-col bg-surface px-5 sm:px-8">
-      {/* 밋밋하지 않게 폼 뒤로 옅은 파란 빛을 깐다. 홈의 파란 악센트와 같은 계열. */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(70%_55%_at_50%_30%,#dce9fd_0%,rgb(234_242_254/0.55)_45%,transparent_100%)]"
@@ -63,7 +62,6 @@ export default function LoginPage() {
         </Link>
       </header>
 
-      {/* 화면 한가운데에 폼 하나만 둔다. 카드 테두리 없이 흰 바탕 위에 바로 올린다. */}
       <main className="flex flex-1 items-center justify-center pb-16">
         <div className="w-full max-w-[360px]">
           <div className="flex flex-col items-center text-center">

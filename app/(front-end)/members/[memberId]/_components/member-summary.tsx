@@ -92,7 +92,7 @@ export function MemberSummary({
         </div>
       ) : (
         <>
-          {/* 남은 수업 — 이 화면의 주인공. 테마와 상관없이 늘 어둡다. */}
+          {/* 남은 수업 */}
           <div className="flex flex-col gap-4 rounded-2xl bg-hero p-5 text-hero-foreground">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <p className="flex items-baseline gap-2.5">
@@ -125,7 +125,6 @@ export function MemberSummary({
               </div>
             </div>
 
-            {/* 막대는 블록 전체를 가로지른다. 왼쪽 반만 차지하면 잘린 것처럼 보인다. */}
             <div className="flex flex-col gap-2">
               <div
                 className="h-[7px] overflow-hidden rounded-full bg-white/12"
@@ -157,7 +156,7 @@ export function MemberSummary({
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-3 gap-2.5">
             <Stat
               label="최신 체중"
               value={latestWeight !== null ? `${latestWeight}` : "—"}

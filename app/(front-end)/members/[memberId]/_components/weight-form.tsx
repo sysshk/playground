@@ -48,7 +48,7 @@ export default function WeightForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-3 rounded-xl border border-line bg-raised p-4"
+      className="flex flex-col gap-3"
     >
       <div className="flex flex-wrap items-center gap-2.5">
         <DatePicker

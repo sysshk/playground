@@ -103,3 +103,9 @@ export function formatDateTime(iso: string) {
     minute: "2-digit",
   });
 }
+
+/** 고른 날짜(YYYY-MM-DD)와 시(0~23)를 차감 시각으로 바꾼다. 분·초는 0으로 둔다. */
+export function completedAtFrom(date: string, hour: number) {
+  const [y, m, d] = date.split("-").map(Number);
+  return new Date(y, m - 1, d, hour).toISOString();
+}

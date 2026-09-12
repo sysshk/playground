@@ -17,8 +17,6 @@ import {
   LogOut,
   Menu,
   Minus,
-  PanelLeftClose,
-  PanelLeftOpen,
   Pencil,
   Plus,
   RotateCcw,
@@ -61,8 +59,6 @@ const ICONS = {
   clock: Clock,
   undo: RotateCcw,
   menu: Menu,
-  panelClose: PanelLeftClose,
-  panelOpen: PanelLeftOpen,
   settings: Settings,
 } as const;
 

@@ -8,24 +8,24 @@ import { Button } from "@/components/ui/button";
 import { apiFetch, errorMessage, formatDate } from "@/lib/client";
 import type { MemberDetail } from "@/lib/types";
 import { EditorFrame } from "../../_components/editor-frame";
-import WorkoutForm, {
-  type WorkoutPayload,
-} from "../../_components/workout-form";
+import CoachingNoteForm, {
+  type CoachingNotePayload,
+} from "../../_components/coaching-note-form";
 
 /**
- * 운동 기록 작성·수정 화면.
+ * 코칭 메모 작성·수정 화면.
  *
- * 종목과 세트가 늘어나면 폼이 화면 하나를 통째로 쓴다. 회원 상세 안에서
- * 펼치면 아래 내용이 한꺼번에 밀려나 어디를 보고 있었는지 놓치게 된다.
- * 체중·코칭 메모처럼 몇 줄짜리 입력은 지금처럼 그 자리에서 연다.
+ * 통증·자세·움직임·숙제를 자유 서술로 적는 자리라 몇 분이 걸린다. 회원 상세
+ * 안에서 펼치면 주소가 없어 뒤로 가기로 닫을 수 없고, 쓰던 내용이 경고 없이
+ * 사라진다.
  */
-export function WorkoutEditor({
+export function NoteEditor({
   memberId,
-  workoutId,
+  noteId,
 }: {
   memberId: string;
-  /** 주면 수정, 없으면 새 기록 */
-  workoutId?: string;
+  /** 주면 수정, 없으면 새 메모 */
+  noteId?: string;
 }) {
   const router = useRouter();
   const [member, setMember] = useState<MemberDetail | null>(null);
@@ -50,50 +50,35 @@ export function WorkoutEditor({
     };
   }, [memberId]);
 
-  const workout = workoutId
-    ? member?.workouts.find((w) => w.id === workoutId)
-    : undefined;
+  const note = noteId ? member?.notes.find((n) => n.id === noteId) : undefined;
 
   const handleSubmit = useCallback(
-    async (payload: WorkoutPayload) => {
+    async (payload: CoachingNotePayload) => {
       setBusy(true);
       setServerError(null);
       try {
-        const res = await apiFetch<{ completed?: boolean }>(
-          workoutId
-            ? `/api/members/${memberId}/workouts/${workoutId}`
-            : `/api/members/${memberId}/workouts`,
+        await apiFetch(
+          noteId
+            ? `/api/members/${memberId}/notes/${noteId}`
+            : `/api/members/${memberId}/notes`,
           {
-            method: workoutId ? "PATCH" : "POST",
+            method: noteId ? "PATCH" : "POST",
             body: JSON.stringify(payload),
           },
         );
-
-        if (workoutId) {
-          toast("운동 기록을 수정했습니다.");
-        } else if (payload.completeSession) {
-          // 차감을 요청했는데 남은 수업이 없었으면 기록만 저장됐다는 걸 알린다.
-          toast(
-            res.completed === true
-              ? "운동 기록을 저장하고 수업 1회를 차감했습니다."
-              : "운동 기록은 저장했지만 남은 수업이 없어 차감하지 못했습니다.",
-          );
-        } else {
-          toast("운동 기록을 저장했습니다.");
-        }
-
+        toast(noteId ? "코칭 메모를 수정했습니다." : "코칭 메모를 저장했습니다.");
         router.replace(back);
       } catch (e) {
-        setServerError(errorMessage(e, "운동 기록 저장에 실패했습니다."));
+        setServerError(errorMessage(e, "코칭 메모 저장에 실패했습니다."));
         setBusy(false);
       }
     },
-    [back, memberId, router, workoutId],
+    [back, memberId, noteId, router],
   );
 
   if (loadError) {
     return (
-      <EditorFrame back={back} title="운동 기록">
+      <EditorFrame back={back} title="코칭 메모">
         <div className="rounded-2xl border-[1.5px] border-edge bg-surface p-6 text-center">
           <p className="text-base font-bold">{loadError}</p>
           <Button asChild variant="outline" className="mt-4">
@@ -106,18 +91,18 @@ export function WorkoutEditor({
 
   if (!member) {
     return (
-      <EditorFrame back={back} title="운동 기록">
+      <EditorFrame back={back} title="코칭 메모">
         <div className="h-[420px] animate-pulse rounded-2xl border-[1.5px] border-edge bg-surface" />
       </EditorFrame>
     );
   }
 
-  // 주소를 직접 쳐서 없는 기록으로 들어온 경우
-  if (workoutId && !workout) {
+  // 주소를 직접 쳐서 없는 메모로 들어온 경우
+  if (noteId && !note) {
     return (
-      <EditorFrame back={back} title="운동 기록" name={member.name}>
+      <EditorFrame back={back} title="코칭 메모" name={member.name}>
         <div className="rounded-2xl border-[1.5px] border-edge bg-surface p-6 text-center">
-          <p className="text-base font-bold">기록을 찾을 수 없습니다.</p>
+          <p className="text-base font-bold">메모를 찾을 수 없습니다.</p>
           <Button asChild variant="outline" className="mt-4">
             <Link href={back}>회원으로 돌아가기</Link>
           </Button>
@@ -129,17 +114,17 @@ export function WorkoutEditor({
   return (
     <EditorFrame
       back={back}
-      title={workout ? "운동 기록 수정" : "운동 기록"}
+      title={note ? "코칭 메모 수정" : "코칭 메모"}
       name={member.name}
       subtitle={
-        workout
-          ? `${formatDate(workout.date)} 기록을 고칩니다.`
-          : "종목과 세트를 남기면 수업이 함께 차감됩니다."
+        note
+          ? `${formatDate(note.date)} 메모를 고칩니다.`
+          : "통증, 자세와 움직임 평가를 다음 수업에 활용하세요."
       }
     >
-      <div>
-        <WorkoutForm
-          workout={workout}
+      <div className="rounded-2xl border-[1.5px] border-edge bg-surface p-4 sm:p-5">
+        <CoachingNoteForm
+          note={note}
           busy={busy}
           serverError={serverError}
           onSubmit={handleSubmit}

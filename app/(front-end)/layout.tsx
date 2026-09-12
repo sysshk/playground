@@ -2,8 +2,8 @@
 
 import { usePathname } from 'next/navigation';
 import { Toaster } from '@/components/ui/sonner';
-import AppShell from './_components/app-shell';
-import SessionProvider from './_components/session-provider';
+import FrontSidebar from '@/components/custom/front-sidebar';
+import SessionProvider from '@/components/custom/session-provider';
 
 // 셸 없이 그리는 화면들.
 // "/"는 소개 페이지라 전폭 히어로와 자체 헤더를 쓴다. 앱 셸의
@@ -20,7 +20,7 @@ export default function FrontEndLayout({
 
   return (
     <SessionProvider>
-      {bare ? children : <AppShell>{children}</AppShell>}
+      {bare ? children : <FrontSidebar>{children}</FrontSidebar>}
       <Toaster position="bottom-center" />
     </SessionProvider>
   );

@@ -55,16 +55,7 @@ export default function SessionCompleteForm({
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex flex-col gap-3 rounded-xl border border-line bg-raised p-4"
-    >
-      <p className="text-xs leading-relaxed text-muted-foreground">
-        상담이나 체형 평가처럼 남길 운동 기록이 없는 날에 씁니다. 운동을 했다면
-        기록을 저장할 때 함께 차감하세요.
-      </p>
-
-      {/* 폰에서는 한 줄에 두 개가 안 들어간다. 좁으면 세로로 쌓는다. */}
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
         <DatePicker
           value={date}
