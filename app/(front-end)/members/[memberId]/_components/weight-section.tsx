@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { formatDate } from "@/lib/client";
+import { formatDateShort } from "@/lib/client";
 import type { WeightRecord } from "@/lib/types";
 import { IconButton, Section, SectionAction } from "./section";
 import WeightForm, { type WeightPayload } from "./weight-form";
@@ -83,7 +83,7 @@ export function WeightSection({
                     kg
                   </span>
                   <span className="ml-2.5 text-xs font-medium text-muted-foreground">
-                    {formatDate(record.date)}
+                    {formatDateShort(record.date)}
                   </span>
                 </p>
                 {record.memo && (

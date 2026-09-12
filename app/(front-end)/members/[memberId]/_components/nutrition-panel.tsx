@@ -47,11 +47,11 @@ export default function NutritionPanel({
         />
       ) : (
           <div className="flex flex-col gap-4">
-            <div className="flex items-baseline justify-between gap-3 rounded-xl bg-primary-light px-4 py-3">
+            <div className="flex items-center justify-between gap-3 rounded-xl bg-primary-light px-4 py-3">
               <p className="text-xs font-bold text-primary-dark dark:text-primary-bright">
-                목표 섭취칼로리
+                목표 섭취 칼로리
               </p>
-              <p className="text-xl font-extrabold tracking-tight">
+              <p className="text-xl font-extrabold leading-none tracking-tight">
                 {nutrition.targetCalories}
                 <span className="ml-0.5 text-2xs font-bold text-muted-foreground">
                   kcal

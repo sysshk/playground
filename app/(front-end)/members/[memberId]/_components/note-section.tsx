@@ -1,7 +1,7 @@
 "use client";
 
 import { EmptyState } from "@/components/custom/empty-state";
-import { formatDate } from "@/lib/client";
+import { formatDateShort } from "@/lib/client";
 import type { CoachingNote } from "@/lib/types";
 import { IconButton, Section, SectionAction } from "./section";
 
@@ -47,7 +47,7 @@ export function NoteSection({
           {notes.map((note) => (
             <li key={note.id} className="border-b border-line py-4 last:border-0 last:pb-0 first:pt-0">
               <div className="flex items-start justify-between gap-3">
-                <p className="text-sm font-bold">{formatDate(note.date)}</p>
+                <p className="text-sm font-bold">{formatDateShort(note.date)}</p>
                 <div className="flex gap-1">
                   <IconButton
                     icon="pencil"

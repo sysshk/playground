@@ -2,7 +2,7 @@
 
 import MemberForm, { type MemberPayload } from "../../_components/member-form";
 import { Icon } from "@/components/custom/icons";
-import { formatDay } from "@/lib/client";
+import { formatDayShort } from "@/lib/client";
 import type { MemberDetail } from "@/lib/types";
 import { IconButton } from "./section";
 
@@ -65,7 +65,7 @@ export function MemberSummary({
               {totalSessions > 0
                 ? `등록 ${totalSessions}회 중 ${used}회 사용`
                 : "등록된 수업 없음"}
-              {lastCompletedAt && ` · 최근 수업 ${formatDay(lastCompletedAt)}`}
+              {lastCompletedAt && ` · 최근 수업 ${formatDayShort(lastCompletedAt)}`}
             </span>
           </p>
           {left === 0 && totalSessions > 0 && (
