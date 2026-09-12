@@ -95,7 +95,7 @@ export default function CoachingNoteForm({
       {FIELDS.map(({ key, label, placeholder }) => (
         <Field key={key} label={label}>
           <Textarea
-            className="min-h-20 resize-y"
+            className="h-24 resize-none"
             value={values[key]}
             onChange={(e) => {
               setValues((prev) => ({ ...prev, [key]: e.target.value }));

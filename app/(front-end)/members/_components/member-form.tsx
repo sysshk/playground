@@ -131,7 +131,7 @@ export default function MemberForm({
 
       <Field label="특이사항">
         <Textarea
-          className="min-h-[88px] resize-y"
+          className="h-24 resize-none"
           value={values.memo}
           onChange={(e) => set("memo", e.target.value)}
           placeholder="컨디션, 일정, 주의사항 등"
