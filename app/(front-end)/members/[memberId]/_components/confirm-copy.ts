@@ -3,33 +3,15 @@ import type { CoachingNote, SessionCompletion, Workout } from "@/lib/types";
 
 /** 되돌릴 수 없는 동작만 확인 창을 띄운다. 입력은 전부 화면 안에서 한다. */
 export type PendingAction =
-  | { type: "completeSession"; date: string; time: number; reason: string | null }
   | { type: "deleteMember" }
-  | { type: "deleteWorkout"; workout: Workout }
+  | { type: "deleteWorkout"; workout: Workout; completionId?: string }
   | { type: "deleteWeight"; id: string; date: string }
   | { type: "deleteNote"; note: CoachingNote }
   | { type: "cancelCompletion"; completion: SessionCompletion };
 
-/** 0~23 → "오후 2시" */
-function hourLabel(hour: number) {
-  if (hour === 12) return "정오";
-  return hour < 12 ? `오전 ${hour}시` : `오후 ${hour - 12}시`;
-}
-
 /** 확인 창에 띄울 문구 */
 export function confirmCopy(pending: PendingAction | null, memberName: string) {
   switch (pending?.type) {
-    case "completeSession":
-      return {
-        title: "수업 완료",
-        message: `${formatDate(pending.date)} ${hourLabel(pending.time)}, ${memberName} 회원의 수업을 운동 기록 없이 완료할까요?`,
-        hint: pending.reason
-          ? `사유: ${pending.reason} · 남은 수업이 1회 줄고 이력에 남습니다.`
-          : "남은 수업이 1회 줄고 이력에 남습니다. 되돌리려면 이력에서 되돌리기를 누르세요.",
-        confirmLabel: "완료하기",
-        tone: "primary" as const,
-        icon: "minus" as const,
-      };
     case "deleteMember":
       return {
         title: "회원 삭제",
@@ -38,9 +20,11 @@ export function confirmCopy(pending: PendingAction | null, memberName: string) {
       };
     case "deleteWorkout":
       return {
-        title: "운동 기록 삭제",
-        message: `${formatDate(pending.workout.date)} 운동 기록을 삭제하시겠습니까?`,
-        hint: "삭제된 기록은 복구할 수 없습니다. 이 기록으로 완료한 수업은 그대로 남으니, 되돌리려면 수업 이력에서 되돌리기를 누르세요.",
+        title: "수업 기록 삭제",
+        message: `${formatDate(pending.workout.date)} 수업 기록을 삭제하시겠습니까?`,
+        hint: pending.completionId
+          ? "종목과 세트가 지워지고 남은 수업이 1회 늘어납니다. 복구할 수 없습니다."
+          : "삭제된 기록은 복구할 수 없습니다.",
       };
     case "deleteWeight":
       return {
@@ -56,12 +40,9 @@ export function confirmCopy(pending: PendingAction | null, memberName: string) {
       };
     case "cancelCompletion":
       return {
-        title: "수업 완료 되돌리기",
-        message: `${formatDayHour(pending.completion.completedAt)} 수업 완료를 되돌릴까요?`,
-        hint: "남은 수업이 1회 늘어납니다. 연결된 운동 기록은 지워지지 않고 그대로 남습니다.",
-        confirmLabel: "되돌리기",
-        tone: "primary" as const,
-        icon: "undo" as const,
+        title: "수업 기록 삭제",
+        message: `${formatDayHour(pending.completion.completedAt)} 수업 기록을 삭제하시겠습니까?`,
+        hint: "남은 수업이 1회 늘어납니다.",
       };
     default:
       return { title: "", message: "" };

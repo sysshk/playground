@@ -79,7 +79,21 @@ export function WorkoutEditor({
       setBusy(true);
       setServerError(null);
       try {
-        const res = await apiFetch<{ completed?: boolean }>(
+        // 종목이 없으면 남길 운동이 없던 날이다. 수업 완료만 남긴다.
+        if (payload.exercises.length === 0) {
+          await apiFetch(`/api/members/${memberId}/complete`, {
+            method: "POST",
+            body: JSON.stringify({
+              completedAt: payload.completedAt,
+              reason: payload.reason ?? null,
+            }),
+          });
+          toast("수업 1회를 기록했습니다.");
+          router.replace(back);
+          return;
+        }
+
+        await apiFetch(
           workoutId
             ? `/api/members/${memberId}/workouts/${workoutId}`
             : `/api/members/${memberId}/workouts`,
@@ -89,22 +103,12 @@ export function WorkoutEditor({
           },
         );
 
-        if (workoutId) {
-          toast("운동 기록을 수정했습니다.");
-        } else if (payload.completeSession) {
-          // 차감을 요청했는데 남은 수업이 없었으면 기록만 저장됐다는 걸 알린다.
-          toast(
-            res.completed === true
-              ? "운동 기록을 저장하고 수업 1회를 완료했습니다."
-              : "운동 기록은 저장했지만 남은 수업이 없어 수업은 완료하지 못했습니다.",
-          );
-        } else {
-          toast("운동 기록을 저장했습니다.");
-        }
-
+        toast(
+          workoutId ? "수업 기록을 수정했습니다." : "수업 1회를 기록했습니다.",
+        );
         router.replace(back);
       } catch (e) {
-        setServerError(errorMessage(e, "운동 기록 저장에 실패했습니다."));
+        setServerError(errorMessage(e, "수업 기록 저장에 실패했습니다."));
         setBusy(false);
       }
     },
@@ -113,7 +117,7 @@ export function WorkoutEditor({
 
   if (loadError) {
     return (
-      <EditorFrame back={back} title="운동 기록">
+      <EditorFrame back={back} title="수업 기록">
         <div className="rounded-2xl border-[1.5px] border-edge bg-surface p-6 text-center">
           <p className="text-base font-bold">{loadError}</p>
           <Button asChild variant="outline" className="mt-4">
@@ -126,7 +130,7 @@ export function WorkoutEditor({
 
   if (!member) {
     return (
-      <EditorFrame back={back} title="운동 기록">
+      <EditorFrame back={back} title="수업 기록">
         <div className="h-[420px] animate-pulse rounded-2xl border-[1.5px] border-edge bg-surface" />
       </EditorFrame>
     );
@@ -135,7 +139,7 @@ export function WorkoutEditor({
   // 주소를 직접 쳐서 없는 기록으로 들어온 경우
   if (workoutId && !workout) {
     return (
-      <EditorFrame back={back} title="운동 기록" name={member.name}>
+      <EditorFrame back={back} title="수업 기록" name={member.name}>
         <div className="rounded-2xl border-[1.5px] border-edge bg-surface p-6 text-center">
           <p className="text-base font-bold">기록을 찾을 수 없습니다.</p>
           <Button asChild variant="outline" className="mt-4">
@@ -149,17 +153,29 @@ export function WorkoutEditor({
   return (
     <EditorFrame
       back={back}
-      title={workout ? "운동 기록 수정" : "운동 기록"}
+      title={workout ? "수업 기록 수정" : "수업 기록"}
       name={member.name}
       subtitle={
         workout
           ? `${formatDate(workout.date)} 기록을 고칩니다.`
-          : "종목과 세트를 남기면 수업도 함께 완료됩니다."
+          : "종목을 남기면 수업 1회가 함께 기록됩니다. 상담처럼 남길 운동이 없는 날은 종목 없이 저장하세요."
       }
       aside={
         !workout && (
-          <p className="flex shrink-0 items-baseline gap-1.5 rounded-xl bg-primary-light px-3 py-2">
-            <span className="text-xs font-bold text-primary-dark dark:text-primary-bright">
+          <p
+            className={`flex shrink-0 items-baseline gap-1.5 rounded-xl px-3 py-2 ${
+              member.remainingSessions === 0
+                ? "bg-danger/10"
+                : "bg-primary-light"
+            }`}
+          >
+            <span
+              className={`text-xs font-bold ${
+                member.remainingSessions === 0
+                  ? "text-danger"
+                  : "text-primary-dark dark:text-primary-bright"
+              }`}
+            >
               남은 수업
             </span>
             <span className="text-lg font-extrabold leading-none tracking-[-0.02em]">
@@ -170,7 +186,14 @@ export function WorkoutEditor({
         )
       }
     >
-      <div>
+      <div className="flex flex-col gap-4">
+        {!workout && member.remainingSessions === 0 && (
+          <p className="rounded-xl bg-danger/10 px-4 py-3 text-sm font-semibold leading-relaxed text-danger">
+            남은 수업이 없어 기록을 저장할 수 없습니다. 회원 정보에서 수업
+            횟수를 먼저 늘려 주세요.
+          </p>
+        )}
+
         <WorkoutForm
           workout={workout}
           lastSets={lastSets}

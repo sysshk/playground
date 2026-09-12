@@ -86,6 +86,37 @@ export function formatDayHour(iso: string) {
   return `${formatDay(iso)} ${hour}`;
 }
 
+const WEEKDAY = ["일", "월", "화", "수", "목", "금", "토"];
+
+/** 목록에 쓰는 짧은 날짜 — "9월 11일 (목)". 올해가 아닐 때만 연도를 붙인다. */
+function shortLabel(parsed: Date) {
+  const year =
+    parsed.getFullYear() === new Date().getFullYear()
+      ? ""
+      : `${parsed.getFullYear()}년 `;
+  return `${year}${parsed.getMonth() + 1}월 ${parsed.getDate()}일 (${WEEKDAY[parsed.getDay()]})`;
+}
+
+/** YYYY-MM-DD → "9월 11일 (목)" */
+export function formatDateShort(date: string) {
+  const parsed = new Date(`${date}T00:00:00`);
+  return Number.isNaN(parsed.getTime()) ? date : shortLabel(parsed);
+}
+
+/** ISO 타임스탬프 → "9월 11일 (목)" */
+export function formatDayShort(iso: string) {
+  const parsed = new Date(iso);
+  return Number.isNaN(parsed.getTime()) ? iso : shortLabel(parsed);
+}
+
+/** ISO 타임스탬프 → "오후 3시" */
+export function formatHour(iso: string) {
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) return "";
+  const h = parsed.getHours();
+  return h === 12 ? "정오" : h < 12 ? `오전 ${h}시` : `오후 ${h - 12}시`;
+}
+
 /** ISO 타임스탬프 → "2026. 9. 11. 오후 3:20" */
 export function formatDateTime(iso: string) {
   const parsed = new Date(iso);

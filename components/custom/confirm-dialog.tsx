@@ -1,6 +1,5 @@
 "use client";
 
-import { Icon, type IconName } from "@/components/custom/icons";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,7 +12,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 /**
- * 되돌릴 수 없는 동작(삭제, 수업 차감)만 확인한다. 입력은 전부 화면 안에서 한다.
+ * 되돌릴 수 없는 동작만 확인한다. 입력은 전부 화면 안에서 한다.
  * 처리 중에는 닫히지 않게 막는다 — 요청이 끝난 뒤 부모가 open을 내린다.
  */
 export function ConfirmDialog({
@@ -23,7 +22,6 @@ export function ConfirmDialog({
   hint,
   confirmLabel = "삭제하기",
   tone = "danger",
-  icon,
   busy = false,
   onConfirm,
   onCancel,
@@ -34,14 +32,11 @@ export function ConfirmDialog({
   hint?: string;
   confirmLabel?: string;
   tone?: "danger" | "primary";
-  /** 무슨 동작인지 한눈에 알리는 아이콘. 없으면 성격에 맞는 기본값을 쓴다. */
-  icon?: IconName;
   busy?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
   const danger = tone === "danger";
-  const mark: IconName = icon ?? (danger ? "alert" : "check");
 
   return (
     <AlertDialog
@@ -50,37 +45,29 @@ export function ConfirmDialog({
         if (!next && !busy) onCancel();
       }}
     >
-      <AlertDialogContent>
-        <AlertDialogHeader className="place-items-start gap-3 text-left">
-          <span
-            className={`grid size-10 place-items-center rounded-xl ${
-              danger ? "bg-danger/10 text-danger" : "bg-primary-light text-primary"
-            }`}
-          >
-            <Icon name={mark} size={20} />
-          </span>
-
-          <div className="flex flex-col gap-1.5 text-left">
-            <AlertDialogTitle className="text-lg font-extrabold tracking-[-0.02em]">
-              {title}
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-base leading-relaxed text-foreground">
-              {message}
-            </AlertDialogDescription>
-            {hint && (
-              <p className="text-sm leading-relaxed text-muted-foreground">{hint}</p>
-            )}
-          </div>
+      <AlertDialogContent className="flex w-[calc(100vw-2rem)] max-w-md flex-col gap-5 p-6 shadow-float sm:max-w-md">
+        <AlertDialogHeader className="flex flex-col place-items-start gap-2 text-left sm:place-items-start sm:text-left">
+          <AlertDialogTitle className="text-lg font-extrabold tracking-[-0.02em]">
+            {title}
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-sm leading-relaxed text-ink">
+            {message}
+          </AlertDialogDescription>
+          {hint && (
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              {hint}
+            </p>
+          )}
         </AlertDialogHeader>
 
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={busy} className="h-11 flex-1 sm:flex-none sm:px-5">
+        <AlertDialogFooter className="mx-0 mt-0 mb-0 flex-row justify-end gap-2.5 rounded-none border-0 bg-transparent p-0">
+          <AlertDialogCancel disabled={busy} className="h-10 px-5">
             취소
           </AlertDialogCancel>
           <AlertDialogAction
             variant={danger ? "destructive" : "default"}
             disabled={busy}
-            className={`h-11 flex-1 sm:flex-none sm:px-5 ${
+            className={`h-10 px-5 ${
               danger ? "bg-danger text-white hover:bg-danger-dark" : ""
             }`}
             onClick={(e) => {

@@ -12,15 +12,14 @@ import { ConfirmDialog } from "@/components/custom/confirm-dialog";
 import { MemberSummary } from "./_components/member-summary";
 import { NoteSection } from "./_components/note-section";
 import NutritionPanel from "./_components/nutrition-panel";
-import { SessionHistorySection } from "./_components/session-history-section";
+import { SessionSection } from "./_components/session-section";
 import { WeightSection } from "./_components/weight-section";
 import type { WeightPayload } from "./_components/weight-form";
-import { WorkoutSection } from "./_components/workout-section";
 import type { MemberPayload } from "../_components/member-form";
 import { EmptyState } from "@/components/custom/empty-state";
 import { Icon } from "@/components/custom/icons";
 import { Button } from "@/components/ui/button";
-import { apiFetch, completedAtFrom, errorMessage } from "@/lib/client";
+import { apiFetch, errorMessage } from "@/lib/client";
 import type { MemberDetail } from "@/lib/types";
 
 /** 화면에 펼쳐져 있는 입력 폼. 한 번에 하나만 연다. */
@@ -41,7 +40,6 @@ export default function MemberDetailPage() {
   const [open, setOpen] = useState<OpenForm>(null);
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [standaloneOpen, setStandaloneOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoadError(null);
@@ -107,27 +105,11 @@ export default function MemberDetailPage() {
     }
 
     const jobs: Record<string, [string, RequestInit, string, string]> = {
-      completeSession: [
-        `${path}/complete`,
-        {
-          method: "POST",
-          body: JSON.stringify(
-            pending.type === "completeSession"
-              ? {
-                  completedAt: completedAtFrom(pending.date, pending.time),
-                  reason: pending.reason,
-                }
-              : {},
-          ),
-        },
-        "수업 1회를 완료했습니다.",
-        "수업 완료에 실패했습니다.",
-      ],
       deleteWorkout: [
         `${path}/workouts/${pending.type === "deleteWorkout" ? pending.workout.id : ""}`,
         { method: "DELETE" },
-        "운동 기록을 삭제했습니다.",
-        "운동 기록 삭제에 실패했습니다.",
+        "수업 기록을 삭제했습니다.",
+        "수업 기록 삭제에 실패했습니다.",
       ],
       deleteWeight: [
         `${path}/weights/${pending.type === "deleteWeight" ? pending.id : ""}`,
@@ -144,21 +126,26 @@ export default function MemberDetailPage() {
       cancelCompletion: [
         `${path}/complete/${pending.type === "cancelCompletion" ? pending.completion.id : ""}`,
         { method: "DELETE" },
-        "수업 완료를 되돌렸습니다. 남은 수업이 1회 늘었습니다.",
-        "되돌리기에 실패했습니다.",
+        "수업 기록을 삭제했습니다. 남은 수업이 1회 늘었습니다.",
+        "수업 기록 삭제에 실패했습니다.",
       ],
     };
 
     const [url, init, ok, fail] = jobs[pending.type];
+    // 기록과 수업은 한 줄로 보이므로 함께 지운다. 기록만 지우고 수업이
+    // 남으면 화면에는 사라졌는데 횟수는 그대로인 상태가 된다.
+    const linked =
+      pending.type === "deleteWorkout" ? pending.completionId : undefined;
+
     const done = await run(
       async () => {
         await apiFetch(url, init);
+        if (linked) await apiFetch(`${path}/complete/${linked}`, { method: "DELETE" });
       },
-      ok,
+      linked ? "수업 기록을 삭제했습니다. 남은 수업이 1회 늘었습니다." : ok,
       fail,
     );
     if (!done) toast(formError ?? fail);
-    if (done && pending.type === "completeSession") setStandaloneOpen(false);
     setPending(null);
   };
 
@@ -239,11 +226,6 @@ export default function MemberDetailPage() {
   const totalSessions = member.remainingSessions + member.completions.length;
   const lastCompletedAt = member.completions[0]?.completedAt ?? null;
 
-  // 수업을 차감하며 저장한 운동 기록 — 카드에 뱃지로 표시한다.
-  const linkedWorkoutIds = new Set(
-    member.completions.flatMap((c) => (c.workoutId ? [c.workoutId] : [])),
-  );
-
   return (
     <div className="mx-auto flex w-full max-w-[760px] flex-col gap-7">
       <Link
@@ -268,29 +250,16 @@ export default function MemberDetailPage() {
         onCancel={() => setOpen(null)}
       />
 
-      <WorkoutSection
-        id="workouts"
+      <SessionSection
+        id="sessions"
         memberId={member.id}
-        workouts={member.workouts}
-        linkedWorkoutIds={linkedWorkoutIds}
-        onDelete={(workout) => setPending({ type: "deleteWorkout", workout })}
-      />
-
-      <SessionHistorySection
-        id="session-history"
-        remainingSessions={member.remainingSessions}
         completions={member.completions}
-        standaloneOpen={standaloneOpen}
+        workouts={member.workouts}
         busy={busy}
-        serverError={formError}
-        onToggleStandalone={() => {
-          setFormError(null);
-          setStandaloneOpen((v) => !v);
-        }}
-        onComplete={({ date, time, reason }) =>
-          setPending({ type: "completeSession", date, time, reason })
+        onDeleteWorkout={(workout, completionId) =>
+          setPending({ type: "deleteWorkout", workout, completionId })
         }
-        onCancelCompletion={(completion) =>
+        onDeleteCompletion={(completion) =>
           setPending({ type: "cancelCompletion", completion })
         }
       />

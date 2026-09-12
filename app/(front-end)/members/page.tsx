@@ -317,7 +317,6 @@ export default function MembersPage() {
         busy={busy}
         title="회원 삭제"
         message={`선택한 회원 ${picked.size}명을 삭제할까요?`}
-        icon="trash"
         onConfirm={handleDelete}
         onCancel={() => setConfirming(false)}
       />

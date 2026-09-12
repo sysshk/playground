@@ -82,6 +82,7 @@ export function IconButton({
   href,
   danger = false,
   active = false,
+  disabled = false,
 }: {
   icon: IconName;
   label: string;
@@ -90,8 +91,9 @@ export function IconButton({
   href?: string;
   danger?: boolean;
   active?: boolean;
+  disabled?: boolean;
 }) {
-  const className = `grid size-9 shrink-0 place-items-center rounded-lg transition-colors ${
+  const className = `grid size-9 shrink-0 place-items-center rounded-lg transition-colors disabled:pointer-events-none disabled:opacity-40 ${
     active
       ? "bg-primary-light text-primary-dark dark:text-primary-bright"
       : danger
@@ -111,6 +113,7 @@ export function IconButton({
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       title={label}
       aria-label={label}
       className={className}

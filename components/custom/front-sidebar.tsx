@@ -337,7 +337,6 @@ function Account() {
         message="로그아웃하시겠습니까?"
         hint="다시 쓰려면 아이디와 비밀번호를 다시 입력해야 합니다."
         confirmLabel="로그아웃"
-        icon="logout"
         onConfirm={logout}
         onCancel={() => setConfirming(false)}
       />

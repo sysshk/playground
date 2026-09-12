@@ -29,10 +29,7 @@ export async function POST(request: Request, { params }: Params) {
     const parsed = parseExercises(body.exercises);
     if ("error" in parsed) return badRequest(parsed.error);
 
-    // 저장하면서 수업 1회를 차감할지. 회원 혼자 한 개인 운동을 기록할 때는 끈다.
-    const completeSession = body.completeSession === true;
-
-    // 차감 시각은 폼에서 받는다. 없으면 오늘은 지금, 지난 날짜는 그날 정오(한국 시각).
+    // 수업 시각은 폼에서 받는다. 없으면 오늘은 지금, 지난 날짜는 그날 정오(한국 시각).
     const kstToday = new Date(Date.now() + 9 * 60 * 60 * 1000)
       .toISOString()
       .slice(0, 10);
@@ -70,20 +67,29 @@ export async function POST(request: Request, { params }: Params) {
         },
       });
 
-      if (!completeSession) return { workout, completed: false };
-
-      // 남은 수업이 없으면 기록만 남기고 차감은 건너뛴다. 기록까지 막을 이유는 없다.
+      // 기록 한 건이 곧 수업 한 번이다. 차감하지 못하면 기록도 남기지 않는다 —
+      // 기록만 남으면 목록에는 있는데 횟수는 그대로인 상태가 된다.
       const { count } = await tx.member.updateMany({
         where: { id: memberId, remainingSessions: { gt: 0 } },
         data: { remainingSessions: { decrement: 1 } },
       });
-      if (count === 0) return { workout, completed: false };
+      if (count === 0) return null;
 
       await tx.sessionCompletion.create({
         data: { memberId, workoutId: workout.id, completedAt },
       });
       return { workout, completed: true };
     });
+
+    if (!result) {
+      return NextResponse.json(
+        {
+          error:
+            "남은 수업이 없습니다. 회원 정보에서 수업 횟수를 늘린 뒤 기록해 주세요.",
+        },
+        { status: 409 },
+      );
+    }
 
     return NextResponse.json(result, { status: 201 });
   } catch (e) {

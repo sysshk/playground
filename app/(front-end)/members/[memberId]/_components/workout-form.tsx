@@ -18,6 +18,9 @@ import type { WeightUnit, Workout } from "@/lib/types";
 /** 무게 −/+ 한 번에 움직이는 양. 원판 한 쌍(1.25kg × 2) 기준. */
 const WEIGHT_STEP = 2.5;
 
+/** 종목 없이 수업만 남길 때 고르는 사유. 폰에서 키보드를 올리지 않고 넣는다. */
+const QUICK_REASONS = ["상담", "체형 평가", "노쇼"];
+
 interface SetRow {
   reps: string;
   weight: string;
@@ -31,10 +34,11 @@ interface ExerciseRow {
 export interface WorkoutPayload {
   date: string;
   memo: string | null;
-  /** 새 기록이면 항상 수업 1회를 차감한다. 잘못 저장했으면 수업 이력에서 되돌린다. */
-  completeSession?: boolean;
   /** 수업이 있었던 시각 (새 기록일 때만 보낸다) */
   completedAt?: string;
+  /** 종목이 하나도 없을 때 남기는 사유 */
+  reason?: string | null;
+  /** 비어 있으면 운동 없이 수업만 기록한다. */
   exercises: {
     name: string;
     sets: { reps: number; weight: number | null; unit: WeightUnit }[];
@@ -89,7 +93,12 @@ export default function WorkoutForm({
   const [error, setError] = useState<string | null>(null);
 
   const [hour, setHour] = useState(() => new Date().getHours());
+  const [reason, setReason] = useState("");
   const [removing, setRemoving] = useState<number | null>(null);
+
+  // 이름을 적은 종목만 저장한다. 하나도 없으면 수업만 남기는 날이다.
+  const named = rows.filter((r) => r.name.trim() !== "");
+  const sessionOnly = named.length === 0;
 
   const patchExercise = (i: number, patch: Partial<ExerciseRow>) => {
     setRows((prev) => prev.map((r, n) => (n === i ? { ...r, ...patch } : r)));
@@ -110,14 +119,15 @@ export default function WorkoutForm({
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
 
+    if (sessionOnly && workout) {
+      setError("종목을 하나 이상 남겨 주세요. 기록을 지우려면 목록에서 삭제하세요.");
+      return;
+    }
+
     const exercises: WorkoutPayload["exercises"] = [];
 
-    for (const [i, row] of rows.entries()) {
+    for (const row of named) {
       const name = row.name.trim();
-      if (!name) {
-        setError(`${i + 1}번째 종목의 이름을 입력해 주세요.`);
-        return;
-      }
 
       const sets: WorkoutPayload["exercises"][number]["sets"] = [];
 
@@ -153,9 +163,8 @@ export default function WorkoutForm({
       date,
       memo: memo.trim() || null,
       exercises,
-      ...(workout
-        ? {}
-        : { completeSession: true, completedAt: completedAtFrom(date, hour) }),
+      ...(sessionOnly ? { reason: reason.trim() || null } : {}),
+      ...(workout ? {} : { completedAt: completedAtFrom(date, hour) }),
     });
   };
 
@@ -288,8 +297,33 @@ export default function WorkoutForm({
         종목 추가
       </button>
 
+      {sessionOnly && !workout && (
+        <div className="flex flex-col gap-2.5">
+          <input
+            className="h-12 w-full rounded-xl border-[1.5px] border-edge bg-surface px-3.5 text-base outline-none transition-colors placeholder:text-subtle focus:border-primary"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="사유 — 상담, 체형 평가 등 (선택)"
+            aria-label="사유"
+            maxLength={40}
+          />
+          <div className="flex flex-wrap gap-2">
+            {QUICK_REASONS.map((label) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => setReason(label)}
+                className="h-9 rounded-full border border-line bg-surface px-3.5 text-xs font-bold text-muted-foreground transition-colors hover:border-edge hover:text-ink"
+              >
+                + {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <textarea
-        className="min-h-20 w-full resize-y rounded-xl border-[1.5px] border-edge bg-surface px-3.5 py-3 text-base outline-none transition-colors placeholder:text-subtle focus:border-primary"
+        className="h-24 w-full resize-none rounded-xl border-[1.5px] border-edge bg-surface px-3.5 py-3 text-base outline-none transition-colors placeholder:text-subtle focus:border-primary"
         value={memo}
         onChange={(e) => setMemo(e.target.value)}
         placeholder="메모 — 폼 체크, 컨디션 등"
@@ -306,7 +340,6 @@ export default function WorkoutForm({
         title="종목 삭제"
         message={`${rows[removing ?? 0]?.name.trim() || `${(removing ?? 0) + 1}번째 종목`}을(를) 지울까요?`}
         hint="입력한 세트도 함께 사라집니다."
-        icon="trash"
         onConfirm={() => {
           setRows((p) => p.filter((_, n) => n !== removing));
           setRemoving(null);
@@ -319,7 +352,7 @@ export default function WorkoutForm({
           취소
         </Button>
         <Button type="submit" loading={busy} className="flex-1 sm:flex-none sm:px-7">
-          {workout ? "수정 저장" : "저장"}
+          {workout ? "수정 저장" : sessionOnly ? "수업만 기록" : "저장"}
         </Button>
       </div>
     </form>
