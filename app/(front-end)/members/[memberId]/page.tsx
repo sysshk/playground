@@ -120,8 +120,8 @@ export default function MemberDetailPage() {
               : {},
           ),
         },
-        "수업 1회를 차감했습니다.",
-        "수업 차감에 실패했습니다.",
+        "수업 1회를 완료했습니다.",
+        "수업 완료에 실패했습니다.",
       ],
       deleteWorkout: [
         `${path}/workouts/${pending.type === "deleteWorkout" ? pending.workout.id : ""}`,
@@ -144,8 +144,8 @@ export default function MemberDetailPage() {
       cancelCompletion: [
         `${path}/complete/${pending.type === "cancelCompletion" ? pending.completion.id : ""}`,
         { method: "DELETE" },
-        "차감을 되돌렸습니다. 남은 수업이 1회 늘었습니다.",
-        "차감 되돌리기에 실패했습니다.",
+        "수업 완료를 되돌렸습니다. 남은 수업이 1회 늘었습니다.",
+        "되돌리기에 실패했습니다.",
       ],
     };
 

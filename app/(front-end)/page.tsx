@@ -22,7 +22,7 @@ const CTA = "inline-flex h-12 items-center gap-2 rounded-xl px-6 text-md font-bo
 
 const STATS = [
   { value: "세트별", label: "횟수와 무게를 따로 기록" },
-  { value: "저장 한 번", label: "기록 저장과 수업 차감을 함께" },
+  { value: "저장 한 번", label: "기록 저장과 수업 완료를 함께" },
   { value: "한 화면", label: "기록 · 체중 · 메모 · 영양" },
 ];
 
@@ -130,13 +130,13 @@ export default function HomePage() {
             </h2>
             <p className={BODY}>
               남은 수업, 최신 체중, 오늘의 운동 기록까지 한눈에 봅니다. 운동 기록을
-              저장하면 수업도 함께 차감됩니다.
+              저장하면 수업도 함께 완료됩니다.
             </p>
             <ul className="mt-7 flex flex-col gap-3">
               {[
                 "회원 정보와 남은 수업",
                 "운동 · 체중 · 코칭 메모를 같은 화면에서 입력",
-                "기록 저장과 함께 수업 차감, 잘못 누르면 이력에서 취소",
+                "기록 저장과 함께 수업 완료, 잘못 누르면 이력에서 되돌리기",
               ].map((t) => (
                 <li key={t} className="flex items-start gap-2.5 text-base sm:text-md">
                   <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary-light text-primary-dark dark:text-primary-bright">

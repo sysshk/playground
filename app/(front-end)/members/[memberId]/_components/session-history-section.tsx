@@ -52,11 +52,11 @@ export function SessionHistorySection({
     <Section
       id={id}
       title="수업 이력"
-      subtitle="운동 기록을 저장하면 수업이 함께 차감됩니다."
+      subtitle="운동 기록을 저장하면 수업도 함께 완료됩니다."
       action={
         <SectionAction
           icon="check"
-          label="직접 차감"
+          label="수업 완료"
           onClick={onToggleStandalone}
         />
       }
@@ -69,9 +69,9 @@ export function SessionHistorySection({
       >
         <DialogContent dismissOnOutsideClick>
           <DialogHeader>
-            <DialogTitle>수업 1회 차감</DialogTitle>
+            <DialogTitle>수업 완료</DialogTitle>
             <DialogDescription>
-              상담이나 체형 평가처럼 남길 운동 기록이 없는 날에 씁니다.
+              상담이나 체형 평가처럼 남길 운동 기록이 없는 날에 씁니다. 남은 수업이 1회 줄어듭니다.
             </DialogDescription>
           </DialogHeader>
           <SessionCompleteForm
@@ -86,7 +86,7 @@ export function SessionHistorySection({
 
       {done === 0 ? (
         <p className="py-2 text-center text-sm text-muted-foreground">
-          아직 차감한 수업이 없습니다.
+          아직 완료한 수업이 없습니다.
         </p>
       ) : (
         <>

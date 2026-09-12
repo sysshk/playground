@@ -18,7 +18,7 @@ export interface SessionCompletePayload {
 /** 사유는 몇 가지로 정해져 있다. 폰에서 키보드를 올리지 않고 넣게 한다. */
 const QUICK_REASONS = ["상담", "체형 평가", "노쇼"];
 
-/** 운동 기록 없이 수업 1회를 차감하는 폼. */
+/** 운동 기록 없이 수업 1회를 완료 처리하는 폼. */
 export default function SessionCompleteForm({
   disabled = false,
   busy = false,
@@ -26,7 +26,7 @@ export default function SessionCompleteForm({
   onSubmit,
   onCancel,
 }: {
-  /** 남은 수업이 없어 차감할 수 없는 상태 */
+  /** 남은 수업이 없어 완료할 수 없는 상태 */
   disabled?: boolean;
   busy?: boolean;
   serverError?: string | null;
@@ -56,9 +56,9 @@ export default function SessionCompleteForm({
           value={date}
           onChange={setDate}
           max={today()}
-          ariaLabel="차감 날짜"
+          ariaLabel="수업 날짜"
         />
-        <HourPicker value={time} onChange={setTime} ariaLabel="차감 시간" />
+        <HourPicker value={time} onChange={setTime} ariaLabel="수업 시간" />
       </div>
 
       <Input
@@ -66,7 +66,7 @@ export default function SessionCompleteForm({
         value={reason}
         onChange={(e) => setReason(e.target.value)}
         placeholder="사유 — 상담, 체형 평가 등 (선택)"
-        aria-label="차감 사유"
+        aria-label="사유"
         maxLength={40}
       />
 
@@ -98,7 +98,7 @@ export default function SessionCompleteForm({
         </Button>
         <Button type="submit" loading={busy} disabled={disabled} className="flex-1">
           <Icon name="check" size={17} />
-          {disabled ? "남은 수업이 없습니다" : "수업 1회 차감"}
+          {disabled ? "남은 수업이 없습니다" : "수업 완료"}
         </Button>
       </div>
     </form>

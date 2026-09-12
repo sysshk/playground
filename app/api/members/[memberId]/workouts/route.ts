@@ -41,10 +41,10 @@ export async function POST(request: Request, { params }: Params) {
     if (body.completedAt) {
       const picked = new Date(body.completedAt);
       if (Number.isNaN(picked.getTime())) {
-        return badRequest("차감 시각이 올바르지 않습니다.");
+        return badRequest("수업 시각이 올바르지 않습니다.");
       }
       if (picked.getTime() > Date.now() + 5 * 60 * 1000) {
-        return badRequest("차감 시각은 미래로 지정할 수 없습니다.");
+        return badRequest("수업 시각은 미래로 지정할 수 없습니다.");
       }
       completedAt = picked;
     } else {

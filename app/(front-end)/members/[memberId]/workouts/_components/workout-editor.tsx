@@ -95,8 +95,8 @@ export function WorkoutEditor({
           // 차감을 요청했는데 남은 수업이 없었으면 기록만 저장됐다는 걸 알린다.
           toast(
             res.completed === true
-              ? "운동 기록을 저장하고 수업 1회를 차감했습니다."
-              : "운동 기록은 저장했지만 남은 수업이 없어 차감하지 못했습니다.",
+              ? "운동 기록을 저장하고 수업 1회를 완료했습니다."
+              : "운동 기록은 저장했지만 남은 수업이 없어 수업은 완료하지 못했습니다.",
           );
         } else {
           toast("운동 기록을 저장했습니다.");
@@ -154,7 +154,7 @@ export function WorkoutEditor({
       subtitle={
         workout
           ? `${formatDate(workout.date)} 기록을 고칩니다.`
-          : "종목과 세트를 남기면 수업이 함께 차감됩니다."
+          : "종목과 세트를 남기면 수업도 함께 완료됩니다."
       }
       aside={
         !workout && (

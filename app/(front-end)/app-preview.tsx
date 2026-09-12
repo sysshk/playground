@@ -99,7 +99,7 @@ export default function AppPreview() {
         {/* 수업 완료 */}
         <div className="flex items-center justify-center gap-1.5 rounded-xl bg-primary-dark py-3 text-xs font-bold text-white">
           <Icon name="check" size={14} />
-          운동 기록 저장 · 수업 1회 차감
+          운동 기록 저장 · 수업 1회 완료
         </div>
       </div>
     </div>

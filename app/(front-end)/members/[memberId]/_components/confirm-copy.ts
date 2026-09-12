@@ -21,12 +21,12 @@ export function confirmCopy(pending: PendingAction | null, memberName: string) {
   switch (pending?.type) {
     case "completeSession":
       return {
-        title: "수업 차감 확인",
-        message: `${formatDate(pending.date)} ${hourLabel(pending.time)}, ${memberName} 회원의 수업 1회를 운동 기록 없이 차감할까요?`,
+        title: "수업 완료",
+        message: `${formatDate(pending.date)} ${hourLabel(pending.time)}, ${memberName} 회원의 수업을 운동 기록 없이 완료할까요?`,
         hint: pending.reason
           ? `사유: ${pending.reason} · 남은 수업이 1회 줄고 이력에 남습니다.`
           : "남은 수업이 1회 줄고 이력에 남습니다. 되돌리려면 이력에서 되돌리기를 누르세요.",
-        confirmLabel: "차감하기",
+        confirmLabel: "완료하기",
         tone: "primary" as const,
         icon: "minus" as const,
       };
@@ -40,7 +40,7 @@ export function confirmCopy(pending: PendingAction | null, memberName: string) {
       return {
         title: "운동 기록 삭제",
         message: `${formatDate(pending.workout.date)} 운동 기록을 삭제하시겠습니까?`,
-        hint: "삭제된 기록은 복구할 수 없습니다. 이 기록으로 차감한 수업은 그대로 남으니, 되돌리려면 수업 이력에서 되돌리기를 누르세요.",
+        hint: "삭제된 기록은 복구할 수 없습니다. 이 기록으로 완료한 수업은 그대로 남으니, 되돌리려면 수업 이력에서 되돌리기를 누르세요.",
       };
     case "deleteWeight":
       return {
@@ -56,8 +56,8 @@ export function confirmCopy(pending: PendingAction | null, memberName: string) {
       };
     case "cancelCompletion":
       return {
-        title: "수업 차감 되돌리기",
-        message: `${formatDayHour(pending.completion.completedAt)} 차감을 되돌릴까요?`,
+        title: "수업 완료 되돌리기",
+        message: `${formatDayHour(pending.completion.completedAt)} 수업 완료를 되돌릴까요?`,
         hint: "남은 수업이 1회 늘어납니다. 연결된 운동 기록은 지워지지 않고 그대로 남습니다.",
         confirmLabel: "되돌리기",
         tone: "primary" as const,

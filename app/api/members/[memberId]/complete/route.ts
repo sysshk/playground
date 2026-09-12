@@ -67,7 +67,7 @@ export async function POST(request: Request, { params }: Params) {
 
     if (!result) {
       return NextResponse.json(
-        { error: "남은 수업이 없어 더 이상 차감할 수 없습니다." },
+        { error: "남은 수업이 없습니다." },
         { status: 409 },
       );
     }
