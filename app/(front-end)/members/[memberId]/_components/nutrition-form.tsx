@@ -177,16 +177,16 @@ export default function NutritionForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <Field label="성별" required>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-1 rounded-xl border-[1.5px] border-edge bg-surface p-1">
           {(["male", "female"] as Gender[]).map((value) => (
             <button
               key={value}
               type="button"
               onClick={() => set("gender", value)}
-              className={`rounded-xl px-4 py-3 text-base font-semibold transition-colors ${
+              className={`h-10 rounded-lg text-sm font-bold transition-colors ${
                 form.gender === value
-                  ? "border-[1.5px] border-primary bg-primary-light text-primary-dark dark:text-primary-bright"
-                  : "border-[1.5px] border-edge bg-surface text-muted-foreground hover:bg-raised"
+                  ? "bg-primary-light text-primary-dark dark:text-primary-bright"
+                  : "text-muted-foreground hover:bg-raised"
               }`}
             >
               {value === "male" ? "남성" : "여성"}
@@ -223,13 +223,15 @@ export default function NutritionForm({
         />
       </Field>
 
-      <div className="rounded-xl border-[1.5px] border-edge bg-surface p-4">
-        <p className="text-sm font-bold">체성분</p>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          선택 입력 · 입력할수록 계산이 정교해집니다
+      <div className="flex flex-col gap-3 rounded-xl bg-canvas p-4">
+        <p className="flex flex-wrap items-baseline gap-x-2 text-sm font-bold">
+          체성분
+          <span className="text-xs font-medium text-muted-foreground">
+            선택 입력 · 넣을수록 계산이 정교해집니다
+          </span>
         </p>
 
-        <div className="mt-3 flex flex-col gap-3">
+        <div className="flex flex-col gap-3">
           <Field label="체지방률 (%)">
             <Input
               value={form.bodyFatPercentage}
@@ -283,16 +285,16 @@ export default function NutritionForm({
       </Field>
 
       <Field label="목표" required>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-1 rounded-xl border-[1.5px] border-edge bg-surface p-1">
           {GOALS.map((value) => (
             <button
               key={value}
               type="button"
               onClick={() => set("goal", value)}
-              className={`rounded-xl px-3 py-3 text-base font-semibold transition-colors ${
+              className={`h-10 rounded-lg text-sm font-bold transition-colors ${
                 form.goal === value
-                  ? "border-[1.5px] border-primary bg-primary-light text-primary-dark dark:text-primary-bright"
-                  : "border-[1.5px] border-edge bg-surface text-muted-foreground hover:bg-raised"
+                  ? "bg-primary-light text-primary-dark dark:text-primary-bright"
+                  : "text-muted-foreground hover:bg-raised"
               }`}
             >
               {GOAL_LABEL[value]}
