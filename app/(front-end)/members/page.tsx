@@ -98,7 +98,7 @@ export default function MembersPage() {
   const activeTotal = total - endedTotal;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-[760px] flex-col gap-7">
       {/* ── 인사 ───────────────────────────── */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
@@ -182,7 +182,7 @@ export default function MembersPage() {
             }
           />
         ) : members === null ? (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="flex flex-col gap-2">
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
@@ -217,9 +217,9 @@ export default function MembersPage() {
             수업이 남은 회원이 없습니다.
           </p>
         ) : (
-          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="flex flex-col">
             {active.map((member) => (
-              <MemberCard key={member.id} member={member} />
+<MemberCard key={member.id} member={member} />
             ))}
           </ul>
         )}
@@ -231,9 +231,9 @@ export default function MembersPage() {
           <h2 className="text-lg font-extrabold tracking-[-0.02em] text-muted-foreground">
             종료 {ended.length}명
           </h2>
-          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="flex flex-col">
             {ended.map((member) => (
-              <MemberCard key={member.id} member={member} />
+<MemberCard key={member.id} member={member} />
             ))}
           </ul>
         </section>
@@ -246,11 +246,6 @@ export default function MembersPage() {
 function MemberCard({ member }: { member: MemberSummary }) {
   const left = member.remainingSessions;
   const totalSessions = left + member.completedSessions;
-  const percent =
-    totalSessions === 0
-      ? 0
-      : Math.round((member.completedSessions / totalSessions) * 100);
-
   /*
    * 숫자와 진행바는 "수업이 얼마나 남았나"라는 같은 사실을 말한다.
    * 색을 따로 주면 카드 한 장에 강조색이 둘이 되어 색만 늘고 뜻은 안 는다.
@@ -258,66 +253,52 @@ function MemberCard({ member }: { member: MemberSummary }) {
    */
   const tone =
     left === 0
-      ? { text: "text-subtle", bar: "bg-line-strong" }
+      ? { text: "text-subtle" }
       : left <= LOW_SESSION_THRESHOLD
-        ? { text: "text-danger", bar: "bg-danger" }
-        : { text: "text-primary", bar: "bg-primary" };
+        ? { text: "text-danger" }
+        : { text: "text-primary" };
 
   return (
-    <li>
+    <li className="border-b border-line last:border-0">
       <Link
         href={`/members/${member.id}`}
-        className="group flex h-full flex-col gap-3.5 rounded-2xl border-[1.5px] border-edge bg-surface p-4 transition-colors hover:bg-raised sm:p-5"
+        className="group flex min-w-0 flex-1 items-center justify-between gap-3 py-3.5"
       >
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <h3 className="truncate text-lg font-extrabold tracking-[-0.03em]">
+        <span className="flex min-w-0 flex-col gap-1">
+          <span className="flex min-w-0 flex-wrap items-center gap-2">
+            <span className="truncate text-base font-extrabold tracking-[-0.02em] group-hover:text-primary">
               {member.name}
-            </h3>
+            </span>
             {member.goal && (
-              <span className="shrink-0 rounded-full bg-raised px-2.5 py-1 text-2xs font-bold text-muted-foreground group-hover:bg-surface">
-                {member.goal}
-              </span>
+              <span className="shrink-0 text-2xs text-subtle">{member.goal}</span>
             )}
-          </div>
-          <p className="flex shrink-0 items-end gap-1">
-            {/* 남은 수업이 곧 끝나면 숫자 자체가 경고가 된다. */}
+          </span>
+          <span className="text-2xs text-subtle">
+            {totalSessions > 0
+              ? `등록 ${totalSessions}회 중 ${member.completedSessions}회 사용`
+              : "등록된 수업 없음"}
+            {member.latestWeight !== null && ` · ${member.latestWeight}kg`}
+            {` · 기록 ${member.workoutCount}건`}
+          </span>
+        </span>
+
+        <span className="flex shrink-0 items-center gap-2">
+          <span className="flex items-end gap-1">
             <span
-              className={`text-2xl font-extrabold leading-none tracking-[-0.03em] ${tone.text}`}
+              className={`text-xl font-extrabold leading-none tracking-[-0.03em] ${tone.text}`}
             >
               {left}
             </span>
             <span className="text-2xs font-bold text-muted-foreground">회</span>
-          </p>
-        </div>
-
-        <div className="h-1.5 overflow-hidden rounded-full bg-raised group-hover:bg-line">
-          <div
-            className={`h-full rounded-full ${tone.bar}`}
-            style={{ width: `${percent}%` }}
+          </span>
+          <Icon
+            name="chevronRight"
+            size={16}
+            className="text-subtle transition-colors group-hover:text-ink"
           />
-        </div>
-
-        <div className="mt-auto flex items-center justify-between gap-2 text-xs text-subtle">
-          <span>
-            기록{" "}
-            <span className="font-bold text-ink">{member.workoutCount}건</span>
-            {member.latestWeight !== null && (
-              <>
-                {" · "}
-                <span className="font-bold text-ink">
-                  {member.latestWeight}kg
-                </span>
-              </>
-            )}
-          </span>
-          <span>
-            {totalSessions > 0
-              ? `등록 ${totalSessions}회 중 ${member.completedSessions}회 사용`
-              : "등록된 수업 없음"}
-          </span>
-        </div>
+        </span>
       </Link>
+
     </li>
   );
 }

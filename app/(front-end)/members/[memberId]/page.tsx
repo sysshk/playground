@@ -43,17 +43,6 @@ export default function MemberDetailPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [standaloneOpen, setStandaloneOpen] = useState(false);
 
-  /**
-   * 히어로의 버튼이 누른 섹션을 열고, 그 자리로 데려간다.
-   * 열기만 하면 화면 아래에서 폼이 펼쳐져 아무 일도 안 일어난 것처럼 보인다.
-   */
-  const reveal = (id: string, open: () => void) => {
-    open();
-    requestAnimationFrame(() => {
-      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  };
-
   const load = useCallback(async () => {
     setLoadError(null);
     try {
@@ -246,7 +235,6 @@ export default function MemberDetailPage() {
     );
   }
 
-  const latestWeight = member.weights[0]?.weight ?? null;
   // 등록한 전체 횟수는 남은 것과 쓴 것을 더한 값이다.
   const totalSessions = member.remainingSessions + member.completions.length;
   const lastCompletedAt = member.completions[0]?.completedAt ?? null;
@@ -257,7 +245,7 @@ export default function MemberDetailPage() {
   );
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="mx-auto flex w-full max-w-[760px] flex-col gap-7">
       <Link
         href="/members"
         className="hidden w-fit items-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-ink lg:flex"
@@ -268,7 +256,6 @@ export default function MemberDetailPage() {
 
       <MemberSummary
         member={member}
-        latestWeight={latestWeight}
         totalSessions={totalSessions}
         lastCompletedAt={lastCompletedAt}
         editing={open?.kind === "member"}
@@ -280,17 +267,8 @@ export default function MemberDetailPage() {
         onSubmit={handleEditMember}
         onCancel={() => setOpen(null)}
         onDelete={() => setPending({ type: "deleteMember" })}
-        onRecordWorkout={() => router.push(`/members/${member.id}/workouts/new`)}
-        onDeductSession={() =>
-          reveal("session-history", () => {
-            setFormError(null);
-            setStandaloneOpen(true);
-          })
-        }
       />
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(380px,440px)] xl:items-start">
-      <div className="flex min-w-0 flex-col gap-4">
       <WorkoutSection
         id="workouts"
         memberId={member.id}
@@ -299,9 +277,25 @@ export default function MemberDetailPage() {
         onDelete={(workout) => setPending({ type: "deleteWorkout", workout })}
       />
 
-      </div>
+      <SessionHistorySection
+        id="session-history"
+        remainingSessions={member.remainingSessions}
+        completions={member.completions}
+        standaloneOpen={standaloneOpen}
+        busy={busy}
+        serverError={formError}
+        onToggleStandalone={() => {
+          setFormError(null);
+          setStandaloneOpen((v) => !v);
+        }}
+        onComplete={({ date, time, reason }) =>
+          setPending({ type: "completeSession", date, time, reason })
+        }
+        onCancelCompletion={(completion) =>
+          setPending({ type: "cancelCompletion", completion })
+        }
+      />
 
-      <div className="flex min-w-0 flex-col gap-4">
       <NoteSection
         memberId={member.id}
         notes={member.notes}
@@ -322,27 +316,6 @@ export default function MemberDetailPage() {
       />
 
       <NutritionPanel memberId={member.id} nutrition={member.nutrition} />
-
-      <SessionHistorySection
-        id="session-history"
-        remainingSessions={member.remainingSessions}
-        completions={member.completions}
-        standaloneOpen={standaloneOpen}
-        busy={busy}
-        serverError={formError}
-        onToggleStandalone={() => {
-          setFormError(null);
-          setStandaloneOpen((v) => !v);
-        }}
-        onComplete={({ date, time, reason }) =>
-          setPending({ type: "completeSession", date, time, reason })
-        }
-        onCancelCompletion={(completion) =>
-          setPending({ type: "cancelCompletion", completion })
-        }
-      />
-      </div>
-      </div>
 
       <ConfirmDialog
         open={pending !== null}

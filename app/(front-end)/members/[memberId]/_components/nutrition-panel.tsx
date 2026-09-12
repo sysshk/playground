@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Icon } from "@/components/custom/icons";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/custom/empty-state";
-import { Section } from "./section";
+import { Section, SectionAction } from "./section";
 import { formatDateTime } from "@/lib/client";
 import { ACTIVITY_HINT, GOAL_LABEL } from "@/lib/nutrition";
 import type { NutritionProfile } from "@/lib/types";
@@ -30,12 +30,7 @@ export default function NutritionPanel({
       }
       action={
         nutrition ? (
-          <Link
-            href={href}
-            className="flex h-9 items-center rounded-lg px-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-raised hover:text-ink"
-          >
-            다시 계산
-          </Link>
+          <SectionAction icon="flame" label="다시 계산" href={href} />
         ) : null
       }
     >
@@ -52,8 +47,8 @@ export default function NutritionPanel({
         />
       ) : (
           <div className="flex flex-col gap-4">
-            <div className="rounded-xl border border-primary bg-primary-light px-4 py-3.5">
-              <p className="text-xs font-semibold text-primary-dark">
+            <div className="rounded-xl bg-primary-light px-4 py-3.5">
+              <p className="text-xs font-semibold text-primary-dark dark:text-primary-bright">
                 목표 섭취칼로리
               </p>
               <p className="mt-1 text-3xl font-extrabold leading-none tracking-tight">
@@ -64,7 +59,7 @@ export default function NutritionPanel({
               </p>
             </div>
 
-            <dl className="rounded-xl border border-line px-4 divide-y divide-line">
+            <dl className="rounded-xl bg-surface px-4 divide-y divide-line">
               <Row label="기초대사량" value={nutrition.bmr} unit="kcal" />
               <Row
                 label="유지칼로리"
@@ -119,7 +114,7 @@ function CalculationBasis({ lines }: { lines: string[] }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="rounded-xl border border-line px-4 py-3">
+    <div className="rounded-xl bg-surface px-4 py-3">
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}

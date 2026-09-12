@@ -43,9 +43,9 @@ export function NoteSection({
           description="통증·자세·움직임·숙제를 남겨 다음 수업에 이어가세요."
         />
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="flex flex-col">
           {notes.map((note) => (
-            <li key={note.id} className="rounded-xl border border-line p-4">
+            <li key={note.id} className="border-b border-line py-4 last:border-0 last:pb-0 first:pt-0">
               <div className="flex items-start justify-between gap-3">
                 <p className="text-sm font-bold">{formatDate(note.date)}</p>
                 <div className="flex gap-1">

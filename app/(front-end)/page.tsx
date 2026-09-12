@@ -139,7 +139,7 @@ export default function HomePage() {
                 "기록 저장과 함께 수업 차감, 잘못 누르면 이력에서 취소",
               ].map((t) => (
                 <li key={t} className="flex items-start gap-2.5 text-base sm:text-md">
-                  <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary-light text-primary-dark">
+                  <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary-light text-primary-dark dark:text-primary-bright">
                     <Icon name="check" size={12} />
                   </span>
                   {t}

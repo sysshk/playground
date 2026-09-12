@@ -37,7 +37,7 @@ export default function AppPreview() {
               010-2847-1120 · 체중 감량
             </p>
           </div>
-          <span className="shrink-0 rounded-full bg-primary-light px-2.5 py-1 text-2xs font-bold text-primary-dark">
+          <span className="shrink-0 rounded-full bg-primary-light px-2.5 py-1 text-2xs font-bold text-primary-dark dark:text-primary-bright">
             남은 수업 8회
           </span>
         </div>

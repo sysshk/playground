@@ -185,7 +185,7 @@ export default function NutritionForm({
               onClick={() => set("gender", value)}
               className={`rounded-xl border px-4 py-3 text-base font-semibold transition-colors ${
                 form.gender === value
-                  ? "border-primary bg-primary-light text-primary-dark"
+                  ? "border-primary bg-primary-light text-primary-dark dark:text-primary-bright"
                   : "border-line bg-surface text-muted-foreground hover:bg-raised"
               }`}
             >
@@ -291,7 +291,7 @@ export default function NutritionForm({
               onClick={() => set("goal", value)}
               className={`rounded-xl border px-3 py-3 text-base font-semibold transition-colors ${
                 form.goal === value
-                  ? "border-primary bg-primary-light text-primary-dark"
+                  ? "border-primary bg-primary-light text-primary-dark dark:text-primary-bright"
                   : "border-line bg-surface text-muted-foreground hover:bg-raised"
               }`}
             >

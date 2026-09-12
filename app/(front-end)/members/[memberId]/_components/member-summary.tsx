@@ -9,7 +9,6 @@ import { IconButton } from "./section";
 /** 회원 상세의 머리. */
 export function MemberSummary({
   member,
-  latestWeight,
   totalSessions,
   lastCompletedAt,
   editing,
@@ -19,11 +18,8 @@ export function MemberSummary({
   onSubmit,
   onCancel,
   onDelete,
-  onRecordWorkout,
-  onDeductSession,
 }: {
   member: MemberDetail;
-  latestWeight: number | null;
   /** 등록한 전체 횟수 (남은 것 + 쓴 것) */
   totalSessions: number;
   /** 가장 최근 차감 시각. 없으면 null */
@@ -35,19 +31,16 @@ export function MemberSummary({
   onSubmit: (values: MemberPayload) => void;
   onCancel: () => void;
   onDelete: () => void;
-  onRecordWorkout: () => void;
-  onDeductSession: () => void;
 }) {
   const { remainingSessions: left } = member;
   const used = totalSessions - left;
-  const percent = totalSessions === 0 ? 0 : Math.round((used / totalSessions) * 100);
 
   return (
     <section className="flex flex-col gap-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="text-2xl font-extrabold tracking-[-0.03em]">
+            <h1 className="text-xl font-extrabold tracking-[-0.03em]">
               {member.name}
             </h1>
             {member.goal && (
@@ -56,7 +49,7 @@ export function MemberSummary({
               </span>
             )}
           </div>
-          <p className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+          <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
             <Icon name="phone" size={14} />
             {member.phone}
           </p>
@@ -68,7 +61,6 @@ export function MemberSummary({
             onClick={onToggleEdit}
             active={editing}
           />
-          <IconButton icon="trash" label="회원 삭제" danger onClick={onDelete} />
         </div>
       </div>
 
@@ -86,62 +78,29 @@ export function MemberSummary({
       ) : (
         <>
           {/* 남은 수업 */}
-          <div className="flex flex-col gap-4 rounded-2xl bg-hero p-5 text-hero-foreground">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <p className="flex items-baseline gap-2.5">
-                <span className="text-2xs font-extrabold uppercase tracking-widest text-white/45">
+          <div className="rounded-2xl border-[1.5px] border-edge bg-surface p-4">
+            <div className="flex min-w-0 flex-col gap-1">
+              <p className="flex items-baseline gap-1.5">
+                <span className="text-xs font-bold text-muted-foreground">
                   남은 수업
                 </span>
-                <span className="text-5xl font-extrabold leading-none tracking-[-0.05em] text-primary-bright">
+                <span
+                  className={`text-xl font-extrabold leading-none tracking-[-0.03em] ${
+                    left === 0 ? "text-subtle" : "text-primary"
+                  }`}
+                >
                   {left}
                 </span>
-                <span className="text-md font-bold text-white/60">회</span>
+                <span className="text-xs font-bold text-muted-foreground">회</span>
               </p>
-
-              <div className="flex w-full gap-2.5 sm:w-auto">
-                <button
-                  type="button"
-                  onClick={onDeductSession}
-                  className="flex h-12 flex-1 items-center justify-center gap-1.5 rounded-xl bg-white/10 px-4 text-md font-bold transition-colors hover:bg-white/18 sm:flex-none"
-                >
-                  <Icon name="minus" size={17} />
-                  직접 차감
-                </button>
-                <button
-                  type="button"
-                  onClick={onRecordWorkout}
-                  className="flex h-12 flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary px-5 text-md font-extrabold text-white transition-colors hover:bg-primary-dark sm:flex-none"
-                >
-                  <Icon name="plus" size={18} />
-                  운동 기록
-                </button>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <div
-                className="h-[7px] overflow-hidden rounded-full bg-white/12"
-                role="progressbar"
-                aria-valuenow={percent}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label="수업 사용 정도"
-              >
-                <div
-                  className="h-full rounded-full bg-primary-bright"
-                  style={{ width: `${percent}%` }}
-                />
-              </div>
-
-              <p className="text-xs font-medium text-white/45">
+              <p className="text-xs text-subtle">
                 {totalSessions > 0
                   ? `등록 ${totalSessions}회 중 ${used}회 사용`
                   : "등록된 수업이 없습니다"}
                 {lastCompletedAt && ` · 최근 수업 ${formatDay(lastCompletedAt)}`}
               </p>
-
               {left === 0 && totalSessions > 0 && (
-                <p className="flex items-center gap-1.5 text-xs font-bold text-primary-bright">
+                <p className="flex items-center gap-1.5 text-xs font-bold text-danger">
                   <Icon name="alert" size={14} />
                   남은 수업을 다 썼습니다. 재등록이 필요합니다.
                 </p>
@@ -149,47 +108,20 @@ export function MemberSummary({
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2.5">
-            <Stat
-              label="최신 체중"
-              value={latestWeight !== null ? `${latestWeight}` : "—"}
-              unit={latestWeight !== null ? "kg" : ""}
-            />
-            <Stat label="운동 기록" value={`${member.workouts.length}`} unit="건" />
-            <Stat label="총 등록" value={`${totalSessions}`} unit="회" />
-          </div>
-
           {member.memo && (
             <p className="whitespace-pre-wrap rounded-2xl border-[1.5px] border-edge bg-surface px-4 py-3.5 text-sm leading-relaxed">
               {member.memo}
             </p>
           )}
+          <button
+            type="button"
+            onClick={onDelete}
+            className="w-fit rounded-lg px-2 py-1.5 text-xs font-semibold text-subtle transition-colors hover:bg-danger/8 hover:text-danger"
+          >
+            회원 삭제
+          </button>
         </>
       )}
     </section>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  unit,
-}: {
-  label: string;
-  value: string;
-  unit: string;
-}) {
-  return (
-    <div className="rounded-2xl border-[1.5px] border-edge bg-surface px-4 py-3.5">
-      <p className="text-2xs font-extrabold uppercase tracking-widest text-subtle">
-        {label}
-      </p>
-      <p className="mt-1.5 text-2xl font-extrabold leading-none tracking-[-0.03em]">
-        {value}
-        {unit && (
-          <span className="ml-1 text-2xs font-bold text-muted-foreground">{unit}</span>
-        )}
-      </p>
-    </div>
   );
 }

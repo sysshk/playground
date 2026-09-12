@@ -1,14 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Icon, type IconName } from "@/components/custom/icons";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 /** 회원 상세의 한 덩어리(운동 기록, 체중, 코칭 메모 …). 제목 옆에 보조 동작을 둔다. */
 export function Section({
@@ -26,14 +18,18 @@ export function Section({
   children: ReactNode;
 }) {
   return (
-    <Card id={id} className="scroll-mt-20 gap-4 rounded-2xl [--card-spacing:--spacing(5)]">
-      <CardHeader>
-        <CardTitle className="text-md font-bold tracking-tight">{title}</CardTitle>
-        {subtitle && <CardDescription className="text-xs">{subtitle}</CardDescription>}
-        {action && <CardAction>{action}</CardAction>}
-      </CardHeader>
-      <CardContent>{children}</CardContent>
-    </Card>
+    <section id={id} className="flex scroll-mt-20 flex-col gap-3.5">
+      <div className="flex items-end justify-between gap-3 border-b border-line pb-2.5">
+        <div className="flex min-w-0 flex-wrap items-end gap-x-2 gap-y-0.5">
+          <h2 className="text-lg font-extrabold tracking-[-0.02em]">{title}</h2>
+          {subtitle && (
+            <p className="text-xs text-subtle">{subtitle}</p>
+          )}
+        </div>
+        {action}
+      </div>
+      {children}
+    </section>
   );
 }
 
@@ -52,10 +48,8 @@ export function SectionAction({
   href?: string;
   active?: boolean;
 }) {
-  const className = `flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition-colors ${
-    active
-      ? "bg-raised text-ink"
-      : "text-muted-foreground hover:bg-raised hover:text-ink"
+  const className = `flex h-8 shrink-0 items-center gap-1 rounded-lg text-sm font-bold transition-colors ${
+    active ? "text-ink" : "text-primary hover:text-primary-dark"
   }`;
 
   if (href) {
@@ -99,7 +93,7 @@ export function IconButton({
 }) {
   const className = `grid size-9 shrink-0 place-items-center rounded-lg transition-colors ${
     active
-      ? "bg-primary-light text-primary-dark"
+      ? "bg-primary-light text-primary-dark dark:text-primary-bright"
       : danger
         ? "text-subtle hover:bg-danger/8 hover:text-danger"
         : "text-subtle hover:bg-raised hover:text-ink"
