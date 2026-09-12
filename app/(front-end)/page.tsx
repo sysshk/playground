@@ -28,21 +28,21 @@ const STATS = [
 
 const ROWS = [
   {
-    image: asset("/images/sets-barbell.jpg"),
+    image: asset("/images/sets-barbell-rack.jpg"),
     alt: "바벨로 웨이트 트레이닝을 하는 모습",
     title: "세트마다 다르게\n기록됩니다",
     body: "드롭세트도 피라미드도 그대로 남습니다. 1세트 12회 50kg, 2세트 10회 60kg — 세트별로 따로 입력하세요.",
     points: ["세트별 횟수·무게", "맨몸 운동도 그대로", "종목 여러 개를 한 번에"],
   },
   {
-    image: asset("/images/coaching.jpg"),
+    image: asset("/images/coaching-trx.jpg"),
     alt: "트레이너가 회원의 자세를 봐주는 모습",
     title: "통증과 자세를\n다음 수업으로",
     body: "통증 부위, 자세 문제, 움직임 평가, 숙제까지. 지난 수업에서 본 것을 다음 수업에 바로 이어갑니다.",
     points: ["통증 · 자세 문제", "움직임 평가", "다음 수업까지의 숙제"],
   },
   {
-    image: asset("/images/nutrition.jpg"),
+    image: asset("/images/nutrition-bowl.jpg"),
     alt: "균형 잡힌 식단이 담긴 접시",
     title: "체성분까지 반영한\n섭취 기준",
     body: "체지방률과 골격근량을 넣으면 제지방량 기반으로 계산합니다. 기초대사량·유지칼로리·목표 칼로리와 매크로까지 한 번에.",
@@ -60,7 +60,7 @@ export default function HomePage() {
   return (
     <div className="bg-surface">
       {/* ── 히어로 ───────────────────────────── */}
-      <section className="relative isolate min-h-[620px] overflow-hidden bg-ink sm:min-h-[680px]">
+      <section className="relative isolate min-h-[620px] overflow-hidden bg-hero sm:min-h-[680px]">
         <Image
           src={asset("/images/hero-gym.jpg")}
           alt=""
@@ -83,9 +83,9 @@ export default function HomePage() {
             </span>
 
             <h1 className="mt-6 max-w-[660px] text-4xl font-extrabold leading-[1.14] tracking-[-0.035em] text-white sm:text-5xl">
-              수업이 끝나면
+              오늘 수업은
               <br />
-              기록도 끝나 있게
+              기억이 아니라 기록으로
             </h1>
 
             <p className="mt-6 max-w-[560px] text-md leading-[1.75] text-white/70 sm:text-lg">
@@ -107,7 +107,7 @@ export default function HomePage() {
       </section>
 
       {/* ── 숫자 스트립 ───────────────────────── */}
-      <section className="bg-ink">
+      <section className="bg-hero">
         <div className="mx-auto grid max-w-[1200px] gap-8 px-5 py-10 sm:grid-cols-3 sm:px-8 sm:py-12">
           {STATS.map((s) => (
             <div key={s.label}>
@@ -197,7 +197,7 @@ export default function HomePage() {
       ))}
 
       {/* ── 마무리 ───────────────────────────── */}
-      <section className="bg-ink">
+      <section className="bg-hero">
         <div className="mx-auto flex max-w-[1200px] flex-col items-center gap-6 px-5 py-20 text-center sm:px-8 sm:py-24">
           <h2 className="max-w-[560px] text-2xl font-extrabold leading-[1.3] tracking-[-0.025em] text-white sm:text-3xl">
             오늘 수업부터 바로 써보세요
@@ -207,7 +207,7 @@ export default function HomePage() {
           </p>
           <Link
             href={ctaHref}
-            className={`mt-2 ${CTA} bg-surface text-ink hover:bg-raised`}
+            className={`mt-2 ${CTA} bg-white text-hero hover:bg-white/90`}
           >
             {ctaLabel}
             <Icon name="arrowRight" size={17} />

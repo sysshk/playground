@@ -7,10 +7,13 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * PT 매니저 — 모노크롬 + 단일 악센트
+ * PT 매니저 — 고대비 흑백 + 파란 악센트
  *
- * 색은 거의 쓰지 않는다. 흰색·회색·검정이 화면을 이루고,
- * 파란 악센트는 "누를 수 있는 것"과 "지금 중요한 것"에만 쓴다.
+ * 색은 거의 쓰지 않는다. 회색·흰색·먹색이 화면을 이루고,
+ * 파랑은 "숫자"와 "주 동작"에만 쓴다. 로고와 같은 파랑이다.
+ *
+ * 테두리는 두 종류다. 카드 바깥은 edge(먹색 1.5px)로 또렷하게 두르고,
+ * 카드 안을 나누는 선은 line(연회색)을 쓴다. 둘을 섞으면 화면이 탁해진다.
  *
  * 색 값은 shadcn 변수(--background, --primary …)에만 두고,
  * 우리가 먼저 쓰던 이름(canvas, ink, line …)은 그 변수를 가리키게 한다.
@@ -21,24 +24,70 @@
 :root {
   --radius: 0.75rem;
 
-  --background: #fafafa;
-  --foreground: #111111;
+  --background: #f3f3f1;
+  --foreground: #12120f;
   --card: #ffffff;
-  --card-foreground: #111111;
+  --card-foreground: #12120f;
   --popover: #ffffff;
-  --popover-foreground: #111111;
+  --popover-foreground: #12120f;
   --primary: #1f6feb;
   --primary-foreground: #ffffff;
-  --secondary: #f4f4f5;
-  --secondary-foreground: #111111;
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --accent: #f4f4f5;
-  --accent-foreground: #111111;
-  --destructive: #dc2626;
-  --border: #e4e4e7;
-  --input: #e4e4e7;
+  --secondary: #ebebe8;
+  --secondary-foreground: #12120f;
+  --muted: #ebebe8;
+  --muted-foreground: #56554e;
+  --accent: #ebebe8;
+  --accent-foreground: #12120f;
+  --destructive: #b3261e;
+  --border: #dddcd8;
+  --input: #dddcd8;
   --ring: #1f6feb;
+}
+
+/*
+ * 다크 모드.
+ *
+ * html에 .dark가 붙으면 켜진다. 색 이름은 그대로 두고 값만 바꾸므로
+ * 화면 코드는 한 줄도 건드릴 필요가 없다.
+ *
+ * 악센트는 라이트와 같은 파랑 계열을 쓴다. 로고가 파랑이라 다른 색을
+ * 끼우면 모드를 바꿀 때마다 브랜드가 달라 보인다. 다만 어두운 바탕에서는
+ * 같은 파랑이 가라앉아서 한 단계 밝은 값으로 올린다.
+ */
+.dark {
+  --background: #0e0f11;
+  --foreground: #f1f2f4;
+  --card: #17191c;
+  --card-foreground: #f1f2f4;
+  --popover: #17191c;
+  --popover-foreground: #f1f2f4;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --secondary: #212429;
+  --secondary-foreground: #f1f2f4;
+  --muted: #212429;
+  --muted-foreground: #a0a6ad;
+  --accent: #212429;
+  --accent-foreground: #f1f2f4;
+  --destructive: #f87171;
+  --border: #2a2e33;
+  --input: #2a2e33;
+  --ring: #3b82f6;
+
+  /* 먹색 테두리는 어두운 바탕에서 보이지 않는다. 한 단계 밝게 올린다. */
+  --color-edge: #3a3f46;
+  --color-primary-bright: #7fb0ff;
+  --color-primary-dark: #2f6fd0;
+  --color-primary-light: #17253c;
+  --color-subtle: #767c84;
+  --color-line-strong: #3a3f46;
+  --color-inverse: #f1f2f4;
+  --color-danger-dark: #fca5a5;
+  --color-warning: #d9a441;
+
+  /* 어두운 배경 위에서는 순먹색이 배경과 붙는다. 한 단계 띄운다. */
+  --color-hero: #20242a;
+  --color-chip: #2f343b;
 }
 
 @theme inline {
@@ -81,16 +130,43 @@
 @theme {
   /* shadcn에 대응하는 이름이 없는 색 */
   --color-primary-dark: #1857c4;
-  --color-primary-light: #eaf2fe;
-  --color-subtle: #a1a1aa;
-  --color-line-strong: #d4d4d8;
-  --color-inverse: #0d0d0d;
-  --color-danger-dark: #b91c1c;
-  --color-warning: #b45309;
+  --color-primary-light: #e8f0fd;
+  --color-subtle: #8a8a85;
+  --color-line-strong: #c9c9c4;
+  --color-inverse: #12120f;
+  --color-danger-dark: #8f1e18;
+  --color-warning: #a15c00;
 
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-raised: 0 4px 12px rgba(0, 0, 0, 0.06);
-  --shadow-float: 0 10px 30px rgba(0, 0, 0, 0.1);
+  /*
+   * 카드 바깥을 두르는 테두리. 안쪽 구분선(line)과 구별해서 쓴다.
+   * 먹색(#12120f)은 글자색과 같아서 1.5px로 두르면 카드마다 검은 윤곽이
+   * 생기고 화면이 딱딱해진다. line(#dddcd8) < edge < line-strong 순으로
+   * 한 단계씩 짙어지게 두어, 테두리인 건 보이되 먼저 눈에 띄지는 않게 한다.
+   */
+  --color-edge: #cdccc6;
+
+  /* 먹색 위에 올리는 파랑. 본래 파랑은 어두운 바탕에서 가라앉는다. */
+  --color-primary-bright: #6aa5ff;
+
+  /*
+   * 히어로 블록(남은 수업)은 테마와 상관없이 항상 어둡다.
+   * ink로 칠하면 다크 모드에서 값이 뒤집혀 흰 블록에 흰 글씨가 된다.
+   */
+  --color-hero: #12120f;
+  --color-hero-foreground: #f2f3f5;
+
+  /*
+   * 카드 > raised 블록 > 칩. 세 단계짜리 중첩이라 칩에는 한 칸 더 필요하다.
+   * 라이트에서는 흰 카드 위라 raised와 같지만, 다크에서는 raised보다
+   * 밝아야 한다. 어두운 쪽을 쓰면 칩이 구멍처럼 파여 보인다.
+   */
+  --color-chip: #ebebe8;
+
+  /* 테두리로 형태를 잡으므로 그림자는 거의 쓰지 않는다.
+     띄워야 하는 것(팝오버, 토스트)에만 남긴다. */
+  --shadow-card: none;
+  --shadow-raised: 0 2px 6px rgba(18, 18, 15, 0.05);
+  --shadow-float: 0 12px 32px rgba(18, 18, 15, 0.14);
 
   --radius-card: 16px;
 

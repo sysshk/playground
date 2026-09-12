@@ -9,7 +9,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { CoachingNotePayload } from "./_components/coaching-note-form";
 import { confirmCopy, type PendingAction } from "./_components/confirm-copy";
-import { ConfirmDialog } from "./_components/confirm-dialog";
+import { ConfirmDialog } from "@/components/custom/confirm-dialog";
 import { MemberSummary } from "./_components/member-summary";
 import { NoteSection } from "./_components/note-section";
 import NutritionPanel from "./_components/nutrition-panel";
@@ -17,26 +17,22 @@ import { SessionHistorySection } from "./_components/session-history-section";
 import { WeightSection } from "./_components/weight-section";
 import type { WeightPayload } from "./_components/weight-form";
 import { WorkoutSection } from "./_components/workout-section";
-import type { WorkoutPayload } from "./_components/workout-form";
 import type { MemberPayload } from "../_components/member-form";
 import { EmptyState } from "@/components/custom/empty-state";
 import { Icon } from "@/components/custom/icons";
 import { Button } from "@/components/ui/button";
-import { apiFetch, errorMessage, today } from "@/lib/client";
-import type { CoachingNote, MemberDetail, Workout } from "@/lib/types";
+import { apiFetch, errorMessage } from "@/lib/client";
+import type { CoachingNote, MemberDetail } from "@/lib/types";
 
-/** datetime-local 입력이 쓰는 "YYYY-MM-DDTHH:mm" (로컬 시각) */
-function nowLocal() {
-  const now = new Date();
-  return new Date(now.getTime() - now.getTimezoneOffset() * 60_000)
-    .toISOString()
-    .slice(0, 16);
+/** 고른 날짜(YYYY-MM-DD)와 시(0~23)를 차감 시각으로 바꾼다. 분·초는 0으로 둔다. */
+function completedAtFrom(date: string, hour: number) {
+  const [y, m, d] = date.split("-").map(Number);
+  return new Date(y, m - 1, d, hour).toISOString();
 }
 
 /** 화면에 펼쳐져 있는 입력 폼. 한 번에 하나만 연다. */
 type OpenForm =
   | { kind: "member" }
-  | { kind: "workout"; workout: Workout | null }
   | { kind: "weight" }
   | { kind: "note"; note: CoachingNote | null }
   | null;
@@ -53,8 +49,18 @@ export default function MemberDetailPage() {
   const [open, setOpen] = useState<OpenForm>(null);
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [completedAt, setCompletedAt] = useState(nowLocal);
   const [standaloneOpen, setStandaloneOpen] = useState(false);
+
+  /**
+   * 히어로의 버튼이 누른 섹션을 열고, 그 자리로 데려간다.
+   * 열기만 하면 화면 아래에서 폼이 펼쳐져 아무 일도 안 일어난 것처럼 보인다.
+   */
+  const reveal = (id: string, open: () => void) => {
+    open();
+    requestAnimationFrame(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
 
   const load = useCallback(async () => {
     setLoadError(null);
@@ -124,9 +130,14 @@ export default function MemberDetailPage() {
         `${path}/complete`,
         {
           method: "POST",
-          body: JSON.stringify({
-            completedAt: new Date(completedAt).toISOString(),
-          }),
+          body: JSON.stringify(
+            pending.type === "completeSession"
+              ? {
+                  completedAt: completedAtFrom(pending.date, pending.time),
+                  reason: pending.reason,
+                }
+              : {},
+          ),
         },
         "수업 1회를 차감했습니다.",
         "수업 차감에 실패했습니다.",
@@ -135,12 +146,6 @@ export default function MemberDetailPage() {
         `${path}/workouts/${pending.type === "deleteWorkout" ? pending.workout.id : ""}`,
         { method: "DELETE" },
         "운동 기록을 삭제했습니다.",
-        "운동 기록 삭제에 실패했습니다.",
-      ],
-      deleteAllWorkouts: [
-        `${path}/workouts`,
-        { method: "DELETE" },
-        "운동 기록을 모두 삭제했습니다.",
         "운동 기록 삭제에 실패했습니다.",
       ],
       deleteWeight: [
@@ -199,36 +204,6 @@ export default function MemberDetailPage() {
       "회원 정보를 수정했습니다.",
       "회원 정보 수정에 실패했습니다.",
     );
-
-  const handleSaveWorkout = async (payload: WorkoutPayload) => {
-    const editing = open?.kind === "workout" ? open.workout : null;
-    let completed = false;
-
-    const done = await run(
-      async () => {
-        const res = await apiFetch<{ completed?: boolean }>(
-          editing
-            ? `/api/members/${memberId}/workouts/${editing.id}`
-            : `/api/members/${memberId}/workouts`,
-          { method: editing ? "PATCH" : "POST", body: JSON.stringify(payload) },
-        );
-        completed = res.completed === true;
-      },
-      editing ? "운동 기록을 수정했습니다." : "운동 기록을 저장했습니다.",
-      "운동 기록 저장에 실패했습니다.",
-    );
-    if (!done) return;
-
-    setOpen(null);
-    // 차감을 요청했는데 남은 수업이 없었으면 기록만 저장됐다는 걸 알린다.
-    if (!editing && payload.completeSession) {
-      toast(
-        completed
-          ? "운동 기록을 저장하고 수업 1회를 차감했습니다."
-          : "운동 기록은 저장했지만 남은 수업이 없어 차감하지 못했습니다.",
-      );
-    }
-  };
 
   const handleAddWeight = (payload: WeightPayload) =>
     save(
@@ -292,6 +267,9 @@ export default function MemberDetailPage() {
   }
 
   const latestWeight = member.weights[0]?.weight ?? null;
+  // 등록한 전체 횟수는 남은 것과 쓴 것을 더한 값이다.
+  const totalSessions = member.remainingSessions + member.completions.length;
+  const lastCompletedAt = member.completions[0]?.completedAt ?? null;
 
   // 수업을 차감하며 저장한 운동 기록 — 카드에 뱃지로 표시한다.
   const linkedWorkoutIds = new Set(
@@ -302,7 +280,7 @@ export default function MemberDetailPage() {
     <div className="flex flex-col gap-4">
       <Link
         href="/members"
-        className="flex w-fit items-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-ink"
+        className="hidden w-fit items-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-ink lg:flex"
       >
         <Icon name="arrowLeft" size={15} />
         회원 목록
@@ -311,6 +289,8 @@ export default function MemberDetailPage() {
       <MemberSummary
         member={member}
         latestWeight={latestWeight}
+        totalSessions={totalSessions}
+        lastCompletedAt={lastCompletedAt}
         editing={open?.kind === "member"}
         busy={busy}
         serverError={formError}
@@ -320,24 +300,24 @@ export default function MemberDetailPage() {
         onSubmit={handleEditMember}
         onCancel={() => setOpen(null)}
         onDelete={() => setPending({ type: "deleteMember" })}
+        onRecordWorkout={() => router.push(`/members/${member.id}/workouts/new`)}
+        onDeductSession={() =>
+          reveal("session-history", () => {
+            setFormError(null);
+            setStandaloneOpen(true);
+          })
+        }
       />
 
+      {/* 데스크톱에서는 기록을 넓게 쓰고, 이력·메모는 옆 레일로 보낸다. */}
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+      <div className="flex min-w-0 flex-col gap-4">
       <WorkoutSection
+        id="workouts"
+        memberId={member.id}
         workouts={member.workouts}
-        remainingSessions={member.remainingSessions}
         linkedWorkoutIds={linkedWorkoutIds}
-        editing={open?.kind === "workout" ? open.workout : null}
-        formOpen={open?.kind === "workout"}
-        busy={busy}
-        serverError={formError}
-        onToggle={() =>
-          show(open?.kind === "workout" ? null : { kind: "workout", workout: null })
-        }
-        onEdit={(workout) => show({ kind: "workout", workout })}
-        onSubmit={handleSaveWorkout}
-        onCancel={() => setOpen(null)}
         onDelete={(workout) => setPending({ type: "deleteWorkout", workout })}
-        onDeleteAll={() => setPending({ type: "deleteAllWorkouts" })}
       />
 
       <WeightSection
@@ -350,6 +330,36 @@ export default function MemberDetailPage() {
         onCancel={() => setOpen(null)}
         onDelete={(record) =>
           setPending({ type: "deleteWeight", id: record.id, date: record.date })
+        }
+      />
+
+      <NutritionPanel
+        memberId={member.id}
+        nutrition={member.nutrition}
+        suggestedWeight={latestWeight}
+        onSaved={(nutrition) =>
+          setMember((prev) => (prev ? { ...prev, nutrition } : prev))
+        }
+      />
+      </div>
+
+      <div className="flex min-w-0 flex-col gap-4">
+      <SessionHistorySection
+        id="session-history"
+        remainingSessions={member.remainingSessions}
+        completions={member.completions}
+        standaloneOpen={standaloneOpen}
+        busy={busy}
+        serverError={formError}
+        onToggleStandalone={() => {
+          setFormError(null);
+          setStandaloneOpen((v) => !v);
+        }}
+        onComplete={({ date, time, reason }) =>
+          setPending({ type: "completeSession", date, time, reason })
+        }
+        onCancelCompletion={(completion) =>
+          setPending({ type: "cancelCompletion", completion })
         }
       />
 
@@ -367,33 +377,8 @@ export default function MemberDetailPage() {
         onCancel={() => setOpen(null)}
         onDelete={(note) => setPending({ type: "deleteNote", note })}
       />
-
-      <SessionHistorySection
-        remainingSessions={member.remainingSessions}
-        completions={member.completions}
-        standaloneOpen={standaloneOpen}
-        completedAt={completedAt}
-        maxDate={today()}
-        busy={busy}
-        onToggleStandalone={() => {
-          setCompletedAt(nowLocal());
-          setStandaloneOpen((v) => !v);
-        }}
-        onCompletedAtChange={setCompletedAt}
-        onComplete={() => setPending({ type: "completeSession" })}
-        onCancelCompletion={(completion) =>
-          setPending({ type: "cancelCompletion", completion })
-        }
-      />
-
-      <NutritionPanel
-        memberId={member.id}
-        nutrition={member.nutrition}
-        suggestedWeight={latestWeight}
-        onSaved={(nutrition) =>
-          setMember((prev) => (prev ? { ...prev, nutrition } : prev))
-        }
-      />
+      </div>
+      </div>
 
       <ConfirmDialog
         open={pending !== null}

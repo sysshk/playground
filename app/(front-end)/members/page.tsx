@@ -3,14 +3,12 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
-import MemberForm, { type MemberPayload } from "./_components/member-form";
 import { Icon } from "@/components/custom/icons";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/custom/empty-state";
 import { apiFetch, errorMessage } from "@/lib/client";
 import type { MemberStats, MemberSummary } from "@/lib/types";
 
-import { toast } from "sonner";
 /** 수업이 이만큼 이하로 남으면 재등록 안내가 필요하다. */
 const LOW_SESSION_THRESHOLD = 3;
 
@@ -32,9 +30,6 @@ export default function MembersPage() {
   const [stats, setStats] = useState<MemberStats | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-  const [formOpen, setFormOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
 
 
   const load = useCallback(async () => {
@@ -51,9 +46,24 @@ export default function MembersPage() {
     }
   }, []);
 
+  // 첫 로딩은 effect 안에서 직접 부른다. load()를 그대로 부르면
+  // 렌더 도중 상태를 건드리는 모양이 되어 cascading render 경고가 난다.
   useEffect(() => {
-    void load();
-  }, [load]);
+    let alive = true;
+    apiFetch<{ members: MemberSummary[]; stats: MemberStats }>("/api/members").then(
+      (data) => {
+        if (!alive) return;
+        setMembers(data.members);
+        setStats(data.stats);
+      },
+      (e) => {
+        if (alive) setLoadError(errorMessage(e, "회원 목록을 불러오지 못했습니다."));
+      },
+    );
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const filtered = useMemo(() => {
     if (!members) return [];
@@ -67,38 +77,25 @@ export default function MembersPage() {
     );
   }, [members, query]);
 
-  const lowMembers = useMemo(
-    () =>
-      (members ?? []).filter(
-        (m) => m.remainingSessions > 0 && m.remainingSessions <= LOW_SESSION_THRESHOLD,
-      ),
-    [members],
+  /*
+   * 남은 수업이 0회면 사실상 종료한 회원이다. 진행 중인 회원과 한 목록에
+   * 섞여 있으면 매일 보는 목록이 지난 회원들로 길어진다.
+   * 검색은 양쪽 모두에 걸리도록 filtered를 나눠서 쓴다.
+   */
+  const active = useMemo(
+    () => filtered.filter((m) => m.remainingSessions > 0),
+    [filtered],
+  );
+  const ended = useMemo(
+    () => filtered.filter((m) => m.remainingSessions === 0),
+    [filtered],
   );
 
-  const openForm = () => {
-    setFormError(null);
-    setFormOpen(true);
-  };
-
-  const handleCreate = async (values: MemberPayload) => {
-    setSubmitting(true);
-    setFormError(null);
-    try {
-      await apiFetch("/api/members", {
-        method: "POST",
-        body: JSON.stringify(values),
-      });
-      setFormOpen(false);
-      toast(`${values.name} 회원을 등록했습니다.`);
-      await load();
-    } catch (e) {
-      setFormError(errorMessage(e, "회원 등록에 실패했습니다."));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const total = members?.length ?? 0;
+  const endedTotal = (members ?? []).filter(
+    (m) => m.remainingSessions === 0,
+  ).length;
+  const activeTotal = total - endedTotal;
 
   return (
     <div className="flex flex-col gap-6">
@@ -110,18 +107,25 @@ export default function MembersPage() {
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">{todayLabel()}</p>
         </div>
-        {!formOpen && (
-          <Button onClick={openForm}>
+        <Button asChild>
+          <Link href="/members/new">
             <Icon name="plus" size={16} />
             회원 등록
-          </Button>
-        )}
+          </Link>
+        </Button>
       </div>
 
       {/* ── 지표 ───────────────────────────── */}
       {stats && (
         <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
-          <Kpi label="전체 회원" value={stats.total} unit="명" hint="등록된 회원" />
+          {/* "전체"는 종료한 회원까지 세어 실제로 관리 중인 인원과 어긋난다.
+              진행 중을 앞에 세우고, 종료 인원은 아래 설명으로 붙인다. */}
+          <Kpi
+            label="진행 중 회원"
+            value={activeTotal}
+            unit="명"
+            hint={endedTotal > 0 ? `종료 ${endedTotal}명` : "수업이 남은 회원"}
+          />
           <Kpi
             label="최근 7일 수업"
             value={stats.recentCompletions}
@@ -144,60 +148,11 @@ export default function MembersPage() {
         </div>
       )}
 
-      {/* ── 수업 임박 알림 ──────────────────── */}
-      {lowMembers.length > 0 && (
-        <section className="rounded-2xl border border-warning/35 bg-warning/8 p-4 sm:p-5">
-          <p className="flex items-center gap-2 text-base font-bold text-warning">
-            <Icon name="alert" size={16} />
-            수업이 곧 끝나는 회원 {lowMembers.length}명
-          </p>
-          <ul className="mt-3 flex flex-wrap gap-2">
-            {lowMembers.map((m) => (
-              <li key={m.id}>
-                <Link
-                  href={`/members/${m.id}`}
-                  className="flex items-center gap-2 rounded-full border border-warning/35 bg-surface px-3 py-1.5 transition-colors hover:border-warning"
-                >
-                  <span className="text-sm font-bold">{m.name}</span>
-                  <span className="text-xs font-semibold text-warning">
-                    {m.remainingSessions}회 남음
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {/* ── 등록 폼 ───────────────────────── */}
-      {formOpen && (
-        <section className="rounded-2xl border border-line bg-raised p-4 sm:p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-md font-bold tracking-tight">회원 등록</h2>
-            <button
-              type="button"
-              onClick={() => setFormOpen(false)}
-              aria-label="닫기"
-              className="rounded-lg p-1.5 text-subtle transition-colors hover:bg-surface hover:text-ink"
-            >
-              <Icon name="close" size={16} />
-            </button>
-          </div>
-          <MemberForm
-            submitLabel="등록하기"
-            busy={submitting}
-            serverError={formError}
-            onSubmit={handleCreate}
-            onCancel={() => setFormOpen(false)}
-          />
-        </section>
-      )}
-
       {/* ── 회원 목록 ─────────────────────── */}
       <section className="flex flex-col gap-3.5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-extrabold tracking-[-0.02em]">
-            회원 {total}명
+            진행 중 {activeTotal}명
           </h2>
           {total > 0 && (
             <div className="relative w-full sm:w-[280px]">
@@ -210,7 +165,7 @@ export default function MembersPage() {
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="이름, 연락처, 목표로 검색"
                 aria-label="회원 검색"
-                className="w-full rounded-lg border border-line bg-surface py-2.5 pl-9 pr-3 text-sm outline-none transition-colors placeholder:text-subtle focus:border-primary"
+                className="h-11 w-full rounded-lg border-[1.5px] border-edge bg-surface pl-9 pr-3 text-sm outline-none transition-colors placeholder:text-subtle focus:border-primary"
               />
             </div>
           )}
@@ -232,100 +187,142 @@ export default function MembersPage() {
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="h-[168px] animate-pulse rounded-2xl border border-line bg-surface"
+                className="h-[148px] animate-pulse rounded-2xl border-[1.5px] border-edge bg-surface"
               />
             ))}
           </div>
         ) : total === 0 ? (
-          !formOpen && (
-            <EmptyState
-              icon="users"
-              title="아직 등록된 회원이 없습니다"
-              description="회원 등록 버튼을 눌러 첫 번째 회원을 추가해 보세요."
-              action={
-                <Button onClick={openForm}>
+          <EmptyState
+            icon="users"
+            title="아직 등록된 회원이 없습니다"
+            description="회원 등록 버튼을 눌러 첫 번째 회원을 추가해 보세요."
+            action={
+              <Button asChild>
+                <Link href="/members/new">
                   <Icon name="plus" size={16} />
                   회원 등록하기
-                </Button>
-              }
-            />
-          )
+                </Link>
+              </Button>
+            }
+          />
         ) : filtered.length === 0 ? (
           <EmptyState
             icon="search"
             title="검색 결과가 없습니다"
             description="다른 검색어로 다시 시도해 보세요."
           />
+        ) : active.length === 0 ? (
+          // 검색 결과가 종료한 회원뿐일 때. 빈 자리만 두면 아래 종료 목록이
+          // 진행 중 목록인 것처럼 보인다.
+          <p className="rounded-2xl border-[1.5px] border-edge bg-surface px-4 py-5 text-sm text-muted-foreground">
+            수업이 남은 회원이 없습니다.
+          </p>
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((member) => {
-              const low =
-                member.remainingSessions > 0 &&
-                member.remainingSessions <= LOW_SESSION_THRESHOLD;
-              return (
-                <li key={member.id}>
-                  <Link
-                    href={`/members/${member.id}`}
-                    className="group flex h-full flex-col rounded-2xl border border-line bg-surface p-4 shadow-card transition-colors hover:border-line-strong sm:p-5"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <h3 className="truncate text-lg font-bold tracking-tight">
-                          {member.name}
-                        </h3>
-                        <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                          {member.phone}
-                        </p>
-                      </div>
-                      <span
-                        className={`shrink-0 rounded-full px-2.5 py-1 text-2xs font-bold ${
-                          low
-                            ? "bg-warning/12 text-warning"
-                            : member.remainingSessions > 0
-                              ? "bg-primary-light text-primary-dark"
-                              : "bg-raised text-muted-foreground"
-                        }`}
-                      >
-                        {member.remainingSessions}회 남음
-                      </span>
-                    </div>
-
-                    {member.goal && (
-                      <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
-                        {member.goal}
-                      </p>
-                    )}
-
-                    <div className="mt-auto flex items-center justify-between gap-2 border-t border-line pt-3 text-xs text-muted-foreground">
-                      <span className="flex gap-3.5">
-                        <span>
-                          체중{" "}
-                          <span className="font-bold text-ink">
-                            {member.latestWeight !== null
-                              ? `${member.latestWeight}kg`
-                              : "—"}
-                          </span>
-                        </span>
-                        <span>
-                          기록{" "}
-                          <span className="font-bold text-ink">
-                            {member.workoutCount}건
-                          </span>
-                        </span>
-                      </span>
-                      <span className="text-subtle transition-colors group-hover:text-primary">
-                        <Icon name="arrowRight" size={16} />
-                      </span>
-                    </div>
-                  </Link>
-                </li>
-              );
-            })}
+            {active.map((member) => (
+              <MemberCard key={member.id} member={member} />
+            ))}
           </ul>
         )}
       </section>
 
+      {/* ── 종료한 회원 ───────────────────────
+          남은 수업이 0회면 진행 중인 회원과 섞어 두지 않는다. 매일 보는 것은
+          지금 수업이 남은 사람들이고, 종료한 사람은 다시 등록할 때만 찾는다. */}
+      {ended.length > 0 && (
+        <section className="flex flex-col gap-3.5">
+          <h2 className="text-lg font-extrabold tracking-[-0.02em] text-muted-foreground">
+            종료 {ended.length}명
+          </h2>
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {ended.map((member) => (
+              <MemberCard key={member.id} member={member} />
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
+  );
+}
+
+/** 목록에 놓이는 회원 한 장. 진행 중과 종료 목록이 같은 카드를 쓴다. */
+function MemberCard({ member }: { member: MemberSummary }) {
+  const left = member.remainingSessions;
+  const totalSessions = left + member.completedSessions;
+  const percent =
+    totalSessions === 0
+      ? 0
+      : Math.round((member.completedSessions / totalSessions) * 100);
+
+  /*
+   * 숫자와 진행바는 "수업이 얼마나 남았나"라는 같은 사실을 말한다.
+   * 색을 따로 주면 카드 한 장에 강조색이 둘이 되어 색만 늘고 뜻은 안 는다.
+   * 한 색으로 묶어 카드마다 강조색이 하나만 남게 한다.
+   */
+  const tone =
+    left === 0
+      ? { text: "text-subtle", bar: "bg-line-strong" }
+      : left <= LOW_SESSION_THRESHOLD
+        ? { text: "text-danger", bar: "bg-danger" }
+        : { text: "text-primary", bar: "bg-primary" };
+
+  return (
+    <li>
+      <Link
+        href={`/members/${member.id}`}
+        className="group flex h-full flex-col gap-3.5 rounded-2xl border-[1.5px] border-edge bg-surface p-4 transition-colors hover:bg-raised sm:p-5"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <h3 className="truncate text-lg font-extrabold tracking-[-0.03em]">
+              {member.name}
+            </h3>
+            {member.goal && (
+              <span className="shrink-0 rounded-full bg-raised px-2.5 py-1 text-2xs font-bold text-muted-foreground group-hover:bg-surface">
+                {member.goal}
+              </span>
+            )}
+          </div>
+          <p className="flex shrink-0 items-end gap-1">
+            {/* 남은 수업이 곧 끝나면 숫자 자체가 경고가 된다.
+                따로 알림 배너를 띄우면 같은 사실을 두 번 말하게 된다. */}
+            <span
+              className={`text-2xl font-extrabold leading-none tracking-[-0.03em] ${tone.text}`}
+            >
+              {left}
+            </span>
+            <span className="text-2xs font-bold text-muted-foreground">회</span>
+          </p>
+        </div>
+
+        <div className="h-1.5 overflow-hidden rounded-full bg-raised group-hover:bg-line">
+          <div
+            className={`h-full rounded-full ${tone.bar}`}
+            style={{ width: `${percent}%` }}
+          />
+        </div>
+
+        <div className="mt-auto flex items-center justify-between gap-2 text-xs text-subtle">
+          <span>
+            기록{" "}
+            <span className="font-bold text-ink">{member.workoutCount}건</span>
+            {member.latestWeight !== null && (
+              <>
+                {" · "}
+                <span className="font-bold text-ink">
+                  {member.latestWeight}kg
+                </span>
+              </>
+            )}
+          </span>
+          <span>
+            {totalSessions > 0
+              ? `등록 ${totalSessions}회 중 ${member.completedSessions}회 사용`
+              : "등록된 수업 없음"}
+          </span>
+        </div>
+      </Link>
+    </li>
   );
 }
 
@@ -343,16 +340,14 @@ function Kpi({
   warn?: boolean;
 }) {
   return (
-    <div
-      className={`rounded-2xl border bg-surface p-4 ${
-        warn ? "border-warning/35" : "border-line"
-      }`}
-    >
-      <p className="text-xs font-semibold text-muted-foreground">{label}</p>
+    <div className="rounded-2xl border-[1.5px] border-edge bg-surface p-4">
+      <p className="text-2xs font-extrabold uppercase tracking-widest text-subtle">
+        {label}
+      </p>
       <p className="mt-2 flex items-end gap-1">
         <span
           className={`text-3xl font-extrabold leading-none tracking-[-0.03em] ${
-            warn ? "text-warning" : ""
+            warn ? "text-primary" : ""
           }`}
         >
           {value}

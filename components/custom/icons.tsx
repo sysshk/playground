@@ -15,11 +15,15 @@ import {
   Dumbbell,
   Flame,
   LogOut,
+  Menu,
   Minus,
+  PanelLeftClose,
+  PanelLeftOpen,
   Pencil,
   Plus,
   RotateCcw,
   Search,
+  Settings,
   Smartphone,
   Sparkles,
   Target,
@@ -56,6 +60,10 @@ const ICONS = {
   chevronRight: ChevronRight,
   clock: Clock,
   undo: RotateCcw,
+  menu: Menu,
+  panelClose: PanelLeftClose,
+  panelOpen: PanelLeftOpen,
+  settings: Settings,
 } as const;
 
 export type IconName = keyof typeof ICONS;

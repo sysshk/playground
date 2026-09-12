@@ -75,20 +75,3 @@ export async function POST(request: Request, { params }: Params) {
     return serverError("workouts.POST", e);
   }
 }
-
-/** 해당 회원의 운동 기록 전체 삭제 */
-export async function DELETE(_request: Request, { params }: Params) {
-  const { memberId } = await params;
-  const { trainerId, error } = await requireTrainerId();
-  if (error) return error;
-
-  const owned = await requireOwnedMember(memberId, trainerId);
-  if (owned.error) return owned.error;
-
-  try {
-    const { count } = await prisma.workout.deleteMany({ where: { memberId } });
-    return NextResponse.json({ ok: true, deleted: count });
-  } catch (e) {
-    return serverError("workouts.DELETE_ALL", e);
-  }
-}

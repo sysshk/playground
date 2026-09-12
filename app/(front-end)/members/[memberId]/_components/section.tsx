@@ -11,18 +11,21 @@ import {
 
 /** 회원 상세의 한 덩어리(운동 기록, 체중, 코칭 메모 …). 제목 옆에 보조 동작을 둔다. */
 export function Section({
+  id,
   title,
   subtitle,
   action,
   children,
 }: {
+  /** 히어로의 버튼이 이 섹션으로 스크롤할 때 쓴다. */
+  id?: string;
   title: string;
   subtitle?: string;
   action?: ReactNode;
   children: ReactNode;
 }) {
   return (
-    <Card className="gap-4 rounded-2xl shadow-card [--card-spacing:--spacing(5)]">
+    <Card id={id} className="scroll-mt-20 gap-4 rounded-2xl [--card-spacing:--spacing(5)]">
       <CardHeader>
         <CardTitle className="text-md font-bold tracking-tight">{title}</CardTitle>
         {subtitle && <CardDescription className="text-xs">{subtitle}</CardDescription>}

@@ -37,7 +37,7 @@ export async function GET() {
           take: 1,
           select: { weight: true },
         },
-        _count: { select: { workouts: true } },
+        _count: { select: { workouts: true, completions: true } },
       },
     });
 
@@ -45,6 +45,8 @@ export async function GET() {
       ...member,
       latestWeight: weights[0]?.weight ?? null,
       workoutCount: _count.workouts,
+      // 진행 막대를 그리려면 쓴 횟수가 필요하다.
+      completedSessions: _count.completions,
     }));
 
     return NextResponse.json({

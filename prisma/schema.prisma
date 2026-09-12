@@ -171,6 +171,8 @@ model SessionCompletion {
   workoutId   String?  @unique
   workout     Workout? @relation(fields: [workoutId], references: [id], onDelete: SetNull)
   completedAt DateTime @default(now())
+  /// 운동 기록 없이 직접 차감할 때 남기는 사유 (상담, 체형 평가 등)
+  reason      String?
 
   @@index([memberId, completedAt])
 }

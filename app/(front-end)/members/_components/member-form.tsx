@@ -143,7 +143,7 @@ export default function MemberForm({
       )}
 
       <div className="mt-2 flex gap-2.5">
-        <Button variant="outline" onClick={onCancel} className="flex-1">
+        <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
           취소
         </Button>
         <Button type="submit" loading={busy} className="flex-1">

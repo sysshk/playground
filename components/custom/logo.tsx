@@ -1,5 +1,3 @@
-import { useId } from "react";
-
 // PT 매니저 로고
 //
 // P와 T를 한 줄로 이어 그린 모노그램. T의 가로획이 오른쪽에서 말려 내려와
@@ -16,15 +14,28 @@ export function LogoMark({
   size = 32,
   onDark = false,
   className = "",
+  gradientId,
 }: {
   size?: number;
   /** 어두운 배경 위에 놓일 때. 그라데이션이 하늘색→흰색으로 바뀐다. */
   onDark?: boolean;
   className?: string;
+  /**
+   * 그라데이션 id. 기본값은 변형별 고정값이라 한 화면에 마크가 여러 개
+   * 나와도 보통은 문제가 없다 — 내용이 같으니 어느 것을 참조해도 같다.
+   *
+   * 단, 같은 id가 여럿이면 브라우저는 문서에서 **처음 만난 것**을 쓴다.
+   * 그 첫 번째가 display:none 안에 있으면(예: 모바일에서 감춰 둔 데스크톱
+   * 사이드바) 그라데이션을 못 찾아 마크가 통째로 안 보인다. 감춰질 수 있는
+   * 곳과 같이 놓이는 마크에는 여기에 다른 id를 넘겨 준다.
+   */
+  gradientId?: string;
 }) {
-  // 한 화면에 로고가 여러 번 나와도 그라데이션 id가 겹치지 않게 한다.
-  const gradientId = `pt-logo-${useId().replace(/[^\w-]/g, "")}`;
-  const [from, to] = onDark ? ["#5b9bff", "#ffffff"] : ["#1f6feb", "#111111"];
+  // useId()를 쓰면 서버와 클라이언트가 다른 값을 내 hydration이 깨진다.
+  const [defaultId, from, to] = onDark
+    ? ["pt-logo-gradient-dark", "#5b9bff", "#ffffff"]
+    : ["pt-logo-gradient-light", "#1f6feb", "#111111"];
+  const id = gradientId ?? defaultId;
 
   return (
     <svg
@@ -36,14 +47,14 @@ export function LogoMark({
       className={`shrink-0 ${className}`}
     >
       <defs>
-        <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
+        <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor={from} />
           <stop offset="1" stopColor={to} />
         </linearGradient>
       </defs>
       <path
         d={LOGO_PATH}
-        stroke={`url(#${gradientId})`}
+        stroke={`url(#${id})`}
         strokeWidth="4"
         strokeLinecap="round"
         strokeLinejoin="round"

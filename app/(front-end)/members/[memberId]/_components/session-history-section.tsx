@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { DateTimePicker } from "@/components/custom/date-picker";
 import { Icon } from "@/components/custom/icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatDateTime } from "@/lib/client";
+import { formatDayHour } from "@/lib/client";
 import type { SessionCompletion } from "@/lib/types";
 import { Section, SectionAction } from "./section";
+import SessionCompleteForm, {
+  type SessionCompletePayload,
+} from "./session-complete-form";
 
 /** 이력이 길어지면 접어 둔다. */
 const VISIBLE = 5;
@@ -19,28 +21,24 @@ const VISIBLE = 5;
  * 잘못 차감한 것을 되돌리고, 상담처럼 운동 기록이 없는 날만 직접 차감한다.
  */
 export function SessionHistorySection({
+  id,
   remainingSessions,
   completions,
   standaloneOpen,
-  completedAt,
-  maxDate,
   busy,
+  serverError,
   onToggleStandalone,
-  onCompletedAtChange,
   onComplete,
   onCancelCompletion,
 }: {
+  id?: string;
   remainingSessions: number;
   completions: SessionCompletion[];
   standaloneOpen: boolean;
-  /** "YYYY-MM-DDTHH:mm" */
-  completedAt: string;
-  /** 이 날짜(YYYY-MM-DD) 이후는 고를 수 없다. */
-  maxDate: string;
   busy: boolean;
+  serverError: string | null;
   onToggleStandalone: () => void;
-  onCompletedAtChange: (value: string) => void;
-  onComplete: () => void;
+  onComplete: (payload: SessionCompletePayload) => void;
   onCancelCompletion: (completion: SessionCompletion) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -53,6 +51,7 @@ export function SessionHistorySection({
 
   return (
     <Section
+      id={id}
       title="수업 이력"
       subtitle="운동 기록을 저장하면 수업이 함께 차감됩니다."
       action={
@@ -99,31 +98,14 @@ export function SessionHistorySection({
       </div>
 
       {standaloneOpen && (
-        <div className="mt-4 flex flex-col gap-3 rounded-xl border border-primary/30 bg-primary-light/50 p-3 sm:p-4">
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            상담이나 체형 평가처럼 운동 기록이 없는 날에만 씁니다. 운동을 했다면 기록을
-            저장할 때 함께 차감하세요.
-          </p>
-          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <span className="shrink-0 whitespace-nowrap text-sm font-semibold">
-                차감 시각
-              </span>
-              <DateTimePicker
-                value={completedAt}
-                onChange={onCompletedAtChange}
-                max={maxDate}
-              />
-            </div>
-            <Button
-              onClick={onComplete}
-              disabled={remainingSessions === 0 || busy}
-              className="w-full sm:w-auto"
-            >
-              <Icon name="check" size={17} />
-              {remainingSessions === 0 ? "남은 수업이 없습니다" : "수업 1회 차감"}
-            </Button>
-          </div>
+        <div className="mt-4">
+          <SessionCompleteForm
+            disabled={remainingSessions === 0}
+            busy={busy}
+            serverError={serverError}
+            onSubmit={onComplete}
+            onCancel={onToggleStandalone}
+          />
         </div>
       )}
 
@@ -144,7 +126,7 @@ export function SessionHistorySection({
                     {done - i}
                   </span>
                   <span className="text-sm font-semibold">
-                    {formatDateTime(completion.completedAt)}
+                    {formatDayHour(completion.completedAt)}
                   </span>
                   <Badge
                     variant={completion.workoutId ? "secondary" : "outline"}
@@ -152,6 +134,11 @@ export function SessionHistorySection({
                   >
                     {completion.workoutId ? "운동 기록" : "직접 차감"}
                   </Badge>
+                  {completion.reason && (
+                    <span className="truncate text-xs text-muted-foreground">
+                      {completion.reason}
+                    </span>
+                  )}
                 </span>
                 <Button
                   variant="ghost"

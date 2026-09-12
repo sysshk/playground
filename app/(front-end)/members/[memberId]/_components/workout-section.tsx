@@ -1,45 +1,36 @@
 "use client";
 
+import Link from "next/link";
 import { EmptyState } from "@/components/custom/empty-state";
+import { Icon } from "@/components/custom/icons";
+import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/client";
 import type { Exercise, Workout } from "@/lib/types";
-import { IconButton, Section, SectionAction } from "./section";
-import WorkoutForm, { type WorkoutPayload } from "./workout-form";
+import { IconButton, Section } from "./section";
 
-/** 날짜별 운동 기록. 수업을 차감하며 저장한 기록에는 뱃지가 붙는다. */
+/**
+ * 날짜별 운동 기록. 수업을 차감하며 저장한 기록에는 뱃지가 붙는다.
+ *
+ * 작성·수정은 별도 화면에서 한다. 종목과 세트가 늘어나면 폼이 화면을 통째로
+ * 써서, 여기서 펼치면 아래 내용이 한꺼번에 밀려난다.
+ */
 export function WorkoutSection({
+  id,
+  memberId,
   workouts,
-  remainingSessions,
   linkedWorkoutIds,
-  editing,
-  formOpen,
-  busy,
-  serverError,
-  onToggle,
-  onEdit,
-  onSubmit,
-  onCancel,
   onDelete,
-  onDeleteAll,
 }: {
+  id?: string;
+  memberId: string;
   workouts: Workout[];
-  remainingSessions: number;
   /** 수업 차감과 연결된 기록 id */
   linkedWorkoutIds: Set<string>;
-  /** 수정 중인 기록. 새로 추가하는 중이면 null */
-  editing: Workout | null;
-  formOpen: boolean;
-  busy: boolean;
-  serverError: string | null;
-  onToggle: () => void;
-  onEdit: (workout: Workout) => void;
-  onSubmit: (payload: WorkoutPayload) => void;
-  onCancel: () => void;
   onDelete: (workout: Workout) => void;
-  onDeleteAll: () => void;
 }) {
   return (
     <Section
+      id={id}
       title="운동 기록"
       subtitle={
         workouts.length > 0
@@ -47,46 +38,20 @@ export function WorkoutSection({
           : "세트마다 횟수와 무게를 따로 기록합니다."
       }
       action={
-        <div className="flex gap-1.5">
-          {workouts.length > 0 && (
-            <IconButton
-              icon="trash"
-              label="운동 기록 전체 삭제"
-              danger
-              onClick={onDeleteAll}
-            />
-          )}
-          <SectionAction
-            icon={formOpen ? "close" : "plus"}
-            label={formOpen ? "닫기" : "기록 추가"}
-            active={formOpen}
-            onClick={onToggle}
-          />
-        </div>
+        <Button asChild variant="ghost" size="sm">
+          <Link href={`/members/${memberId}/workouts/new`}>
+            <Icon name="plus" size={16} />
+            기록 추가
+          </Link>
+        </Button>
       }
     >
-      {formOpen && (
-        <div className="mb-4">
-          <WorkoutForm
-            key={editing?.id ?? "new"}
-            workout={editing ?? undefined}
-            remainingSessions={remainingSessions}
-            busy={busy}
-            serverError={serverError}
-            onSubmit={onSubmit}
-            onCancel={onCancel}
-          />
-        </div>
-      )}
-
       {workouts.length === 0 ? (
-        !formOpen && (
-          <EmptyState
-            icon="dumbbell"
-            title="운동 기록이 없습니다"
-            description="기록 추가를 눌러 오늘 진행한 종목을 남겨보세요."
-          />
-        )
+        <EmptyState
+          icon="dumbbell"
+          title="운동 기록이 없습니다"
+          description="기록 추가를 눌러 오늘 진행한 종목을 남겨보세요."
+        />
       ) : (
         <ul className="flex flex-col gap-3">
           {workouts.map((workout) => (
@@ -108,11 +73,14 @@ export function WorkoutSection({
                   )}
                 </p>
                 <span className="flex shrink-0 gap-1">
-                  <IconButton
-                    icon="pencil"
-                    label="운동 기록 수정"
-                    onClick={() => onEdit(workout)}
-                  />
+                  <Link
+                    href={`/members/${memberId}/workouts/${workout.id}`}
+                    title="운동 기록 수정"
+                    aria-label="운동 기록 수정"
+                    className="grid size-9 shrink-0 place-items-center rounded-lg text-subtle transition-colors hover:bg-raised hover:text-ink"
+                  >
+                    <Icon name="pencil" size={15} />
+                  </Link>
                   <IconButton
                     icon="trash"
                     label="운동 기록 삭제"
@@ -150,11 +118,11 @@ function ExerciseRow({ exercise }: { exercise: Exercise }) {
         {exercise.sets.map((set, i) => (
           <li
             key={set.id}
-            className="flex items-baseline gap-1 rounded-lg bg-raised px-2.5 py-1.5"
+            className="flex items-baseline gap-1.5 rounded-lg bg-chip px-2.5 py-1.5"
           >
             <span className="text-2xs font-bold text-subtle">{i + 1}</span>
-            <span className="text-xs font-semibold">{set.reps}회</span>
-            <span className="text-2xs text-muted-foreground">
+            <span className="text-xs font-bold tabular-nums">{set.reps}회</span>
+            <span className="text-2xs font-semibold tabular-nums text-muted-foreground">
               {set.unit === "bodyweight" ? "맨몸" : `${set.weight}kg`}
             </span>
           </li>

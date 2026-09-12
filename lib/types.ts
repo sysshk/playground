@@ -62,6 +62,8 @@ export interface SessionCompletion {
   /** 운동 기록을 저장하면서 차감했으면 그 기록의 id */
   workoutId: string | null;
   completedAt: string;
+  /** 직접 차감할 때 적어 둔 사유. 운동 기록으로 차감했으면 null */
+  reason: string | null;
 }
 
 export interface NutritionProfile {
@@ -105,6 +107,8 @@ export interface Member {
 export interface MemberSummary extends Member {
   latestWeight: number | null;
   workoutCount: number;
+  /** 지금까지 차감한 수업 수. 등록 전체 횟수는 이 값 + remainingSessions */
+  completedSessions: number;
 }
 
 /** 대시보드 상단 지표 */

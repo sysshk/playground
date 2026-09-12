@@ -87,7 +87,7 @@ export default function WeightForm({
       )}
 
       <div className="flex gap-2.5">
-        <Button variant="outline" onClick={onCancel} className="flex-1 sm:flex-none">
+        <Button type="button" variant="outline" onClick={onCancel} className="flex-1 sm:flex-none">
           취소
         </Button>
         <Button type="submit" loading={busy} className="flex-1">

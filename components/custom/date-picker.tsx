@@ -139,6 +139,84 @@ export function DatePicker({
   );
 }
 
+/** 수업이 있을 만한 시간대만 고른다. 새벽 3시를 누를 일은 없다. */
+const GYM_HOURS = Array.from({ length: 17 }, (_, i) => i + 6);
+
+/** 0~23 → "오전 9시" / "정오" / "오후 2시" */
+export function formatHourLabel(hour: number) {
+  if (hour === 12) return "정오";
+  return hour < 12 ? `오전 ${hour}시` : `오후 ${hour - 12}시`;
+}
+
+/**
+ * 시 단위 시각 선택기.
+ *
+ * 수업 기록에 분 단위는 쓸모가 없다. 시간대만 남기면 한 번 눌러서 끝나고,
+ * 폰에서 스크롤 휠을 두 번 돌릴 필요도 없다.
+ */
+export function HourPicker({
+  value,
+  onChange,
+  ariaLabel = "시간 선택",
+}: {
+  /** 0~23 */
+  value: number;
+  onChange: (hour: number) => void;
+  ariaLabel?: string;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const pick = (hour: number) => {
+    onChange(hour);
+    setOpen(false);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          className={TRIGGER}
+          aria-label={`${ariaLabel}: ${formatHourLabel(value)}`}
+        >
+          <Icon name="clock" className="text-muted-foreground" />
+          {formatHourLabel(value)}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-[268px] p-3">
+        <div className="flex items-center justify-between pb-2.5">
+          <span className="text-2xs font-bold text-subtle">시간</span>
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => pick(new Date().getHours())}
+          >
+            지금
+          </Button>
+        </div>
+        <div className="grid grid-cols-3 gap-1.5">
+          {GYM_HOURS.map((h) => (
+            <button
+              key={h}
+              type="button"
+              aria-pressed={h === value}
+              onClick={() => pick(h)}
+              className={`h-10 rounded-lg text-sm font-bold transition-colors ${
+                h === value
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-raised text-ink hover:bg-line"
+              }`}
+            >
+              {formatHourLabel(h)}
+            </button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function TimeColumn({
   label,
   values,

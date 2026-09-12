@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { THEME_SCRIPT } from "@/components/custom/theme";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -21,7 +22,10 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#ffffff",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f3f3f1" },
+    { media: "(prefers-color-scheme: dark)", color: "#0e0f11" },
+  ],
 };
 
 export default function RootLayout({
@@ -40,6 +44,8 @@ export default function RootLayout({
         {/* eslint-disable-next-line @next/next/no-css-tags -- 92개 서브셋 파일을 참조하는
             서드파티 CSS라 next/font나 번들 import로는 다룰 수 없다. */}
         <link rel="stylesheet" href="/pt-manager/fonts/pretendard.css" />
+        {/* 저장해 둔 테마를 첫 페인트 전에 입혀 화면이 번쩍이지 않게 한다. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body>{children}</body>
     </html>
