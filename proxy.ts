@@ -9,6 +9,9 @@ import { SIGNUP_ENABLED } from "@/lib/config";
 //
 // Next 16부터 middleware.ts 대신 proxy.ts 규약을 쓴다.
 
+/** 로그인한 트레이너의 첫 화면 */
+const HOME = "/home";
+
 /** 로그인 없이 볼 수 있는 화면. "/"는 서비스 소개 겸 랜딩이라 공개한다. */
 const PUBLIC_PATHS = ["/", "/login", "/join"];
 
@@ -44,7 +47,7 @@ export function proxy(request: NextRequest) {
 
   if (loggedIn && AUTH_PATHS.includes(pathname)) {
     const url = request.nextUrl.clone();
-    url.pathname = "/members";
+    url.pathname = HOME;
     url.search = "";
     return NextResponse.redirect(url);
   }

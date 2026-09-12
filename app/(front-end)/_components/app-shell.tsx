@@ -33,6 +33,7 @@ const BACK =
   "flex min-w-0 items-center gap-1.5 rounded-lg px-2 py-1.5 text-base font-bold text-muted-foreground transition-colors hover:bg-raised hover:text-ink";
 
 const NAV: { href: string; label: string; icon: IconName }[] = [
+  { href: "/home", label: "홈", icon: "calendar" },
   { href: "/members", label: "회원", icon: "users" },
 ];
 
@@ -45,6 +46,7 @@ const NAV: { href: string; label: string; icon: IconName }[] = [
  * 하위 화면에서는 돌아갈 곳을 바로 띄운다.
  */
 function topBar(pathname: string) {
+  if (pathname === "/home") return { label: "홈" };
   if (pathname === "/members") return { label: "회원" };
   if (pathname.startsWith("/members/")) {
     return { href: "/members", label: "회원 목록" };
@@ -78,7 +80,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
               compact ? "justify-center px-0" : "gap-3 px-3"
             } ${
               active
-                ? "bg-ink text-canvas"
+                ? "bg-primary-light text-ink"
                 : "text-muted-foreground hover:bg-raised hover:text-ink"
             }`}
           >
@@ -93,12 +95,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const sidebar = (compact: boolean, onClose?: () => void) => (
     <div className="flex h-full flex-col justify-between gap-6">
       <div className="flex flex-col gap-6">
-        {/* 로고와 닫기/접기를 한 줄에 둔다. 닫기만 따로 한 줄을 차지하면
-            좁은 화면에서 아까운 세로를 그냥 버리게 된다.
-
-            접었을 때는 로고를 빼고 접기 버튼만 남긴다. 글자 없이 마크만 남으면
-            아래 메뉴 아이콘들과 같은 크기의 도형이 하나 더 늘어난 꼴이라,
-            누를 수 있는 아이콘인지 그냥 표시인지 구분이 안 된다. */}
+        {/* 로고와 닫기/접기를 한 줄에 둔다. 접으면 로고는 빼고 버튼만 남긴다. */}
         <div
           className={`flex items-center ${
             compact ? "flex-col gap-2" : "justify-between gap-2"
@@ -106,13 +103,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
         >
           {!compact && (
             <Link
-              href={loggedIn ? "/members" : "/"}
+              href={loggedIn ? "/home" : "/"}
               onClick={() => setDrawerOpen(false)}
               className="flex min-w-0 items-center gap-2.5 px-1 py-1"
             >
-              {/* 데스크톱 사이드바는 폰에서 hidden(display:none)으로 남아 있다.
-                  서랍 마크가 같은 그라데이션 id를 쓰면 문서에서 먼저 나오는
-                  감춰진 쪽을 참조해 마크가 안 보인다. 서랍만 id를 달리 준다. */}
               <LogoMark
                 size={30}
                 gradientId={onClose ? "pt-logo-gradient-drawer" : undefined}
@@ -279,9 +273,6 @@ function AccountMenu({
             type="button"
             aria-label="계정 및 설정"
             title={compact ? name : undefined}
-            /* 평소에는 배경 없이 둔다. 위 메뉴 항목과 같은 규칙이다 —
-               흰 사이드바에 늘 채워진 블록이 있으면 검정 활성 메뉴와
-               둘이 되어 어디를 보라는 것인지 흐려진다. */
             className={`flex items-center rounded-xl text-left transition-colors hover:bg-raised ${
               compact
                 ? "size-11 justify-center self-center"

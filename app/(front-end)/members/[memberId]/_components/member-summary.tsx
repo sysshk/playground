@@ -106,14 +106,16 @@ export function MemberSummary({
               </p>
 
               <div className="flex w-full gap-2.5 sm:w-auto">
-                <button
-                  type="button"
-                  onClick={onDeductSession}
-                  className="flex h-12 flex-1 items-center justify-center gap-1.5 rounded-xl bg-white/10 px-4 text-md font-bold transition-colors hover:bg-white/18 sm:flex-none"
-                >
-                  <Icon name="minus" size={17} />
-                  직접 차감
-                </button>
+                {left > 0 && (
+                  <button
+                    type="button"
+                    onClick={onDeductSession}
+                    className="flex h-12 flex-1 items-center justify-center gap-1.5 rounded-xl bg-white/10 px-4 text-md font-bold transition-colors hover:bg-white/18 sm:flex-none"
+                  >
+                    <Icon name="minus" size={17} />
+                    직접 차감
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={onRecordWorkout}

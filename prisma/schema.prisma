@@ -81,11 +81,12 @@ model Member {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  workouts    Workout[]
-  weights     WeightRecord[]
-  notes       CoachingNote[]
-  completions SessionCompletion[]
-  nutrition   NutritionProfile?
+  workouts     Workout[]
+  weights      WeightRecord[]
+  notes        CoachingNote[]
+  completions  SessionCompletion[]
+  appointments Appointment[]
+  nutrition    NutritionProfile?
 
   @@index([trainerId, createdAt])
 }
@@ -165,16 +166,43 @@ model CoachingNote {
 /// 운동 기록을 저장하면서 차감하면 그 기록과 연결된다.
 /// 기록을 지워도 차감 이력은 남는다 — 되돌리려면 이력에서 따로 취소한다.
 model SessionCompletion {
-  id          String   @id @default(cuid())
+  id          String       @id @default(cuid())
   memberId    String
-  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  workoutId   String?  @unique
-  workout     Workout? @relation(fields: [workoutId], references: [id], onDelete: SetNull)
-  completedAt DateTime @default(now())
+  member      Member       @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  workoutId   String?      @unique
+  workout     Workout?     @relation(fields: [workoutId], references: [id], onDelete: SetNull)
+  completedAt DateTime     @default(now())
   /// 운동 기록 없이 직접 차감할 때 남기는 사유 (상담, 체형 평가 등)
   reason      String?
+  appointment Appointment?
 
   @@index([memberId, completedAt])
+}
+
+/// 잡아둔 수업 일정.
+///
+/// 수업 이력(SessionCompletion)의 "예정" 상태다. 일정에서 수업을 끝내면
+/// 그 자리에서 완료 내역이 만들어지고 서로 연결된다. 둘을 따로 두면
+/// 트레이너가 같은 수업을 두 번 입력하게 된다.
+///
+/// 완료 내역을 지우면(차감 되돌리기) 일정은 다시 "예정"으로 돌아간다.
+model Appointment {
+  id       String   @id @default(cuid())
+  memberId String
+  member   Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  /// 시작 시각. 분 단위는 받지 않고 시 단위로만 저장한다.
+  startsAt DateTime
+  memo     String?
+
+  /// 끝난 수업이면 그때 만들어진 완료 내역
+  completionId String?            @unique
+  completion   SessionCompletion? @relation(fields: [completionId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([memberId, startsAt])
+  @@index([startsAt])
 }
 
 /// 칼로리 및 영양 계산 결과 (회원당 1건, 다시 계산하면 덮어쓴다)
@@ -184,15 +212,15 @@ model NutritionProfile {
   member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   // 입력값
-  gender              String // male | female
-  age                 Int
-  height              Float // cm
-  weight              Float // kg
-  bodyFatPercentage   Float?
-  skeletalMuscleMass  Float? // 골격근량 kg
-  leanBodyMass        Float? // 직접 입력한 제지방량 kg
-  activityLevel       String // sedentary | light | moderate | veryActive | extraActive
-  goal                String // loss | maintain | gain
+  gender             String // male | female
+  age                Int
+  height             Float // cm
+  weight             Float // kg
+  bodyFatPercentage  Float?
+  skeletalMuscleMass Float? // 골격근량 kg
+  leanBodyMass       Float? // 직접 입력한 제지방량 kg
+  activityLevel      String // sedentary | light | moderate | veryActive | extraActive
+  goal               String // loss | maintain | gain
 
   // 계산 결과
   calculatedLeanBodyMass Float?
