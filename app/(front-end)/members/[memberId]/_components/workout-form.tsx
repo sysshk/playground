@@ -128,19 +128,21 @@ export default function WorkoutForm({
           return;
         }
 
-        // 무게 칸이 비어 있으면 맨몸 세트로 남긴다. 한 종목 안에서
-        // 맨몸과 중량 세트가 섞이는 경우가 있어 세트마다 따로 본다.
-        const blank = set.weight.trim() === "";
-        const parsed = Number(set.weight);
-        if (!blank && (!Number.isFinite(parsed) || parsed < 0)) {
+        // 스쿼트 1세트는 그냥 하고 2세트부터 무게를 다는 식으로 한 종목
+        // 안에서 섞이므로 세트마다 따로 본다. 비웠거나 0이면 무게가 없는
+        // 세트다 — 0kg으로 하는 운동은 없으니 둘을 구분할 이유가 없다.
+        const raw = set.weight.trim();
+        const parsed = Number(raw);
+        if (raw !== "" && (!Number.isFinite(parsed) || parsed < 0)) {
           setError(`${name} ${s + 1}세트: 무게를 다시 입력해 주세요.`);
           return;
         }
+        const noWeight = raw === "" || parsed === 0;
 
         sets.push({
           reps,
-          weight: blank ? null : parsed,
-          unit: blank ? "bodyweight" : "kg",
+          weight: noWeight ? null : parsed,
+          unit: noWeight ? "bodyweight" : "kg",
         });
       }
 
@@ -240,7 +242,8 @@ export default function WorkoutForm({
                     step={WEIGHT_STEP}
                     min={0}
                     inputMode="decimal"
-                    placeholder="맨몸"
+                    placeholder="없음"
+                    emptyAtMin
                     onChange={(weight) => patchSet(i, s, { weight })}
                   />
 
@@ -332,6 +335,7 @@ function Stepper({
   min,
   inputMode,
   placeholder = "0",
+  emptyAtMin = false,
   onChange,
 }: {
   label: string;
@@ -341,18 +345,27 @@ function Stepper({
   min: number;
   inputMode: "numeric" | "decimal";
   placeholder?: string;
+  /** 최솟값에서 한 번 더 줄이면 칸을 비운다. 무게가 없는 세트를 만드는 길이다. */
+  emptyAtMin?: boolean;
   onChange: (value: string) => void;
 }) {
+  const empty = value.trim() === "";
   const current = Number(value) || 0;
-  const bump = (delta: number) =>
-    onChange(String(Math.max(min, round1(current + delta))));
+  const bump = (delta: number) => {
+    const next = round1(current + delta);
+    if (emptyAtMin && next <= min) {
+      onChange("");
+      return;
+    }
+    onChange(String(Math.max(min, next)));
+  };
 
   return (
     <div className="flex h-11 min-w-0 items-center overflow-hidden rounded-lg bg-canvas sm:flex-1">
       <button
         type="button"
         onClick={() => bump(-step)}
-        disabled={current <= min}
+        disabled={emptyAtMin ? empty : current <= min}
         aria-label={`${label} 줄이기`}
         className="grid h-full w-9 shrink-0 place-items-center rounded-l-lg sm:w-11 text-muted-foreground transition-colors hover:bg-raised hover:text-ink disabled:opacity-30"
       >
@@ -367,7 +380,11 @@ function Stepper({
           aria-label={label}
           className="min-w-0 flex-1 bg-transparent text-right text-md font-bold tabular-nums outline-none placeholder:text-line-strong"
         />
-        <span className="shrink-0 pr-1.5 text-xs font-semibold text-muted-foreground">{unit}</span>
+        {!(emptyAtMin && empty) && (
+          <span className="shrink-0 pr-1.5 text-xs font-semibold text-muted-foreground">
+            {unit}
+          </span>
+        )}
       </label>
       <button
         type="button"

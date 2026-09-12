@@ -100,7 +100,7 @@ export function MemberSummary({
       ) : (
         <>
           {member.memo && (
-            <p className="whitespace-pre-wrap border-l-2 border-line-strong pl-3 text-sm leading-relaxed text-ink">
+            <p className="whitespace-pre-wrap rounded-r-lg border-l-[3px] border-primary bg-primary-light/40 py-2 pl-3 pr-3 text-sm leading-relaxed text-ink">
               {member.memo}
             </p>
           )}

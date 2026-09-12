@@ -91,7 +91,7 @@ export function WorkoutSection({
                 ))}
 
                 {workout.memo && (
-                  <p className="whitespace-pre-wrap border-l-2 border-line pl-3 text-xs leading-relaxed text-muted-foreground">
+                  <p className="whitespace-pre-wrap rounded-r-lg border-l-[3px] border-primary bg-primary-light/40 py-1.5 pl-3 pr-3 text-xs leading-relaxed text-ink">
                     {workout.memo}
                   </p>
                 )}
@@ -133,11 +133,15 @@ function ExerciseRow({ exercise }: { exercise: Exercise }) {
             className="flex items-baseline gap-1.5 rounded-lg bg-surface py-1 pl-2 pr-2.5 text-xs tabular-nums text-muted-foreground"
           >
             <span className="text-2xs font-bold text-subtle">{i + 1}세트</span>
-            <span className="font-semibold text-ink">
-              {set.unit === "bodyweight" ? "무게 없음" : `${set.weight}kg`}
-            </span>
-            <span className="text-subtle">×</span>
-            {set.reps}회
+            {set.unit === "bodyweight" ? (
+              <span className="font-semibold text-ink">{set.reps}회</span>
+            ) : (
+              <>
+                <span className="font-semibold text-ink">{set.weight}kg</span>
+                <span className="text-subtle">×</span>
+                {set.reps}회
+              </>
+            )}
           </li>
         ))}
       </ul>
