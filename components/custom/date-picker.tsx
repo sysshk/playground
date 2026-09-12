@@ -142,6 +142,17 @@ export function DatePicker({
 /** 수업이 있을 만한 시간대만 고른다. 새벽 3시를 누를 일은 없다. */
 const GYM_HOURS = Array.from({ length: 17 }, (_, i) => i + 6);
 
+/** 오전·오후로 나눠 두 줄에 담는다. 한 칸에 "오전 10시"를 다 쓰면 판이 창보다 커진다. */
+const HOUR_GROUPS = [
+  { label: "오전", hours: GYM_HOURS.filter((h) => h < 12) },
+  { label: "오후", hours: GYM_HOURS.filter((h) => h >= 12) },
+];
+
+/** 0~23 → 시계에 적힌 숫자 */
+function hourDigit(hour: number) {
+  return hour > 12 ? hour - 12 : hour;
+}
+
 /** 0~23 → "오전 9시" / "정오" / "오후 2시" */
 export function formatHourLabel(hour: number) {
   if (hour === 12) return "정오";
@@ -179,32 +190,46 @@ export function HourPicker({
           {formatHourLabel(value)}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-[268px] p-3">
-        <div className="flex items-center justify-between pb-2.5">
+      <PopoverContent
+        align="end"
+        collisionPadding={12}
+        className="w-[248px] p-2.5"
+      >
+        <div className="flex items-center justify-between pb-2">
           <span className="text-2xs font-bold text-subtle">시간</span>
-          <Button
+          <button
             type="button"
-            size="sm"
             onClick={() => pick(new Date().getHours())}
+            className="rounded-md px-1.5 py-1 text-xs font-bold text-primary transition-colors hover:bg-raised"
           >
             지금
-          </Button>
+          </button>
         </div>
-        <div className="grid grid-cols-3 gap-1.5">
-          {GYM_HOURS.map((h) => (
-            <button
-              key={h}
-              type="button"
-              aria-pressed={h === value}
-              onClick={() => pick(h)}
-              className={`h-10 rounded-lg text-sm font-bold transition-colors ${
-                h === value
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-raised text-ink hover:bg-line"
-              }`}
-            >
-              {formatHourLabel(h)}
-            </button>
+        <div className="flex flex-col gap-2">
+          {HOUR_GROUPS.map((group) => (
+            <div key={group.label} className="flex items-start gap-2">
+              <span className="w-6 shrink-0 pt-2 text-2xs font-bold text-subtle">
+                {group.label}
+              </span>
+              <div className="grid flex-1 grid-cols-6 gap-1">
+                {group.hours.map((h) => (
+                  <button
+                    key={h}
+                    type="button"
+                    aria-pressed={h === value}
+                    aria-label={formatHourLabel(h)}
+                    onClick={() => pick(h)}
+                    className={`h-8 rounded-md text-sm tabular-nums transition-colors ${
+                      h === value
+                        ? "font-extrabold text-primary"
+                        : "font-medium text-muted-foreground hover:bg-raised hover:text-ink"
+                    }`}
+                  >
+                    {hourDigit(h)}
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </PopoverContent>
