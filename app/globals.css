@@ -57,30 +57,30 @@
 .dark {
   --background: #0e0f11;
   --foreground: #f1f2f4;
-  --card: #17191c;
+  --card: #1b1e22;
   --card-foreground: #f1f2f4;
-  --popover: #17191c;
+  --popover: #1b1e22;
   --popover-foreground: #f1f2f4;
   --primary: #3b82f6;
   --primary-foreground: #ffffff;
-  --secondary: #212429;
+  --secondary: #282c32;
   --secondary-foreground: #f1f2f4;
-  --muted: #212429;
-  --muted-foreground: #a0a6ad;
-  --accent: #212429;
+  --muted: #282c32;
+  --muted-foreground: #b6bcc4;
+  --accent: #282c32;
   --accent-foreground: #f1f2f4;
   --destructive: #f87171;
-  --border: #2a2e33;
-  --input: #2a2e33;
+  --border: #30353b;
+  --input: #30353b;
   --ring: #3b82f6;
 
   /* 먹색 테두리는 어두운 바탕에서 보이지 않는다. 한 단계 밝게 올린다. */
-  --color-edge: #3a3f46;
+  --color-edge: #42474f;
   --color-primary-bright: #7fb0ff;
   --color-primary-dark: #2f6fd0;
   --color-primary-light: #17253c;
-  --color-subtle: #767c84;
-  --color-line-strong: #3a3f46;
+  --color-subtle: #949aa2;
+  --color-line-strong: #42474f;
   --color-inverse: #f1f2f4;
   --color-danger-dark: #fca5a5;
   --color-warning: #d9a441;
