@@ -18,6 +18,7 @@ import {
   Minus,
   Pencil,
   Plus,
+  RotateCcw,
   Search,
   Smartphone,
   Sparkles,
@@ -54,6 +55,7 @@ const ICONS = {
   chevronLeft: ChevronLeft,
   chevronRight: ChevronRight,
   clock: Clock,
+  undo: RotateCcw,
 } as const;
 
 export type IconName = keyof typeof ICONS;

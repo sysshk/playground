@@ -86,7 +86,7 @@ AUTH_SECRET=...   # node -e "console.log(require('crypto').randomBytes(32).toStr
 
 `prisma.config.ts`가 `dotenv/config`로 `.env`를 읽으므로, 아래 명령들은 **`.env`의 `DATABASE_URL`을 대상으로** 동작합니다.
 
-> ⚠️ 현재 `.env`와 `.env.production`의 `DATABASE_URL`이 **같습니다**. 즉 로컬에서 돌리는 스키마 명령이 **운영 DB에 바로 적용**됩니다. 실데이터가 쌓이기 시작하면 Neon 브랜치를 따서 개발용 URL을 `.env`에 따로 두는 걸 권합니다.
+> ⚠️ `.env`의 `DATABASE_URL`은 **운영 Neon DB를 그대로 가리킵니다.** 즉 로컬에서 돌리는 스키마 명령이 **운영 DB에 바로 적용**됩니다. 실데이터가 쌓이기 시작하면 Neon 브랜치를 따서 개발용 URL을 `.env`에 따로 두는 걸 권합니다.
 
 ### 자주 쓰는 명령어
 
@@ -165,9 +165,9 @@ npx tsc --noEmit     # 타입 검사
   확인: `vercel env ls` · 추가: `vercel env add`
 - `.env` 파일은 배포에 관여하지 않습니다. 빌드는 대시보드 환경변수만 씁니다.
 
-> ⚠️ `.env`와 `.env.production`이 한동안 공개 저장소에 커밋돼 있었습니다.
-> 현재는 추적을 끊었지만 **과거 커밋에는 남아 있습니다.** Neon 비밀번호와
-> `AUTH_SECRET`을 재발급하기 전까지는 그 값들이 유효한 상태입니다.
+> ℹ️ `.env`가 한동안 공개 저장소에 커밋돼 있었고 **과거 커밋에는 그대로 남아 있습니다.**
+> 2026-09-12에 Neon 비밀번호와 `AUTH_SECRET`을 모두 재발급해 노출됐던 값은 무효가 됐습니다.
+> 커밋에 남은 값으로는 더 이상 접속할 수 없습니다.
 
 ### basePath 때문에 주의할 점
 

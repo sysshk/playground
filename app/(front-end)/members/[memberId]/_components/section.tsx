@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Icon, type IconName } from "@/components/custom/icons";
 import {
   Card,
   CardAction,
@@ -29,5 +30,67 @@ export function Section({
       </CardHeader>
       <CardContent>{children}</CardContent>
     </Card>
+  );
+}
+
+/** 섹션 머리의 보조 동작. 옆의 아이콘 버튼과 같은 높이·무게로 맞춘다. */
+export function SectionAction({
+  icon,
+  label,
+  onClick,
+  active = false,
+}: {
+  icon: IconName;
+  label: string;
+  onClick: () => void;
+  active?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition-colors ${
+        active
+          ? "bg-raised text-ink"
+          : "text-muted-foreground hover:bg-raised hover:text-ink"
+      }`}
+    >
+      <Icon name={icon} size={16} />
+      {label}
+    </button>
+  );
+}
+
+/** 목록 항목의 수정·삭제처럼 글자 없이 아이콘만 두는 동작. */
+export function IconButton({
+  icon,
+  label,
+  onClick,
+  danger = false,
+  active = false,
+}: {
+  icon: IconName;
+  label: string;
+  onClick: () => void;
+  danger?: boolean;
+  active?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={label}
+      aria-label={label}
+      className={`grid size-9 shrink-0 place-items-center rounded-lg transition-colors ${
+        active
+          ? "bg-primary-light text-primary-dark"
+          : danger
+            ? "text-subtle hover:bg-danger/8 hover:text-danger"
+            : "text-subtle hover:bg-raised hover:text-ink"
+      }`}
+    >
+      <Icon name={icon} size={15} />
+    </button>
   );
 }
