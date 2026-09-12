@@ -99,7 +99,7 @@ export function SessionSection({
   return (
     <Section
       id={id}
-      title="수업"
+      title="수업 기록"
       subtitle={
         entries.length > 0
           ? `총 ${entries.length}회 · 최신순`
@@ -108,7 +108,7 @@ export function SessionSection({
       action={
         <SectionAction
           icon="plus"
-          label="수업 기록"
+          label="기록 추가"
           href={`/members/${memberId}/workouts/new`}
         />
       }
@@ -117,7 +117,7 @@ export function SessionSection({
         <EmptyState
           icon="dumbbell"
           title="기록한 수업이 없습니다"
-          description="수업 기록을 눌러 오늘 진행한 종목을 남겨보세요."
+          description="기록 추가를 눌러 오늘 진행한 종목을 남겨보세요."
         />
       ) : (
         <>
@@ -200,21 +200,21 @@ function SessionRow({
     .join(" · ");
 
   return (
-    <li className="flex flex-col gap-2.5 border-b border-line py-4 first:pt-0 last:border-0 last:pb-0">
+    <li className="flex flex-col gap-2.5 border-b border-line py-5 first:pt-0 last:border-0 last:pb-0">
       <div className="flex items-start justify-between gap-3">
-        <p className="flex min-w-0 flex-col gap-0.5">
-          <span className="flex flex-wrap items-baseline gap-x-2">
-            <span className="text-sm font-extrabold">{entry.label}</span>
-            {entry.no !== undefined && (
-              <span className="text-xs font-bold tabular-nums text-primary">
-                {entry.no}회차
-              </span>
-            )}
+        <div className="flex min-w-0 gap-3">
+          {/* 회차를 고정 폭 왼쪽 칸에 둔다. 날짜 길이에 따라 번호가 좌우로
+              흔들리면 세로로 훑으며 셀 수가 없다. */}
+          <span className="w-12 shrink-0 text-sm font-extrabold tabular-nums text-primary">
+            {entry.no !== undefined ? `${entry.no}회차` : ""}
           </span>
-          {meta && (
-            <span className="text-2xs font-semibold text-subtle">{meta}</span>
-          )}
-        </p>
+          <p className="flex min-w-0 flex-col gap-0.5">
+            <span className="text-sm font-extrabold">{entry.label}</span>
+            {meta && (
+              <span className="text-2xs font-semibold text-subtle">{meta}</span>
+            )}
+          </p>
+        </div>
         {actions}
       </div>
 
