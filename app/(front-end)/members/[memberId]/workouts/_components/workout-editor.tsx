@@ -22,13 +22,10 @@ import WorkoutForm, {
 export function WorkoutEditor({
   memberId,
   workoutId,
-  appointmentId,
 }: {
   memberId: string;
   /** 주면 수정, 없으면 새 기록 */
   workoutId?: string;
-  /** 일정에서 들어왔으면 그 일정 id — 저장하면 그 일정이 끝난 것으로 바뀐다 */
-  appointmentId?: string;
 }) {
   const router = useRouter();
   const [member, setMember] = useState<MemberDetail | null>(null);
@@ -68,9 +65,7 @@ export function WorkoutEditor({
             : `/api/members/${memberId}/workouts`,
           {
             method: workoutId ? "PATCH" : "POST",
-            body: JSON.stringify(
-              workoutId ? payload : { ...payload, appointmentId },
-            ),
+            body: JSON.stringify(payload),
           },
         );
 
@@ -87,14 +82,13 @@ export function WorkoutEditor({
           toast("운동 기록을 저장했습니다.");
         }
 
-        // 일정에서 왔으면 그 일정이 있는 홈으로 돌려보낸다.
-        router.replace(appointmentId ? "/home" : back);
+        router.replace(back);
       } catch (e) {
         setServerError(errorMessage(e, "운동 기록 저장에 실패했습니다."));
         setBusy(false);
       }
     },
-    [appointmentId, back, memberId, router, workoutId],
+    [back, memberId, router, workoutId],
   );
 
   if (loadError) {

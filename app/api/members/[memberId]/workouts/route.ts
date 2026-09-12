@@ -32,26 +32,12 @@ export async function POST(request: Request, { params }: Params) {
     // 저장하면서 수업 1회를 차감할지. 회원 혼자 한 개인 운동을 기록할 때는 끈다.
     const completeSession = body.completeSession === true;
 
-    // 일정에서 들어온 기록이면 그 일정을 끝난 것으로 표시한다.
-    // 이렇게 연결해 두지 않으면 같은 수업이 일정과 이력에 따로 남는다.
-    const appointmentId = toTrimmed(body.appointmentId);
-    const appointment = appointmentId
-      ? await prisma.appointment.findFirst({
-          where: { id: appointmentId, memberId, completionId: null },
-          select: { id: true, startsAt: true },
-        })
-      : null;
-
     // 오늘 기록이면 지금 시각, 지난 날짜를 나중에 입력하는 거면 그날 정오(한국 시각)로 남긴다.
     const kstToday = new Date(Date.now() + 9 * 60 * 60 * 1000)
       .toISOString()
       .slice(0, 10);
-    // 일정에서 왔으면 약속한 시각이 실제 수업 시각이다.
     const completedAt =
-      appointment?.startsAt ??
-      (body.date === kstToday
-        ? new Date()
-        : new Date(`${body.date}T12:00:00+09:00`));
+      body.date === kstToday ? new Date() : new Date(`${body.date}T12:00:00+09:00`);
 
     const result = await prisma.$transaction(async (tx) => {
       const workout = await tx.workout.create({
@@ -78,17 +64,9 @@ export async function POST(request: Request, { params }: Params) {
       });
       if (count === 0) return { workout, completed: false };
 
-      const completion = await tx.sessionCompletion.create({
+      await tx.sessionCompletion.create({
         data: { memberId, workoutId: workout.id, completedAt },
       });
-
-      if (appointment) {
-        await tx.appointment.update({
-          where: { id: appointment.id },
-          data: { completionId: completion.id },
-        });
-      }
-
       return { workout, completed: true };
     });
 

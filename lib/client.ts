@@ -82,15 +82,6 @@ export function formatDay(iso: string) {
   return `${parsed.getFullYear()}년 ${parsed.getMonth() + 1}월 ${parsed.getDate()}일`;
 }
 
-/** ISO 타임스탬프 → "오후 3시" */
-export function formatHour(iso: string) {
-  const parsed = new Date(iso);
-  if (Number.isNaN(parsed.getTime())) return iso;
-  const h = parsed.getHours();
-  if (h === 12) return "정오";
-  return h < 12 ? `오전 ${h}시` : `오후 ${h - 12}시`;
-}
-
 /** ISO 타임스탬프 → "2026년 9월 11일 오후 3시" (시 단위까지만) */
 export function formatDayHour(iso: string) {
   const parsed = new Date(iso);

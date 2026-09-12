@@ -111,22 +111,6 @@ export interface MemberSummary extends Member {
   completedSessions: number;
 }
 
-/** 잡아둔 수업 일정. completionId가 있으면 끝난 수업이다. */
-export interface Appointment {
-  id: string;
-  memberId: string;
-  /** ISO 타임스탬프 (분·초는 0) */
-  startsAt: string;
-  memo: string | null;
-  completionId: string | null;
-  member: {
-    id: string;
-    name: string;
-    phone: string;
-    remainingSessions: number;
-  };
-}
-
 /** 대시보드 상단 지표 */
 export interface MemberStats {
   total: number;
