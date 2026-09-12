@@ -27,10 +27,9 @@ export function LogoMark({
   gradientId?: string;
 }) {
   // useId()를 쓰면 서버와 클라이언트가 다른 값을 내 hydration이 깨진다.
-  const [defaultId, from, to] = onDark
-    ? ["pt-logo-gradient-dark", "#5b9bff", "#ffffff"]
-    : ["pt-logo-gradient-light", "#1f6feb", "#111111"];
-  const id = gradientId ?? defaultId;
+  // onDark는 테마와 무관하게 어두운 바탕(사진, 먹색 블록) 위에 놓일 때다.
+  // 그 외에는 stop-color를 CSS가 정해 테마를 따라간다.
+  const id = gradientId ?? (onDark ? "pt-logo-gradient-dark" : "pt-logo-gradient");
 
   return (
     <svg
@@ -43,8 +42,14 @@ export function LogoMark({
     >
       <defs>
         <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor={from} />
-          <stop offset="1" stopColor={to} />
+          <stop
+            offset="0"
+            {...(onDark ? { stopColor: "#5b9bff" } : { className: "pt-logo-from" })}
+          />
+          <stop
+            offset="1"
+            {...(onDark ? { stopColor: "#ffffff" } : { className: "pt-logo-to" })}
+          />
         </linearGradient>
       </defs>
       <path

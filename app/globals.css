@@ -292,3 +292,17 @@
     }
   }
 }
+
+/* 로고 획의 그라데이션 양 끝. 테마를 따라간다. */
+.pt-logo-from {
+  stop-color: #1f6feb;
+}
+.pt-logo-to {
+  stop-color: #111111;
+}
+.dark .pt-logo-from {
+  stop-color: #5b9bff;
+}
+.dark .pt-logo-to {
+  stop-color: #ffffff;
+}

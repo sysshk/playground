@@ -34,7 +34,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko">
+    <html lang="ko" suppressHydrationWarning>
       <head>
         {/* Pretendard를 직접 호스팅한다. 동적 서브셋이라 92개 파일로 쪼개져 있고, */}
         {/* eslint-disable-next-line @next/next/no-css-tags -- 92개 서브셋 파일을 참조하는 */}
