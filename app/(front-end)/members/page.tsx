@@ -155,32 +155,28 @@ export default function MembersPage() {
 
       {/* ── 지표 ───────────────────────────── */}
       {stats && (
-        <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-5 border-y border-line py-4 sm:grid-cols-4">
           {/* "전체"는 종료한 회원까지 세어 실제로 관리 중인 인원과 어긋난다. */}
           <Kpi
             label="진행 중 회원"
             value={activeTotal}
             unit="명"
-            hint={endedTotal > 0 ? `종료 ${endedTotal}명` : "수업이 남은 회원"}
           />
           <Kpi
             label="최근 7일 수업"
             value={stats.recentCompletions}
             unit="회"
-            hint="완료 처리한 수업"
           />
           <Kpi
             label="수업 소진 임박"
             value={stats.runningLow}
             unit="명"
-            hint={`${LOW_SESSION_THRESHOLD}회 이하 남음`}
             warn={stats.runningLow > 0}
           />
           <Kpi
             label="최근 7일 기록"
             value={stats.recentWorkouts}
             unit="건"
-            hint="작성한 운동 기록"
           />
         </div>
       )}
@@ -196,7 +192,11 @@ export default function MembersPage() {
               <button
                 type="button"
                 onClick={toggleEditing}
-                className="text-sm font-bold text-primary transition-colors hover:text-primary-dark"
+                className={`text-sm font-bold transition-colors ${
+                  editing
+                    ? "text-muted-foreground hover:text-ink"
+                    : "text-primary hover:text-primary-dark"
+                }`}
               >
                 {editing ? "완료" : "편집"}
               </button>
@@ -317,7 +317,6 @@ export default function MembersPage() {
         busy={busy}
         title="회원 삭제"
         message={`선택한 회원 ${picked.size}명을 삭제할까요?`}
-        hint="운동 기록, 체중, 코칭 메모, 영양 계산까지 모두 함께 지워집니다. 되돌릴 수 없습니다."
         icon="trash"
         onConfirm={handleDelete}
         onCancel={() => setConfirming(false)}
@@ -428,31 +427,26 @@ function Kpi({
   label,
   value,
   unit,
-  hint,
   warn = false,
 }: {
   label: string;
   value: number;
   unit: string;
-  hint: string;
   warn?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border-[1.5px] border-edge bg-surface p-4">
-      <p className="text-2xs font-extrabold uppercase tracking-widest text-subtle">
-        {label}
-      </p>
-      <p className="mt-2 flex items-end gap-1">
+    <div className="flex flex-col gap-1">
+      <p className="flex items-baseline gap-1">
         <span
-          className={`text-3xl font-extrabold leading-none tracking-[-0.03em] ${
-            warn ? "text-primary" : ""
+          className={`text-xl font-extrabold leading-none tracking-[-0.03em] ${
+            warn ? "text-danger" : ""
           }`}
         >
           {value}
         </span>
-        <span className="pb-0.5 text-xs font-bold text-muted-foreground">{unit}</span>
+        <span className="text-xs font-bold text-muted-foreground">{unit}</span>
       </p>
-      <p className="mt-1.5 text-2xs text-subtle">{hint}</p>
+      <p className="text-xs font-bold text-ink">{label}</p>
     </div>
   );
 }

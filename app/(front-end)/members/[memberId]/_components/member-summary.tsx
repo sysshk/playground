@@ -34,7 +34,7 @@ export function MemberSummary({
   const used = totalSessions - left;
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="flex flex-col gap-3">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-2.5">
@@ -47,10 +47,33 @@ export function MemberSummary({
               </span>
             )}
           </div>
-          <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-            <Icon name="phone" size={14} />
-            {member.phone}
+          <p className="text-sm font-medium text-ink">{member.phone}</p>
+          <p className="flex flex-wrap items-baseline gap-x-1.5 text-sm text-muted-foreground">
+            <span className="font-bold text-ink">남은 수업</span>
+            <span
+              className={`text-lg font-extrabold leading-none tracking-[-0.02em] ${
+                left === 0 ? "text-subtle" : "text-primary"
+              }`}
+            >
+              {left}
+            </span>
+            <span className="font-bold text-ink">회</span>
+            <span aria-hidden="true" className="text-line-strong">
+              ·
+            </span>
+            <span>
+              {totalSessions > 0
+                ? `등록 ${totalSessions}회 중 ${used}회 사용`
+                : "등록된 수업 없음"}
+              {lastCompletedAt && ` · 최근 수업 ${formatDay(lastCompletedAt)}`}
+            </span>
           </p>
+          {left === 0 && totalSessions > 0 && (
+            <p className="flex items-center gap-1.5 text-xs font-bold text-danger">
+              <Icon name="alert" size={14} />
+              남은 수업을 다 썼습니다. 재등록이 필요합니다.
+            </p>
+          )}
         </div>
         <div className="flex gap-1.5">
           <IconButton
@@ -76,39 +99,8 @@ export function MemberSummary({
         </div>
       ) : (
         <>
-          {/* 남은 수업 */}
-          <div className="rounded-2xl border-[1.5px] border-edge bg-surface p-4">
-            <div className="flex min-w-0 flex-col gap-1">
-              <p className="flex items-baseline gap-1.5">
-                <span className="text-xs font-bold text-muted-foreground">
-                  남은 수업
-                </span>
-                <span
-                  className={`text-xl font-extrabold leading-none tracking-[-0.03em] ${
-                    left === 0 ? "text-subtle" : "text-primary"
-                  }`}
-                >
-                  {left}
-                </span>
-                <span className="text-xs font-bold text-muted-foreground">회</span>
-              </p>
-              <p className="text-xs text-subtle">
-                {totalSessions > 0
-                  ? `등록 ${totalSessions}회 중 ${used}회 사용`
-                  : "등록된 수업이 없습니다"}
-                {lastCompletedAt && ` · 최근 수업 ${formatDay(lastCompletedAt)}`}
-              </p>
-              {left === 0 && totalSessions > 0 && (
-                <p className="flex items-center gap-1.5 text-xs font-bold text-danger">
-                  <Icon name="alert" size={14} />
-                  남은 수업을 다 썼습니다. 재등록이 필요합니다.
-                </p>
-              )}
-            </div>
-          </div>
-
           {member.memo && (
-            <p className="whitespace-pre-wrap rounded-2xl border-[1.5px] border-edge bg-surface px-4 py-3.5 text-sm leading-relaxed">
+            <p className="whitespace-pre-wrap border-l-2 border-line-strong pl-3 text-sm leading-relaxed text-ink">
               {member.memo}
             </p>
           )}
