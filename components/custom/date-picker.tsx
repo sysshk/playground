@@ -148,12 +148,7 @@ export function formatHourLabel(hour: number) {
   return hour < 12 ? `오전 ${hour}시` : `오후 ${hour - 12}시`;
 }
 
-/**
- * 시 단위 시각 선택기.
- *
- * 수업 기록에 분 단위는 쓸모가 없다. 시간대만 남기면 한 번 눌러서 끝나고,
- * 폰에서 스크롤 휠을 두 번 돌릴 필요도 없다.
- */
+/** 시 단위 시각 선택기. */
 export function HourPicker({
   value,
   onChange,

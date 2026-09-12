@@ -12,13 +12,7 @@ import WorkoutForm, {
   type WorkoutPayload,
 } from "../../_components/workout-form";
 
-/**
- * 운동 기록 작성·수정 화면.
- *
- * 종목과 세트가 늘어나면 폼이 화면 하나를 통째로 쓴다. 회원 상세 안에서
- * 펼치면 아래 내용이 한꺼번에 밀려나 어디를 보고 있었는지 놓치게 된다.
- * 체중·코칭 메모처럼 몇 줄짜리 입력은 지금처럼 그 자리에서 연다.
- */
+/** 운동 기록 작성·수정 화면. */
 export function WorkoutEditor({
   memberId,
   workoutId,

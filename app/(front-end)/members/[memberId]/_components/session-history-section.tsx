@@ -21,12 +21,7 @@ import SessionCompleteForm, {
 /** 이력이 길어지면 접어 둔다. */
 const VISIBLE = 5;
 
-/**
- * 수업 이력.
- *
- * 수업 차감은 운동 기록을 저장할 때 함께 일어난다. 여기서는 남은 횟수를 보고,
- * 잘못 차감한 것을 되돌리고, 상담처럼 운동 기록이 없는 날만 직접 차감한다.
- */
+/** 수업 이력. */
 export function SessionHistorySection({
   id,
   remainingSessions,

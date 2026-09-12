@@ -44,12 +44,7 @@ function DialogOverlay({
   )
 }
 
-/**
- * 짧은 입력을 받는 창. 되돌릴 수 없는 동작을 확인만 하는 자리는 AlertDialog를 쓴다.
- *
- * 폰에서는 내용이 길어지면 창 안에서만 스크롤되게 두어, 뒤 페이지가 같이
- * 밀리지 않게 한다.
- */
+/** 짧은 입력을 받는 창. 되돌릴 수 없는 동작을 확인만 하는 자리는 AlertDialog를 쓴다. */
 function DialogContent({
   className,
   children,

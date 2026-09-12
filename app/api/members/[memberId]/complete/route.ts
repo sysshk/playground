@@ -13,14 +13,7 @@ type Params = { params: Promise<{ memberId: string }> };
 /** 사유는 이력 목록에 한 줄로 보이는 값이라 길게 받지 않는다. */
 const REASON_MAX = 40;
 
-/**
- * 수업 완료 처리 — 남은 수업 1회 차감 후 완료 내역을 남긴다.
- *
- * 수업 중에는 바빠서 끝난 뒤에 누르는 경우가 많다. 그래서 시각을 직접
- * 지정할 수 있게 열어두고, 없으면 지금 시각을 쓴다.
- *
- * 운동 기록 없이 부르는 경우에는 왜 차감했는지 사유를 함께 남긴다.
- */
+/** 수업 완료 처리 — 남은 수업 1회 차감 후 완료 내역을 남긴다. */
 export async function POST(request: Request, { params }: Params) {
   const { memberId } = await params;
   const { trainerId, error } = await requireTrainerId();

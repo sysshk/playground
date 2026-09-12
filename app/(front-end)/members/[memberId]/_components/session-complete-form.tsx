@@ -18,12 +18,7 @@ export interface SessionCompletePayload {
 /** 사유는 몇 가지로 정해져 있다. 폰에서 키보드를 올리지 않고 넣게 한다. */
 const QUICK_REASONS = ["상담", "체형 평가", "노쇼"];
 
-/**
- * 운동 기록 없이 수업 1회를 차감하는 폼.
- *
- * 상담이나 체형 평가처럼 남길 기록이 없는 날에 쓴다. 시각은 시 단위까지만
- * 받는다. 몇 시 수업이었는지는 남을 값이지만, 분은 아무도 보지 않는다.
- */
+/** 운동 기록 없이 수업 1회를 차감하는 폼. */
 export default function SessionCompleteForm({
   disabled = false,
   busy = false,

@@ -118,8 +118,7 @@ export default function MembersPage() {
       {/* ── 지표 ───────────────────────────── */}
       {stats && (
         <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
-          {/* "전체"는 종료한 회원까지 세어 실제로 관리 중인 인원과 어긋난다.
-              진행 중을 앞에 세우고, 종료 인원은 아래 설명으로 붙인다. */}
+          {/* "전체"는 종료한 회원까지 세어 실제로 관리 중인 인원과 어긋난다. */}
           <Kpi
             label="진행 중 회원"
             value={activeTotal}
@@ -226,9 +225,7 @@ export default function MembersPage() {
         )}
       </section>
 
-      {/* ── 종료한 회원 ───────────────────────
-          남은 수업이 0회면 진행 중인 회원과 섞어 두지 않는다. 매일 보는 것은
-          지금 수업이 남은 사람들이고, 종료한 사람은 다시 등록할 때만 찾는다. */}
+      {/* ── 종료한 회원 ─────────────────────── */}
       {ended.length > 0 && (
         <section className="flex flex-col gap-3.5">
           <h2 className="text-lg font-extrabold tracking-[-0.02em] text-muted-foreground">
@@ -284,8 +281,7 @@ function MemberCard({ member }: { member: MemberSummary }) {
             )}
           </div>
           <p className="flex shrink-0 items-end gap-1">
-            {/* 남은 수업이 곧 끝나면 숫자 자체가 경고가 된다.
-                따로 알림 배너를 띄우면 같은 사실을 두 번 말하게 된다. */}
+            {/* 남은 수업이 곧 끝나면 숫자 자체가 경고가 된다. */}
             <span
               className={`text-2xl font-extrabold leading-none tracking-[-0.03em] ${tone.text}`}
             >

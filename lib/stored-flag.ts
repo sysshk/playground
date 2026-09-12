@@ -2,12 +2,7 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
-/**
- * 이 브라우저에만 남기는 켜짐/꺼짐 값.
- *
- * 사이드바 접기처럼 서버가 알 필요 없는 개인 취향에 쓴다. React 상태로
- * 복제해 두면 서버가 그린 화면과 어긋나므로 외부 저장소로 보고 읽는다.
- */
+/** 이 브라우저에만 남기는 켜짐/꺼짐 값. */
 
 const listeners = new Map<string, Set<() => void>>();
 

@@ -16,12 +16,7 @@ import {
 import { BASE_PATH } from "@/lib/client";
 import { useStoredFlag } from "@/lib/stored-flag";
 
-/**
- * 로그인한 트레이너가 쓰는 사이드바. 상단 바 · 본문 자리 · 푸터까지 함께 그린다.
- *
- * lg 이상은 사이드바, 그 아래는 햄버거로 여는 서랍을 쓴다.
- * 메뉴에는 실제로 있는 화면만 넣는다. 없는 화면을 걸어 두면 404가 난다.
- */
+/** 로그인한 트레이너가 쓰는 사이드바. 상단 바 · 본문 자리 · 푸터까지 함께 그린다. */
 
 const NAV: { href: string; label: string; icon: IconName }[] = [
   { href: "/members", label: "회원", icon: "users" },

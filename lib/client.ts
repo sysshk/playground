@@ -46,12 +46,7 @@ export async function apiFetch<T>(
   return (await response.json()) as T;
 }
 
-/**
- * public/ 자산 경로에 basePath를 붙인다.
- *
- * next/image는 이미지 최적화 URL의 `url` 파라미터에 basePath를 붙여주지 않는다.
- * 그대로 두면 옵티마이저가 /images/... 를 찾다 실패해 400이 난다.
- */
+/** public/ 자산 경로에 basePath를 붙인다. */
 export function asset(path: string) {
   return `${BASE_PATH}${path}`;
 }

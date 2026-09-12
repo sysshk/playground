@@ -6,14 +6,7 @@ import { formatDay } from "@/lib/client";
 import type { MemberDetail } from "@/lib/types";
 import { IconButton } from "./section";
 
-/**
- * 회원 상세의 머리.
- *
- * 이 화면에서 제일 먼저 봐야 하는 숫자는 "남은 수업"이다. 그래서 다른
- * 카드와 같은 흰 카드에 섞지 않고 먹색 블록으로 따로 세운다. 수업 직후에
- * 누르는 동작(운동 기록·직접 차감)도 여기 붙여서, 아래까지 내려가지
- * 않아도 손에 닿게 한다.
- */
+/** 회원 상세의 머리. */
 export function MemberSummary({
   member,
   latestWeight,

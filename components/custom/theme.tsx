@@ -2,15 +2,7 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
-/**
- * 라이트/다크 모드.
- *
- * 켜고 끄는 스위치 하나로 다룬다. 처음 열면 기기 설정을 따르고, 한 번이라도
- * 직접 켜거나 끄면 그 뒤로는 고른 값을 지킨다. 고른 값은 이 브라우저에만 남는다.
- *
- * 값의 출처는 localStorage 하나다. React 상태로 복제해 두면 서버가 그린
- * 화면과 어긋나므로, 외부 저장소로 보고 useSyncExternalStore로 읽는다.
- */
+/** 라이트/다크 모드. */
 
 const STORAGE_KEY = "pt.theme";
 const DARK_QUERY = "(prefers-color-scheme: dark)";

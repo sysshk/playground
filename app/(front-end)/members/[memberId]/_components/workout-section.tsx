@@ -8,12 +8,7 @@ import { formatDate } from "@/lib/client";
 import type { Exercise, Workout } from "@/lib/types";
 import { IconButton, Section } from "./section";
 
-/**
- * 날짜별 운동 기록. 수업을 차감하며 저장한 기록에는 뱃지가 붙는다.
- *
- * 작성·수정은 별도 화면에서 한다. 종목과 세트가 늘어나면 폼이 화면을 통째로
- * 써서, 여기서 펼치면 아래 내용이 한꺼번에 밀려난다.
- */
+/** 날짜별 운동 기록. 수업을 차감하며 저장한 기록에는 뱃지가 붙는다. */
 export function WorkoutSection({
   id,
   memberId,

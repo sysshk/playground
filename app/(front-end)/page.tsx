@@ -260,10 +260,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/*
-            사진 출처 표기는 넣지 않는다. Unsplash 라이선스는 표기를 요구하지 않고,
-            Pretendard의 OFL 저작권 문구는 public/fonts/pretendard.css 상단에 그대로 있다.
-          */}
+          {/* 사진 출처 표기는 넣지 않는다. Unsplash 라이선스는 표기를 요구하지 않고, */}
           <div className="mt-10 border-t border-line pt-6">
             <p className="text-xs text-subtle">
               © {new Date().getFullYear()} PT 매니저

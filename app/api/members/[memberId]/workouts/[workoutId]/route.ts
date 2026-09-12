@@ -12,12 +12,7 @@ import { parseExercises } from "../parse";
 
 type Params = { params: Promise<{ memberId: string; workoutId: string }> };
 
-/**
- * 운동 기록 수정.
- *
- * 종목·세트는 개수 자체가 바뀌므로 하나씩 맞춰 고치지 않고 통째로 갈아끼운다.
- * 지우고 다시 넣는 사이에 다른 요청이 끼어들지 않도록 트랜잭션으로 묶는다.
- */
+/** 운동 기록 수정. */
 export async function PATCH(request: Request, { params }: Params) {
   const { memberId, workoutId } = await params;
   const { trainerId, error } = await requireTrainerId();

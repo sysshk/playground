@@ -12,13 +12,7 @@ import CoachingNoteForm, {
   type CoachingNotePayload,
 } from "../../_components/coaching-note-form";
 
-/**
- * 코칭 메모 작성·수정 화면.
- *
- * 통증·자세·움직임·숙제를 자유 서술로 적는 자리라 몇 분이 걸린다. 회원 상세
- * 안에서 펼치면 주소가 없어 뒤로 가기로 닫을 수 없고, 쓰던 내용이 경고 없이
- * 사라진다.
- */
+/** 코칭 메모 작성·수정 화면. */
 export function NoteEditor({
   memberId,
   noteId,
