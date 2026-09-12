@@ -67,7 +67,7 @@ export function SessionHistorySection({
           if (!next) onToggleStandalone();
         }}
       >
-        <DialogContent>
+        <DialogContent dismissOnOutsideClick>
           <DialogHeader>
             <DialogTitle>수업 1회 차감</DialogTitle>
             <DialogDescription>

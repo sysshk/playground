@@ -50,7 +50,7 @@ export function WeightSection({
           if (!next) onCancel();
         }}
       >
-        <DialogContent>
+        <DialogContent dismissOnOutsideClick>
           <DialogHeader>
             <DialogTitle>체중 기록</DialogTitle>
           </DialogHeader>
