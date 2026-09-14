@@ -23,10 +23,13 @@ model User {
   emailVerified DateTime?
   password      String
   image         String?
-  role          String    @default("trainer") // trainer | admin
+  /// 가입하면 회원(client)으로 시작하고, 관리자가 트레이너·관리자로 올린다.
+  role          String    @default("client") // admin | trainer | client(회원 본인)
   accounts      Account[]
   sessions      Session[]
-  members       Member[]
+  members       Member[]  @relation("TrainerMembers")
+  /// role이 client일 때 이 계정이 보는 회원 기록
+  memberRecord  Member?   @relation("MemberAccount")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -74,10 +77,17 @@ model VerificationToken {
 model Member {
   id                String   @id @default(cuid())
   trainerId         String
-  trainer           User     @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  trainer           User     @relation("TrainerMembers", fields: [trainerId], references: [id], onDelete: Cascade)
+  /// 회원 본인 로그인 계정. 초대 링크로 가입하면 채워진다.
+  userId            String?  @unique
+  user              User?    @relation("MemberAccount", fields: [userId], references: [id], onDelete: SetNull)
+  /// 아직 안 쓴 초대 링크. 쓰거나 취소하면 비운다.
+  inviteToken       String?  @unique
+  inviteExpiresAt   DateTime?
   name              String
   phone             String
   goal              String? // 체중 감량, 근력 향상 등
+  targetWeight      Float? // 목표 체중 kg — 체중 그래프에서 고친다
   remainingSessions Int      @default(0) // 남은 PT 세션
   memo              String? // 특이사항 (컨디션, 일정, 주의사항 등)
   createdAt         DateTime @default(now())
@@ -86,8 +96,9 @@ model Member {
   workouts    Workout[]
   weights     WeightRecord[]
   notes       CoachingNote[]
-  completions SessionCompletion[]
-  nutrition   NutritionProfile?
+  completions  SessionCompletion[]
+  appointments Appointment[]
+  nutrition    NutritionProfile?
 
   @@index([trainerId, createdAt])
 }
@@ -175,6 +186,8 @@ model SessionCompletion {
   completedAt DateTime @default(now())
   /// 운동 기록 없이 직접 차감할 때 남기는 사유 (상담, 체형 평가 등)
   reason      String?
+  /// 예약해 둔 수업을 기록했으면 그 예약
+  appointment Appointment?
 
   @@index([memberId, completedAt])
 }
@@ -210,4 +223,23 @@ model NutritionProfile {
   calculationBasis       String[] // 계산 기준 설명 줄들
 
   updatedAt DateTime @updatedAt
+}
+
+/// 앞으로 할 수업 예약. 남은 수업은 차감하지 않는다.
+/// 기록하면 그때 만든 완료 내역과 이어지고, 달력에서는 완료 내역으로 보인다.
+model Appointment {
+  id       String   @id @default(cuid())
+  memberId String
+  member   Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  /// 시작 시각. 30분 단위로 받는다.
+  startsAt DateTime
+  memo     String?
+
+  completionId String?            @unique
+  completion   SessionCompletion? @relation(fields: [completionId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([memberId, startsAt])
+  @@index([startsAt])
 }

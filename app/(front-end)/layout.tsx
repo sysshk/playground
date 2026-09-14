@@ -1,13 +1,18 @@
+/*
+  앱 공통 레이아웃 — 로그인 상태 공급, 사이드바 셸, 알림 토스트
+
+  @date : 2025-12-12
+*/
+
 'use client';
 
+import { SessionProvider } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
-import { Toaster } from '@/components/ui/sonner';
 import FrontSidebar from '@/components/custom/front-sidebar';
-import SessionProvider from '@/components/custom/session-provider';
+import { Toaster } from '@/components/ui/sonner';
+import { BASE_PATH } from '@/lib/client';
 
-// 셸 없이 그리는 화면들.
-// "/"는 소개 페이지라 전폭 히어로와 자체 헤더를 쓴다. 앱 셸의
-// 최대 너비와 여백에 갇히면 랜딩 레이아웃을 만들 수 없다.
+/** 사이드바 셸 없이 그리는 화면 */
 const BARE_ROUTES = ['/', '/login', '/join'];
 
 export default function FrontEndLayout({
@@ -16,10 +21,10 @@ export default function FrontEndLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const bare = BARE_ROUTES.includes(pathname);
+  const bare = BARE_ROUTES.includes(pathname) || pathname.startsWith('/invite/');
 
   return (
-    <SessionProvider>
+    <SessionProvider basePath={`${BASE_PATH}/api/auth`}>
       {bare ? children : <FrontSidebar>{children}</FrontSidebar>}
       <Toaster position="bottom-center" />
     </SessionProvider>

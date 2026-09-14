@@ -1,5 +1,8 @@
-// 클라이언트/서버가 함께 쓰는 PT 도메인 타입
-// API 응답은 Prisma 모델을 그대로 직렬화한 형태다 (Date → ISO 문자열).
+/*
+  공통 — 화면과 서버가 함께 쓰는 PT 도메인 타입 (API 응답 모양, Date → ISO 문자열)
+
+  @date : 2026-09-12
+*/
 
 import type {
   ActivityLevel,
@@ -7,6 +10,20 @@ import type {
   LeanBodyMassSource,
   NutritionGoal,
 } from "./nutrition";
+
+/** 계정 역할 — 관리자는 모든 회원, 트레이너는 자기 회원, 회원(client)은 자기 기록만 읽는다. */
+export type Role = "admin" | "trainer" | "client";
+
+export const ROLE_LABEL: Record<Role, string> = {
+  admin: "관리자",
+  trainer: "트레이너",
+  client: "회원",
+};
+
+/** 모르는 값은 가장 권한이 적은 회원으로 본다. */
+export function toRole(value: unknown): Role {
+  return value === "admin" || value === "trainer" ? value : "client";
+}
 
 export type WeightUnit = "kg" | "bodyweight";
 
@@ -111,6 +128,29 @@ export interface MemberSummary extends Member {
   completedSessions: number;
 }
 
+/** 달력에 찍는 수업 한 건 */
+export interface CalendarSession {
+  id: string;
+  completedAt: string;
+  memberId: string;
+  memberName: string;
+}
+
+/** 달력에 찍는 수업 예약. 기록한 예약은 완료 내역으로 보이므로 여기에 없다. */
+export interface CalendarAppointment {
+  id: string;
+  startsAt: string;
+  memberId: string;
+  memberName: string;
+  memo: string | null;
+}
+
+/** 한 달 달력 — 완료한 수업과 아직 기록하지 않은 예약 */
+export interface MonthCalendar {
+  sessions: CalendarSession[];
+  appointments: CalendarAppointment[];
+}
+
 /** 대시보드 상단 지표 */
 export interface MemberStats {
   total: number;
@@ -124,9 +164,19 @@ export interface MemberStats {
 
 /** 회원 상세 화면이 한 번에 받아오는 전체 데이터 */
 export interface MemberDetail extends Member {
+  /** 목표 체중 kg. 정하지 않았으면 null */
+  targetWeight: number | null;
+  /** 받아 온 수업 기록의 운동 기록 (최근 lessonLimit건 안) */
   workouts: Workout[];
   weights: WeightRecord[];
   notes: CoachingNote[];
+  /** 받아 온 완료 내역 (최근 lessonLimit건) */
   completions: SessionCompletion[];
+  /** 지금까지 차감한 수업 수 */
+  completionTotal: number;
+  /** 수업 기록 전체 수 (완료 내역 + 완료 내역 없는 운동 기록) */
+  lessonTotal: number;
+  /** 이번에 받아 온 수업 기록 수 */
+  lessonLimit: number;
   nutrition: NutritionProfile | null;
 }

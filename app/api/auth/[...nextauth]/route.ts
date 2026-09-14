@@ -1,3 +1,9 @@
+/*
+  API — 로그인 (NextAuth 핸들러)
+
+  @date : 2025-12-11
+*/
+
 import type { NextRequest } from "next/server";
 import { handlers } from "@/app/api/auth/auth-config";
 

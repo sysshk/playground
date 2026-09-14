@@ -1,3 +1,9 @@
+/*
+  로그인 가드 — 로그인 안 한 접근을 로그인 화면으로 돌려보낸다 (Next 16 proxy)
+
+  @date : 2026-09-12
+*/
+
 import { NextResponse, type NextRequest } from "next/server";
 import { SIGNUP_ENABLED } from "@/lib/config";
 
@@ -35,7 +41,10 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (!loggedIn && !PUBLIC_PATHS.includes(pathname)) {
+  // 초대 링크는 계정이 없는 회원이 여는 화면이라 로그인 없이 연다.
+  const isInvite = pathname.startsWith("/invite/");
+
+  if (!loggedIn && !isInvite && !PUBLIC_PATHS.includes(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.search = "";

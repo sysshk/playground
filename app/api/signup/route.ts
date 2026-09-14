@@ -1,3 +1,9 @@
+/*
+  API — 회원가입
+
+  @date : 2025-12-11
+*/
+
 import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
@@ -40,6 +46,8 @@ export async function POST(request: Request) {
         email: user_id, // DB에서는 email 컬럼에 user_id 저장
         password: hashedPassword,
         name,
+        // 가입은 누구나 회원으로 시작한다. 트레이너 권한은 관리자가 계정 관리에서 준다.
+        role: "client",
       },
     })
 

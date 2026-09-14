@@ -1,34 +1,60 @@
-// API 라우트 공통 유틸 — 인증 가드, 소유권 확인, 입력 검증
+/*
+  서버 공통 — API 라우트의 인증 가드, 소유권 확인, 입력 검증
+
+  @date : 2026-09-12
+*/
 
 import { NextResponse } from "next/server";
 import { auth } from "@/app/api/auth/auth-config";
+import type { Prisma } from "@/app/generated/prisma";
+import { memberScope, type MemberScope } from "@/lib/auth";
+import { kstDay, kstIso } from "@/lib/kst";
 import { prisma } from "@/lib/prisma";
+import type { Role } from "@/lib/types";
 
-/** 로그인한 트레이너 id를 돌려준다. 없으면 401 응답을 던진다. */
-export async function requireTrainerId(): Promise<
-  { trainerId: string; error: null } | { trainerId: null; error: NextResponse }
-> {
-  const session = await auth();
-  const trainerId = session?.user?.id;
+type Guard =
+  | { trainerId: string; role: Role; scope: MemberScope; error: null }
+  | { trainerId: null; role: null; scope: null; error: NextResponse };
 
-  if (!trainerId) {
-    return {
-      trainerId: null,
-      error: NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 }),
-    };
-  }
-
-  return { trainerId, error: null };
+function denied(message: string, status: number): Guard {
+  return {
+    trainerId: null,
+    role: null,
+    scope: null,
+    error: NextResponse.json({ error: message }, { status }),
+  };
 }
 
 /**
- * 회원이 이 트레이너의 것인지 확인한다.
+ * 트레이너·관리자만 통과시킨다. 회원 계정은 읽기만 하므로 수정 API에서 403.
+ * scope는 이 사람이 다룰 수 있는 회원 조건이다 — where에 그대로 펼쳐 쓴다.
+ */
+export async function requireTrainerId(): Promise<Guard> {
+  const session = await auth();
+  const user = session?.user;
+
+  if (!user?.id) return denied("로그인이 필요합니다.", 401);
+  if (user.role === "client") return denied("회원 계정은 기록을 볼 수만 있습니다.", 403);
+
+  return { trainerId: user.id, role: user.role, scope: memberScope(user), error: null };
+}
+
+/** 관리자만 통과시킨다. */
+export async function requireAdminId(): Promise<Guard> {
+  const guard = await requireTrainerId();
+  if (guard.error) return guard;
+  if (guard.role !== "admin") return denied("관리자만 할 수 있습니다.", 403);
+  return guard;
+}
+
+/**
+ * 회원이 이 사람이 다룰 수 있는 회원인지 확인한다.
  * 남의 회원이면 존재 여부를 흘리지 않도록 404로 돌려준다.
  */
-export async function requireOwnedMember(memberId: string, trainerId: string) {
+export async function requireOwnedMember(memberId: string, scope: MemberScope) {
   const member = await prisma.member.findFirst({
-    where: { id: memberId, trainerId },
-    select: { id: true, remainingSessions: true },
+    where: { id: memberId, ...scope },
+    select: { id: true, trainerId: true, remainingSessions: true },
   });
 
   if (!member) {
@@ -52,6 +78,29 @@ export function isRecordNotFound(error: unknown) {
     "code" in error &&
     error.code === "P2025"
   );
+}
+
+/** 기록한 수업을 같은 날(한국 시각) 그 회원의 아직 기록 안 한 예약에 잇는다. 여럿이면 이른 것부터. */
+export async function linkSameDayAppointment(
+  tx: Prisma.TransactionClient,
+  memberId: string,
+  completionId: string,
+  at: Date,
+) {
+  const start = new Date(kstIso(kstDay(at), 0));
+  const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+
+  const appointment = await tx.appointment.findFirst({
+    where: { memberId, completionId: null, startsAt: { gte: start, lt: end } },
+    orderBy: { startsAt: "asc" },
+    select: { id: true },
+  });
+  if (appointment) {
+    await tx.appointment.update({
+      where: { id: appointment.id },
+      data: { completionId },
+    });
+  }
 }
 
 export function badRequest(message: string) {
@@ -81,6 +130,12 @@ export function toTrimmed(value: unknown): string | null {
 }
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
+
+/** YYYY-MM 형식인지 확인한다. */
+export function isValidMonth(value: unknown): value is string {
+  return typeof value === "string" && MONTH_PATTERN.test(value);
+}
 
 /** YYYY-MM-DD 형식인지 확인한다. */
 export function isValidDate(value: unknown): value is string {

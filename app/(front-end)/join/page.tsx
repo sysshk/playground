@@ -1,3 +1,9 @@
+/*
+  회원가입 화면
+
+  @date : 2025-12-11
+*/
+
 "use client";
 
 import { useState, FormEvent } from "react";

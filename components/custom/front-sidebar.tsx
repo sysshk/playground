@@ -1,9 +1,15 @@
+/*
+  공통 — 사이드바, 폰 상단 바, 서랍 메뉴, 푸터
+
+  @date : 2026-09-12
+*/
+
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { useState, type ReactNode } from "react";
+import { useCallback, useState, useSyncExternalStore, type ReactNode } from "react";
 import { ConfirmDialog } from "@/components/custom/confirm-dialog";
 import { Icon, type IconName } from "@/components/custom/icons";
 import { LogoMark } from "@/components/custom/logo";
@@ -14,17 +20,17 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { BASE_PATH } from "@/lib/client";
-import { useStoredFlag } from "@/lib/stored-flag";
+import type { Role } from "@/lib/types";
 
-/** 로그인한 트레이너가 쓰는 사이드바. 상단 바 · 본문 자리 · 푸터까지 함께 그린다. */
-
-const NAV: { href: string; label: string; icon: IconName }[] = [
-  { href: "/members", label: "회원", icon: "users" },
+/** 역할별 메뉴. 회원(client)은 자기 기록 하나만 본다. */
+const NAV: { href: string; label: string; icon: IconName; roles: Role[] }[] = [
+  { href: "/members", label: "회원", icon: "users", roles: ["admin", "trainer"] },
+  { href: "/accounts", label: "계정 관리", icon: "settings", roles: ["admin"] },
+  { href: "/me", label: "내 기록", icon: "trend", roles: ["client"] },
 ];
 
 const OPEN_WIDTH = 287;
 
-/** 접히는 동안 내용이 다시 줄바꿈되지 않도록 안쪽은 폭을 고정한다. */
 const INNER_WIDTH = OPEN_WIDTH - 24;
 
 const BACK =
@@ -33,6 +39,8 @@ const BACK =
 /** 폰 상단 바 내용. 뒤로 가기는 한 단계 위로만 보낸다. */
 function topBar(pathname: string) {
   if (pathname === "/members") return { label: "회원" };
+  if (pathname === "/accounts") return { label: "계정 관리" };
+  if (pathname === "/me") return { label: "내 기록" };
 
   const seg = pathname.split("/").filter(Boolean);
   if (seg[0] !== "members") return { label: "PT 매니저" };
@@ -44,6 +52,7 @@ function topBar(pathname: string) {
   return { href: `/members/${seg[1]}`, label: "회원" };
 }
 
+/** 로그인한 사람이 쓰는 셸 — 사이드바·상단 바·본문 자리·푸터까지 함께 그린다. */
 export default function FrontSidebar({ children }: { children: ReactNode }) {
   const { status } = useSession();
   const pathname = usePathname();
@@ -95,38 +104,52 @@ export default function FrontSidebar({ children }: { children: ReactNode }) {
       </aside>
 
       {/* 서랍 */}
-      {drawerOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <button
-            type="button"
-            aria-label="메뉴 닫기"
-            onClick={() => setDrawerOpen(false)}
-            className="absolute inset-0 hidden bg-black/50 sm:block"
-          />
-          <aside className="absolute inset-y-0 left-0 flex w-full flex-col justify-between gap-6 bg-surface p-4 sm:w-[287px] sm:border-r-[1.5px] sm:border-edge">
-            <div className="flex flex-col gap-6">
-              <div className="flex items-center justify-between gap-2">
-                <Brand
-                  onNavigate={() => setDrawerOpen(false)}
-                  gradientId="pt-logo-gradient-drawer"
-                />
-                <button
-                  type="button"
-                  onClick={() => setDrawerOpen(false)}
-                  aria-label="메뉴 닫기"
-                  className="grid size-10 shrink-0 place-items-center rounded-xl text-ink transition-colors hover:bg-raised"
-                >
-                  <Icon name="close" size={20} />
-                </button>
-              </div>
-
-              <Nav onNavigate={() => setDrawerOpen(false)} />
+      <div
+        inert={!drawerOpen}
+        className={`fixed inset-0 z-50 lg:hidden ${drawerOpen ? "" : "pointer-events-none"}`}
+      >
+        <button
+          type="button"
+          aria-label="메뉴 닫기"
+          tabIndex={-1}
+          onClick={() => setDrawerOpen(false)}
+          className={`absolute inset-0 hidden bg-black/50 transition-opacity duration-300 sm:block ${
+            drawerOpen ? "opacity-100" : "opacity-0"
+          }`}
+        />
+        <aside
+          className={`absolute inset-y-0 left-0 flex w-full flex-col justify-between gap-6 bg-surface pb-4 transition-transform duration-300 ease-out sm:w-[287px] sm:border-r-[1.5px] sm:border-edge ${
+            drawerOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <div className="flex flex-col gap-4">
+            {/* 서랍 머리 */}
+            <div className="flex h-14 items-center gap-1 px-4 sm:h-16 sm:px-6">
+              <button
+                type="button"
+                onClick={() => setDrawerOpen(false)}
+                aria-label="메뉴 닫기"
+                aria-expanded
+                className="-ml-2 grid size-10 shrink-0 place-items-center rounded-lg text-ink transition-colors hover:bg-raised"
+              >
+                <Icon name="menu" size={20} />
+              </button>
+              <Brand
+                onNavigate={() => setDrawerOpen(false)}
+                gradientId="pt-logo-gradient-drawer"
+              />
             </div>
 
+            <div className="px-4">
+              <Nav onNavigate={() => setDrawerOpen(false)} />
+            </div>
+          </div>
+
+          <div className="px-4">
             <Account />
-          </aside>
-        </div>
-      )}
+          </div>
+        </aside>
+      </div>
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 border-b-[1.5px] border-edge bg-surface lg:hidden">
@@ -189,7 +212,7 @@ export default function FrontSidebar({ children }: { children: ReactNode }) {
   );
 }
 
-/** 접으면 옅어지고, 펴면 폭이 벌어진 뒤에 들어온다. */
+/** 사이드바를 접으면 숨는 자리 */
 function Fade({
   hidden,
   children,
@@ -233,10 +256,12 @@ function Brand({
 
 function Nav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const role = session?.user.role;
 
   return (
     <nav className="flex flex-col gap-1">
-      {NAV.map((item) => {
+      {NAV.filter((item) => role && item.roles.includes(role)).map((item) => {
         const active = pathname.startsWith(item.href);
         return (
           <Link
@@ -372,4 +397,52 @@ function Switch({
       />
     </button>
   );
+}
+
+// ── 접힘 상태 저장 ─────────────────────────
+
+/** 이 브라우저에만 남기는 켜짐/꺼짐 값 (사이드바 접힘) */
+const listeners = new Map<string, Set<() => void>>();
+
+function subscribe(key: string, notify: () => void) {
+  const set = listeners.get(key) ?? new Set<() => void>();
+  set.add(notify);
+  listeners.set(key, set);
+  // 다른 탭에서 바꾼 경우
+  window.addEventListener("storage", notify);
+  return () => {
+    set.delete(notify);
+    window.removeEventListener("storage", notify);
+  };
+}
+
+function useStoredFlag(key: string, fallback = false) {
+  const value = useSyncExternalStore(
+    useCallback((notify: () => void) => subscribe(key, notify), [key]),
+    useCallback(() => {
+      try {
+        const saved = localStorage.getItem(key);
+        return saved === null ? fallback : saved === "1";
+      } catch {
+        // 저장소가 막힌 환경
+        return fallback;
+      }
+    }, [key, fallback]),
+    // 서버에는 저장값이 없다. 붙고 나서 진짜 값으로 다시 그린다.
+    useCallback(() => fallback, [fallback]),
+  );
+
+  const setValue = useCallback(
+    (next: boolean) => {
+      try {
+        localStorage.setItem(key, next ? "1" : "0");
+      } catch {
+        // 저장이 막혀 있으면 이번 세션에만 적용된다.
+      }
+      listeners.get(key)?.forEach((notify) => notify());
+    },
+    [key],
+  );
+
+  return [value, setValue] as const;
 }

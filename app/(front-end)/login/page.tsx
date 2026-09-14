@@ -1,3 +1,9 @@
+/*
+  로그인 화면
+
+  @date : 2025-12-10
+*/
+
 "use client";
 
 import { signIn } from "next-auth/react";
@@ -70,7 +76,7 @@ export default function LoginPage() {
               PT 매니저에 로그인
             </h1>
             <p className="mt-2 text-base text-muted-foreground">
-              트레이너 계정으로 로그인하세요.
+              트레이너 또는 회원 아이디로 로그인하세요.
             </p>
           </div>
 
