@@ -65,7 +65,6 @@ export function ConfirmDialog({
             취소
           </AlertDialogCancel>
           <AlertDialogAction
-            variant={danger ? "destructive" : "default"}
             disabled={busy}
             className={`h-10 px-5 ${
               danger ? "bg-danger text-white hover:bg-danger-dark" : ""
