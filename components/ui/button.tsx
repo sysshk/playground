@@ -1,3 +1,9 @@
+/*
+  공통 UI (shadcn) — 버튼
+
+  @date : 2026-09-12
+*/
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"

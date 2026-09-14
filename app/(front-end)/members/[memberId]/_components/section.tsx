@@ -1,3 +1,9 @@
+/*
+  회원 상세 화면 공통 — 섹션 틀, 섹션 머리 버튼, 아이콘 버튼
+
+  @date : 2026-09-12
+*/
+
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Icon, type IconName } from "@/components/custom/icons";
@@ -33,7 +39,7 @@ export function Section({
   );
 }
 
-/** 섹션 머리의 보조 동작. 옆의 아이콘 버튼과 같은 높이·무게로 맞춘다. */
+/** 섹션 머리의 보조 동작 */
 export function SectionAction({
   icon,
   label,

@@ -1,3 +1,9 @@
+/*
+  회원 화면 공통 — 데이터를 못 읽었을 때
+
+  @date : 2026-09-14
+*/
+
 "use client";
 
 import { useRouter } from "next/navigation";

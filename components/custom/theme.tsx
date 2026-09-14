@@ -1,3 +1,9 @@
+/*
+  공통 — 라이트/다크 모드 (첫 페인트 전 테마 스크립트, useTheme)
+
+  @date : 2026-09-12
+*/
+
 "use client";
 
 import { useCallback, useSyncExternalStore } from "react";

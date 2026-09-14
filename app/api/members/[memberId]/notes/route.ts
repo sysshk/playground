@@ -1,3 +1,9 @@
+/*
+  API — 코칭 메모 작성
+
+  @date : 2026-09-12
+*/
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
@@ -14,13 +20,13 @@ type Params = { params: Promise<{ memberId: string }> };
 /** 코칭 메모 작성 */
 export async function POST(request: Request, { params }: Params) {
   const { memberId } = await params;
-  const { trainerId, error } = await requireTrainerId();
+  const { scope, error } = await requireTrainerId();
   if (error) return error;
 
-  const owned = await requireOwnedMember(memberId, trainerId);
-  if (owned.error) return owned.error;
-
   try {
+    const owned = await requireOwnedMember(memberId, scope);
+    if (owned.error) return owned.error;
+
     const body = await request.json();
 
     if (!isValidDate(body.date)) return badRequest("날짜를 선택해 주세요.");

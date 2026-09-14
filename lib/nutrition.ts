@@ -1,9 +1,9 @@
-// 칼로리 및 영양 계산
-//
-// 제지방량을 알 수 있으면 Katch-McArdle, 없으면 Mifflin-St Jeor로 기초대사량을 구한다.
-// 골격근량이 있으면 (1) 단백질 권장 범위 내 지점과 (2) 목표 칼로리 보정에 함께 반영한다.
-//
-// 결과는 코칭 참고용 추정치이며 의료 또는 영양 처방을 대신하지 않는다.
+/*
+  영양 계산 공통 — 칼로리·영양 계산식
+  제지방량이 있으면 Katch-McArdle, 없으면 Mifflin-St Jeor. 결과는 코칭 참고용 추정치다.
+
+  @date : 2026-09-12
+*/
 
 export type Gender = "male" | "female";
 export type ActivityLevel =

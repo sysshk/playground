@@ -1,3 +1,9 @@
+/*
+  공통 UI (shadcn) — 여러 줄 입력 칸
+
+  @date : 2026-09-12
+*/
+
 import * as React from "react"
 import { cn } from "cn"
 

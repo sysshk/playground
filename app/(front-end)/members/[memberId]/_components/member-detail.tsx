@@ -1,25 +1,26 @@
-"use client";
+/*
+  회원 상세 화면 — 머리(회원 정보·수정), 수업 기록·코칭 메모·체중·영양 섹션 조립, 삭제 확인 창
+  데이터는 서버 화면(page.tsx)이 읽어 넘기고, 저장·삭제 뒤에는 router.refresh로 다시 받는다.
 
-// 회원 상세 — 저장·삭제를 처리하고, 섹션들을 이어 붙인다.
-// 데이터는 서버 컴포넌트(page.tsx)가 읽어 넘기고, 바뀌면 router.refresh로 다시 받는다.
-// 화면 모양은 전부 섹션 컴포넌트가 가지고 있다.
+  @date : 2026-09-12
+*/
+
+"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { confirmCopy, type PendingAction } from "./confirm-copy";
 import { ConfirmDialog } from "@/components/custom/confirm-dialog";
-import { MemberSummary } from "./member-summary";
+import { Icon } from "@/components/custom/icons";
+import { apiFetch, errorMessage, formatDate, formatDayHour, formatDayShort } from "@/lib/client";
+import type { CoachingNote, MemberDetail, SessionCompletion, Workout } from "@/lib/types";
+import MemberForm, { type MemberPayload } from "../../_components/member-form";
+import { LessonHistory } from "./lesson-history";
 import { NoteSection } from "./note-section";
 import NutritionPanel from "./nutrition-panel";
-import { SessionSection } from "./session-section";
-import { WeightSection } from "./weight-section";
-import type { WeightPayload } from "./weight-form";
-import type { MemberPayload } from "../../_components/member-form";
-import { Icon } from "@/components/custom/icons";
-import { apiFetch, errorMessage } from "@/lib/client";
-import type { MemberDetail } from "@/lib/types";
+import { IconButton } from "./section";
+import { WeightSection, type WeightPayload } from "./weight-section";
 
 /** 화면에 펼쳐져 있는 입력 폼. 한 번에 하나만 연다. */
 type OpenForm =
@@ -46,29 +47,28 @@ export function MemberDetailView({ member }: { member: MemberDetail }) {
   };
 
   /**
-   * 뮤테이션 공통 래퍼 — 끝나면 서버에서 상세를 다시 그린다.
+   * 저장·삭제 공통 — 끝나면 서버에서 상세를 다시 그린다. 실패하면 오류 문구를 돌려준다.
    * after(폼·창 닫기)는 새 데이터와 한 번에 반영되도록 같은 전환에 묶는다.
    */
   const run = async (
-    action: () => Promise<void>,
-    successMessage: string,
-    fallback: string,
+    url: string,
+    init: RequestInit,
+    ok: string,
+    fail: string,
     after?: () => void,
   ) => {
     setBusy(true);
     setFormError(null);
     try {
-      await action();
+      await apiFetch(url, init);
       startRefresh(() => {
         after?.();
         router.refresh();
       });
-      toast(successMessage);
-      return true;
+      toast(ok);
+      return null;
     } catch (e) {
-      const message = errorMessage(e, fallback);
-      setFormError(message);
-      return false;
+      return errorMessage(e, fail);
     } finally {
       setBusy(false);
     }
@@ -76,84 +76,18 @@ export function MemberDetailView({ member }: { member: MemberDetail }) {
 
   const handleConfirm = async () => {
     if (!pending) return;
-    const path = `/api/members/${memberId}`;
-
-    if (pending.type === "deleteMember") {
-      setBusy(true);
-      try {
-        await apiFetch(path, { method: "DELETE" });
-        router.push("/members");
-      } catch (e) {
-        toast(errorMessage(e, "회원 삭제에 실패했습니다."));
-        setPending(null);
-      } finally {
-        setBusy(false);
-      }
-      return;
-    }
-
-    const jobs: Record<string, [string, RequestInit, string, string]> = {
-      deleteWorkout: [
-        `${path}/workouts/${pending.type === "deleteWorkout" ? pending.workout.id : ""}`,
-        { method: "DELETE" },
-        "수업 기록을 삭제했습니다.",
-        "수업 기록 삭제에 실패했습니다.",
-      ],
-      deleteWeight: [
-        `${path}/weights/${pending.type === "deleteWeight" ? pending.id : ""}`,
-        { method: "DELETE" },
-        "체중 기록을 삭제했습니다.",
-        "체중 기록 삭제에 실패했습니다.",
-      ],
-      deleteNote: [
-        `${path}/notes/${pending.type === "deleteNote" ? pending.note.id : ""}`,
-        { method: "DELETE" },
-        "코칭 메모를 삭제했습니다.",
-        "코칭 메모 삭제에 실패했습니다.",
-      ],
-      cancelCompletion: [
-        `${path}/complete/${pending.type === "cancelCompletion" ? pending.completion.id : ""}`,
-        { method: "DELETE" },
-        "수업 기록을 삭제했습니다. 남은 수업이 1회 늘었습니다.",
-        "수업 기록 삭제에 실패했습니다.",
-      ],
-    };
-
-    const [url, init, ok, fail] = jobs[pending.type];
-    // 기록과 수업은 한 줄로 보이므로 함께 지운다. 기록만 지우고 수업이
-    // 남으면 화면에는 사라졌는데 횟수는 그대로인 상태가 된다.
-    const linked =
-      pending.type === "deleteWorkout" ? pending.completionId : undefined;
-
-    const done = await run(
-      async () => {
-        await apiFetch(url, init);
-        if (linked) await apiFetch(`${path}/complete/${linked}`, { method: "DELETE" });
-      },
-      linked ? "수업 기록을 삭제했습니다. 남은 수업이 1회 늘었습니다." : ok,
-      fail,
-      () => setPending(null),
-    );
-    if (!done) {
-      toast(formError ?? fail);
+    const { url, ok, fail } = pendingCopy(pending, memberId);
+    const error = await run(url, { method: "DELETE" }, ok, fail, () => setPending(null));
+    if (error) {
+      toast(error);
       setPending(null);
     }
   };
 
-  const save = async (
-    url: string,
-    init: RequestInit,
-    ok: string,
-    fail: string,
-  ) => {
-    await run(
-      async () => {
-        await apiFetch(url, init);
-      },
-      ok,
-      fail,
-      () => setOpen(null),
-    );
+  // 입력 창 안에서 저장하는 것들 — 실패 문구는 창에 띄운다.
+  const save = async (url: string, init: RequestInit, ok: string, fail: string) => {
+    const error = await run(url, init, ok, fail, () => setOpen(null));
+    if (error) setFormError(error);
   };
 
   const handleEditMember = (values: MemberPayload) =>
@@ -172,9 +106,21 @@ export function MemberDetailView({ member }: { member: MemberDetail }) {
       "체중 기록 저장에 실패했습니다.",
     );
 
+  // 그래프 위에서 바로 고치는 칸이라 오류를 띄울 폼이 없다. 실패는 토스트로 알린다.
+  const handleSaveGoal = async (targetWeight: number | null) => {
+    const error = await run(
+      `/api/members/${memberId}/weights/target`,
+      { method: "PUT", body: JSON.stringify({ targetWeight }) },
+      targetWeight === null ? "목표 체중을 지웠습니다." : "목표 체중을 저장했습니다.",
+      "목표 체중 저장에 실패했습니다.",
+    );
+    if (error) toast(error);
+  };
+
   // 등록한 전체 횟수는 남은 것과 쓴 것을 더한 값이다.
-  const totalSessions = member.remainingSessions + member.completions.length;
+  const totalSessions = member.remainingSessions + member.completionTotal;
   const lastCompletedAt = member.completions[0]?.completedAt ?? null;
+  const confirm = pending ? pendingCopy(pending, memberId) : null;
 
   return (
     <div className="mx-auto flex w-full max-w-[760px] flex-col gap-7">
@@ -200,14 +146,17 @@ export function MemberDetailView({ member }: { member: MemberDetail }) {
         onCancel={() => setOpen(null)}
       />
 
-      <SessionSection
+      <LessonHistory
         id="sessions"
         memberId={member.id}
         completions={member.completions}
         workouts={member.workouts}
+        completionTotal={member.completionTotal}
+        lessonTotal={member.lessonTotal}
+        lessonLimit={member.lessonLimit}
         busy={locked}
         onDeleteWorkout={(workout, completionId) =>
-          setPending({ type: "deleteWorkout", workout, completionId })
+          setPending({ type: "deleteWorkout", workout, refunds: completionId !== undefined })
         }
         onDeleteCompletion={(completion) =>
           setPending({ type: "cancelCompletion", completion })
@@ -222,11 +171,13 @@ export function MemberDetailView({ member }: { member: MemberDetail }) {
 
       <WeightSection
         weights={member.weights}
+        targetWeight={member.targetWeight}
         formOpen={open?.kind === "weight"}
         busy={locked}
         serverError={formError}
         onToggle={() => show(open?.kind === "weight" ? null : { kind: "weight" })}
         onSubmit={handleAddWeight}
+        onSaveGoal={handleSaveGoal}
         onCancel={() => setOpen(null)}
         onDelete={(record) =>
           setPending({ type: "deleteWeight", id: record.id, date: record.date })
@@ -240,8 +191,167 @@ export function MemberDetailView({ member }: { member: MemberDetail }) {
         busy={locked}
         onConfirm={handleConfirm}
         onCancel={() => setPending(null)}
-        {...confirmCopy(pending, member.name)}
+        title={confirm?.title ?? ""}
+        message={confirm?.message ?? ""}
+        hint={confirm?.hint}
       />
     </div>
   );
+}
+
+// ── 머리 ─────────────────────────────────
+
+/** 회원 상세의 머리. */
+function MemberSummary({
+  member,
+  totalSessions,
+  lastCompletedAt,
+  editing,
+  busy,
+  serverError,
+  onToggleEdit,
+  onSubmit,
+  onCancel,
+}: {
+  member: MemberDetail;
+  /** 등록한 전체 횟수 (남은 것 + 쓴 것) */
+  totalSessions: number;
+  /** 가장 최근 차감 시각. 없으면 null */
+  lastCompletedAt: string | null;
+  editing: boolean;
+  busy: boolean;
+  serverError: string | null;
+  onToggleEdit: () => void;
+  onSubmit: (values: MemberPayload) => void;
+  onCancel: () => void;
+}) {
+  const { remainingSessions: left } = member;
+  const used = totalSessions - left;
+
+  return (
+    <section className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h1 className="text-xl font-extrabold tracking-[-0.03em]">
+              {member.name}
+            </h1>
+            {member.goal && (
+              <span className="rounded-full bg-raised px-2.5 py-1 text-2xs font-bold text-muted-foreground">
+                {member.goal}
+              </span>
+            )}
+          </div>
+          <p className="text-sm font-medium text-ink">{member.phone}</p>
+          <p className="flex flex-wrap items-baseline gap-x-1.5 text-sm text-muted-foreground">
+            <span className="font-bold text-ink">남은 수업</span>
+            <span
+              className={`text-lg font-extrabold leading-none tracking-[-0.02em] ${
+                left === 0 ? "text-subtle" : "text-primary"
+              }`}
+            >
+              {left}
+            </span>
+            <span className="font-bold text-ink">회</span>
+            <span aria-hidden="true" className="text-line-strong">
+              ·
+            </span>
+            <span>
+              {totalSessions > 0
+                ? `등록 ${totalSessions}회 중 ${used}회 사용`
+                : "등록된 수업 없음"}
+              {lastCompletedAt && ` · 최근 수업 ${formatDayShort(lastCompletedAt)}`}
+            </span>
+          </p>
+          {left === 0 && totalSessions > 0 && (
+            <p className="flex items-center gap-1.5 text-xs font-bold text-danger">
+              <Icon name="alert" size={14} />
+              남은 수업을 다 썼습니다. 재등록이 필요합니다.
+            </p>
+          )}
+        </div>
+        <IconButton
+          icon="pencil"
+          label="회원 정보 수정"
+          onClick={onToggleEdit}
+          active={editing}
+        />
+      </div>
+
+      {editing ? (
+        <div className="rounded-2xl border-[1.5px] border-edge bg-surface p-5">
+          <MemberForm
+            member={member}
+            submitLabel="수정하기"
+            busy={busy}
+            serverError={serverError}
+            onSubmit={onSubmit}
+            onCancel={onCancel}
+          />
+        </div>
+      ) : (
+        member.memo && (
+          <p className="whitespace-pre-wrap rounded-r-lg border-l-[3px] border-primary bg-primary-light/40 py-2 pl-3 pr-3 text-sm leading-relaxed text-ink">
+            {member.memo}
+          </p>
+        )
+      )}
+    </section>
+  );
+}
+
+// ── 확인 창 ──────────────────────────────────
+
+/** 되돌릴 수 없는 동작만 확인 창을 띄운다. 입력은 전부 화면 안에서 한다. */
+type PendingAction =
+  | { type: "deleteWorkout"; workout: Workout; refunds: boolean }
+  | { type: "deleteWeight"; id: string; date: string }
+  | { type: "deleteNote"; note: CoachingNote }
+  | { type: "cancelCompletion"; completion: SessionCompletion };
+
+/** 확인 창 문구와 삭제 요청 경로 */
+function pendingCopy(pending: PendingAction, memberId: string) {
+  const path = `/api/members/${memberId}`;
+  const refunded = "수업 기록을 삭제했습니다. 남은 수업이 1회 늘었습니다.";
+
+  switch (pending.type) {
+    case "deleteWorkout":
+      return {
+        title: "수업 기록 삭제",
+        message: `${formatDate(pending.workout.date)} 수업 기록을 삭제하시겠습니까?`,
+        hint: pending.refunds
+          ? "종목과 세트가 지워지고 남은 수업이 1회 늘어납니다. 복구할 수 없습니다."
+          : "삭제된 기록은 복구할 수 없습니다.",
+        url: `${path}/workouts/${pending.workout.id}`,
+        ok: pending.refunds ? refunded : "수업 기록을 삭제했습니다.",
+        fail: "수업 기록 삭제에 실패했습니다.",
+      };
+    case "deleteWeight":
+      return {
+        title: "체중 기록 삭제",
+        message: `${formatDate(pending.date)} 체중 기록을 삭제하시겠습니까?`,
+        hint: "삭제된 기록은 복구할 수 없습니다.",
+        url: `${path}/weights/${pending.id}`,
+        ok: "체중 기록을 삭제했습니다.",
+        fail: "체중 기록 삭제에 실패했습니다.",
+      };
+    case "deleteNote":
+      return {
+        title: "코칭 메모 삭제",
+        message: `${formatDate(pending.note.date)} 코칭 메모를 삭제하시겠습니까?`,
+        hint: "삭제된 메모는 복구할 수 없습니다.",
+        url: `${path}/notes/${pending.note.id}`,
+        ok: "코칭 메모를 삭제했습니다.",
+        fail: "코칭 메모 삭제에 실패했습니다.",
+      };
+    case "cancelCompletion":
+      return {
+        title: "수업 기록 삭제",
+        message: `${formatDayHour(pending.completion.completedAt)} 수업 기록을 삭제하시겠습니까?`,
+        hint: "남은 수업이 1회 늘어납니다.",
+        url: `${path}/complete/${pending.completion.id}`,
+        ok: refunded,
+        fail: "수업 기록 삭제에 실패했습니다.",
+      };
+  }
 }

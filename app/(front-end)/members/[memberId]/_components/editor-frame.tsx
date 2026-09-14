@@ -1,3 +1,9 @@
+/*
+  작성 화면 공통 — 수업 기록·코칭 메모·영양 계산의 틀, 없는 대상 안내, 로딩 뼈대
+
+  @date : 2026-09-12
+*/
+
 import Link from "next/link";
 import { Icon } from "@/components/custom/icons";
 import { Button } from "@/components/ui/button";

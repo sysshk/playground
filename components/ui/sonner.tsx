@@ -1,3 +1,9 @@
+/*
+  공통 UI (shadcn) — 알림 토스트
+
+  @date : 2026-09-12
+*/
+
 "use client"
 
 import { Toaster as Sonner, type ToasterProps } from "sonner"

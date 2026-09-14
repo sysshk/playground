@@ -1,3 +1,9 @@
+/*
+  회원 등록 화면
+
+  @date : 2026-09-12
+*/
+
 "use client";
 
 import Link from "next/link";
@@ -7,7 +13,6 @@ import { toast } from "sonner";
 import MemberForm, { type MemberPayload } from "../_components/member-form";
 import { Icon } from "@/components/custom/icons";
 import { apiFetch, errorMessage } from "@/lib/client";
-import type { Member } from "@/lib/types";
 
 /** 회원 등록. */
 export default function NewMemberPage() {
@@ -19,7 +24,7 @@ export default function NewMemberPage() {
     setBusy(true);
     setServerError(null);
     try {
-      const { member } = await apiFetch<{ member: Member }>("/api/members", {
+      const { member } = await apiFetch<{ member: { id: string } }>("/api/members", {
         method: "POST",
         body: JSON.stringify(values),
       });

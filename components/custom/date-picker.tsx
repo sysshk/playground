@@ -1,20 +1,19 @@
+/*
+  공통 — 날짜 선택기, 시각 선택기
+  값은 "YYYY-MM-DD" 문자열이다.
+
+  @date : 2026-09-12
+*/
+
 "use client";
 
-// 날짜·시각 선택기 — shadcn Popover + Calendar
-//
-// 값은 브라우저 기본 입력과 같은 문자열("YYYY-MM-DD", "YYYY-MM-DDTHH:mm")을 그대로 쓴다.
-// 팝오버는 포털로 띄워서, 넘치는 부분을 자르는 카드 안에 있어도 잘리지 않는다.
-
-import { useEffect, useRef, useState } from "react";
-import { ko } from "react-day-picker/locale";
+import dynamic from "next/dynamic";
+import { useState } from "react";
 import { Icon } from "@/components/custom/icons";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-
-const WEEK = ["일", "월", "화", "수", "목", "금", "토"];
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
-const MINUTES = Array.from({ length: 60 }, (_, i) => i);
+import { formatDateShort, formatHourLabel } from "@/lib/client";
+import { kstDay, kstHour } from "@/lib/kst";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -27,60 +26,45 @@ function fromKey(key: string) {
   return new Date(y, (m || 1) - 1, d || 1);
 }
 
-function todayKey() {
-  return toKey(new Date());
-}
-
 function shiftDays(key: string, days: number) {
   const d = fromKey(key);
   d.setDate(d.getDate() + days);
   return toKey(d);
 }
 
-function nowLocal() {
-  const d = new Date();
-  return `${toKey(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-/** "9월 12일 (금)" — 올해가 아니면 연도를 붙인다. */
-function formatDateLabel(key: string) {
-  const d = fromKey(key);
-  const year = d.getFullYear() === new Date().getFullYear() ? "" : `${d.getFullYear()}년 `;
-  return `${year}${d.getMonth() + 1}월 ${d.getDate()}일 (${WEEK[d.getDay()]})`;
-}
-
-/** "오후 3:05" */
-function formatTimeLabel(time: string) {
-  const [h, m] = time.split(":").map(Number);
-  const hour12 = h % 12 === 0 ? 12 : h % 12;
-  return `${h < 12 ? "오전" : "오후"} ${hour12}:${pad(m)}`;
-}
-
 const TRIGGER = "h-10 gap-2 px-3 font-semibold";
 
-function DayCalendar({
-  value,
-  max,
-  onSelect,
-}: {
+type DayCalendarProps = {
   value: string;
   /** 이 날짜(YYYY-MM-DD) 이후는 고를 수 없다. */
   max?: string;
   onSelect: (key: string) => void;
-}) {
-  const selected = fromKey(value);
-  return (
-    <Calendar
-      mode="single"
-      locale={ko}
-      selected={selected}
-      defaultMonth={selected}
-      onSelect={(d) => d && onSelect(toKey(d))}
-      disabled={max ? { after: fromKey(max) } : undefined}
-      className="p-0 [--cell-size:--spacing(9)]"
-    />
-  );
-}
+};
+
+// 달력 라이브러리는 팝업을 처음 열 때 받는다.
+const DayCalendar = dynamic<DayCalendarProps>(
+  async () => {
+    const [{ Calendar }, { ko }] = await Promise.all([
+      import("@/components/ui/calendar"),
+      import("react-day-picker/locale"),
+    ]);
+    return function DayCalendar({ value, max, onSelect }: DayCalendarProps) {
+      const selected = fromKey(value);
+      return (
+        <Calendar
+          mode="single"
+          locale={ko}
+          selected={selected}
+          defaultMonth={selected}
+          onSelect={(d) => d && onSelect(toKey(d))}
+          disabled={max ? { after: fromKey(max) } : undefined}
+          className="p-0 [--cell-size:--spacing(9)]"
+        />
+      );
+    };
+  },
+  { ssr: false, loading: () => <div className="h-[304px] w-[252px]" /> },
+);
 
 export function DatePicker({
   value,
@@ -94,7 +78,7 @@ export function DatePicker({
   ariaLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const today = todayKey();
+  const today = kstDay();
   const quick: [string, string][] = [
     ["오늘", today],
     ["어제", shiftDays(today, -1)],
@@ -112,10 +96,10 @@ export function DatePicker({
           type="button"
           variant="outline"
           className={TRIGGER}
-          aria-label={`${ariaLabel}: ${formatDateLabel(value)}`}
+          aria-label={`${ariaLabel}: ${formatDateShort(value)}`}
         >
           <Icon name="calendar" className="text-muted-foreground" />
-          {formatDateLabel(value)}
+          {formatDateShort(value)}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-auto p-3">
@@ -139,13 +123,12 @@ export function DatePicker({
   );
 }
 
-/** 수업이 있을 만한 시간대만 고른다. 새벽 3시를 누를 일은 없다. */
-const GYM_HOURS = Array.from({ length: 17 }, (_, i) => i + 6);
+const ALL_HOURS = Array.from({ length: 24 }, (_, i) => i);
 
-/** 오전·오후로 나눠 두 줄에 담는다. 한 칸에 "오전 10시"를 다 쓰면 판이 창보다 커진다. */
+/** 오전·오후로 나눠 두 줄에 담는다. */
 const HOUR_GROUPS = [
-  { label: "오전", hours: GYM_HOURS.filter((h) => h < 12) },
-  { label: "오후", hours: GYM_HOURS.filter((h) => h >= 12) },
+  { label: "오전", hours: ALL_HOURS.filter((h) => h < 12) },
+  { label: "오후", hours: ALL_HOURS.filter((h) => h >= 12) },
 ];
 
 /** 0~23 → 시계에 적힌 숫자 */
@@ -153,13 +136,7 @@ function hourDigit(hour: number) {
   return hour > 12 ? hour - 12 : hour;
 }
 
-/** 0~23 → "오전 9시" / "정오" / "오후 2시" */
-export function formatHourLabel(hour: number) {
-  if (hour === 12) return "정오";
-  return hour < 12 ? `오전 ${hour}시` : `오후 ${hour - 12}시`;
-}
-
-/** 시 단위 시각 선택기. */
+/** 시 단위 시각 선택기 (한국 시각). */
 export function HourPicker({
   value,
   onChange,
@@ -199,7 +176,7 @@ export function HourPicker({
           <span className="text-2xs font-bold text-subtle">시간</span>
           <button
             type="button"
-            onClick={() => pick(new Date().getHours())}
+            onClick={() => pick(kstHour(new Date()))}
             className="rounded-md px-1.5 py-1 text-xs font-bold text-primary transition-colors hover:bg-raised"
           >
             지금
@@ -231,118 +208,6 @@ export function HourPicker({
               </div>
             </div>
           ))}
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-function TimeColumn({
-  label,
-  values,
-  selected,
-  onPick,
-}: {
-  label: string;
-  values: number[];
-  selected: number;
-  onPick: (value: number) => void;
-}) {
-  const listRef = useRef<HTMLDivElement>(null);
-
-  // 열었을 때 선택된 값이 목록 가운데 오도록 스크롤한다.
-  // scrollIntoView는 페이지까지 같이 스크롤하므로 목록 자체의 scrollTop만 옮긴다.
-  useEffect(() => {
-    const list = listRef.current;
-    const item = list?.querySelector<HTMLElement>('[aria-pressed="true"]');
-    if (list && item) {
-      list.scrollTop = item.offsetTop - list.clientHeight / 2 + item.clientHeight / 2;
-    }
-  }, []);
-
-  return (
-    <div className="flex w-14 flex-col">
-      <span className="pb-1 text-center text-2xs font-semibold text-subtle">{label}</span>
-      <div
-        ref={listRef}
-        className="relative flex h-36 flex-col gap-0.5 overflow-y-auto sm:h-[272px]"
-      >
-        {values.map((v) => (
-          <button
-            key={v}
-            type="button"
-            aria-pressed={v === selected}
-            onClick={() => onPick(v)}
-            className={`shrink-0 rounded-md py-1.5 text-sm tabular-nums transition-colors ${
-              v === selected
-                ? "bg-primary font-bold text-primary-foreground"
-                : "hover:bg-muted"
-            }`}
-          >
-            {pad(v)}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export function DateTimePicker({
-  value,
-  onChange,
-  max,
-}: {
-  /** "YYYY-MM-DDTHH:mm" */
-  value: string;
-  onChange: (value: string) => void;
-  /** 이 날짜(YYYY-MM-DD) 이후는 고를 수 없다. */
-  max?: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const [date, time = "00:00"] = value.split("T");
-  const [hour, minute] = time.split(":").map(Number);
-
-  const set = (d: string, h: number, m: number) => onChange(`${d}T${pad(h)}:${pad(m)}`);
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          className={TRIGGER}
-          aria-label={`시각 선택: ${formatDateLabel(date)} ${formatTimeLabel(time)}`}
-        >
-          <Icon name="clock" className="text-muted-foreground" />
-          {formatDateLabel(date)}
-          <span className="font-normal text-muted-foreground">{formatTimeLabel(time)}</span>
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-auto p-3">
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <DayCalendar value={date} max={max} onSelect={(d) => set(d, hour, minute)} />
-          <div className="flex justify-center gap-1.5 border-t pt-3 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-3">
-            <TimeColumn
-              label="시"
-              values={HOURS}
-              selected={hour}
-              onPick={(h) => set(date, h, minute)}
-            />
-            <TimeColumn
-              label="분"
-              values={MINUTES}
-              selected={minute}
-              onPick={(m) => set(date, hour, m)}
-            />
-          </div>
-        </div>
-        <div className="flex items-center justify-between border-t pt-2.5">
-          <Button type="button" variant="secondary" size="sm" onClick={() => onChange(nowLocal())}>
-            지금
-          </Button>
-          <Button type="button" size="sm" onClick={() => setOpen(false)}>
-            확인
-          </Button>
         </div>
       </PopoverContent>
     </Popover>

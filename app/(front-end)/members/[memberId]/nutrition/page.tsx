@@ -1,7 +1,13 @@
+/*
+  영양 계산 화면 (서버)
+
+  @date : 2026-09-12
+*/
+
 import { getNutritionEditor } from "@/lib/queries";
-import { requireTrainer } from "@/lib/session";
+import { requireTrainer } from "@/lib/auth";
 import { EditorMissing } from "../_components/editor-frame";
-import { NutritionEditor } from "../_components/nutrition-editor";
+import { NutritionEditor } from "./nutrition-editor";
 
 /** 칼로리 및 영양 계산 */
 export default async function NutritionPage({
@@ -11,7 +17,7 @@ export default async function NutritionPage({
 }) {
   const { memberId } = await params;
   const trainer = await requireTrainer();
-  const data = await getNutritionEditor(memberId, trainer.id);
+  const data = await getNutritionEditor(memberId, trainer.scope);
 
   if (!data) {
     return (

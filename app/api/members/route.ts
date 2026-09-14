@@ -1,19 +1,18 @@
+/*
+  API — 회원 등록, 여러 명 삭제
+
+  @date : 2026-09-12
+*/
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getMemberList } from "@/lib/queries";
-import { badRequest, requireTrainerId, serverError, toNumber, toTrimmed } from "@/lib/api";
-
-/** 로그인한 트레이너의 회원 목록 + 대시보드 집계 */
-export async function GET() {
-  const { trainerId, error } = await requireTrainerId();
-  if (error) return error;
-
-  try {
-    return NextResponse.json(await getMemberList(trainerId));
-  } catch (e) {
-    return serverError("members.GET", e);
-  }
-}
+import {
+  badRequest,
+  requireTrainerId,
+  serverError,
+  toNumber,
+  toTrimmed,
+} from "@/lib/api";
 
 /** 회원 등록 */
 export async function POST(request: Request) {
@@ -43,6 +42,7 @@ export async function POST(request: Request) {
         memo: toTrimmed(body.memo),
         remainingSessions,
       },
+      select: { id: true, name: true },
     });
 
     return NextResponse.json({ member }, { status: 201 });
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
 
 /** 회원 여러 명 삭제 — 연결된 기록도 함께 지워진다 (onDelete: Cascade). */
 export async function DELETE(request: Request) {
-  const { trainerId, error } = await requireTrainerId();
+  const { scope, error } = await requireTrainerId();
   if (error) return error;
 
   try {
@@ -67,9 +67,10 @@ export async function DELETE(request: Request) {
       return badRequest("삭제할 회원을 선택해 주세요.");
     }
 
-    // trainerId를 조건에 넣어 남의 회원은 지워지지 않게 한다.
+    // scope를 조건에 넣어 남의 회원은 지워지지 않게 한다.
+    // 연결된 앱 계정은 지우지 않는다(연결만 풀림). 계정 관리에서 다른 회원에 다시 이을 수 있다.
     const { count } = await prisma.member.deleteMany({
-      where: { id: { in: ids }, trainerId },
+      where: { id: { in: ids }, ...scope },
     });
 
     return NextResponse.json({ ok: true, count });

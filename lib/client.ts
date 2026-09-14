@@ -1,7 +1,12 @@
-// 클라이언트에서 API를 부를 때 쓰는 얇은 래퍼
-//
-// next.config.ts의 basePath("/pt-manager")는 <Link>/라우터에는 자동으로 붙지만
-// fetch에는 붙지 않는다. 그래서 API 호출은 항상 이 헬퍼를 거친다.
+/*
+  화면 공통 — API 호출 헬퍼와 날짜·시각 표기
+  basePath(/pt-manager)가 fetch에는 자동으로 안 붙어서 API 호출은 항상 apiFetch를 거친다.
+  표기는 한국 시각 기준이라 서버(UTC)에서 그려도 브라우저와 같은 글자가 나온다.
+
+  @date : 2026-09-12
+*/
+
+import { kstDay, kstHour, kstIso } from "@/lib/kst";
 
 export const BASE_PATH = "/pt-manager";
 
@@ -56,11 +61,9 @@ export function errorMessage(error: unknown, fallback = "오류가 발생했습�
   return error instanceof Error ? error.message : fallback;
 }
 
-/** 오늘 날짜를 YYYY-MM-DD로 (로컬 타임존 기준) */
+/** 오늘 한국 날짜 YYYY-MM-DD */
 export function today() {
-  const now = new Date();
-  const offset = now.getTimezoneOffset() * 60_000;
-  return new Date(now.getTime() - offset).toISOString().slice(0, 10);
+  return kstDay();
 }
 
 /** YYYY-MM-DD → "2026년 9월 11일" */
@@ -70,20 +73,16 @@ export function formatDate(date: string) {
   return `${parsed.getFullYear()}년 ${parsed.getMonth() + 1}월 ${parsed.getDate()}일`;
 }
 
-/** ISO 타임스탬프 → "2026년 9월 11일" (보는 사람의 시간대 기준) */
-export function formatDay(iso: string) {
-  const parsed = new Date(iso);
-  if (Number.isNaN(parsed.getTime())) return iso;
-  return `${parsed.getFullYear()}년 ${parsed.getMonth() + 1}월 ${parsed.getDate()}일`;
+/** ISO 타임스탬프 → "2026년 9월 11일 오후 3시" (한국 시각) */
+export function formatDayHour(iso: string) {
+  if (!isValidIso(iso)) return iso;
+  return `${formatDate(kstDay(iso))} ${formatHourLabel(kstHour(iso))}`;
 }
 
-/** ISO 타임스탬프 → "2026년 9월 11일 오후 3시" (시 단위까지만) */
-export function formatDayHour(iso: string) {
-  const parsed = new Date(iso);
-  if (Number.isNaN(parsed.getTime())) return iso;
-  const h = parsed.getHours();
-  const hour = h === 12 ? "정오" : h < 12 ? `오전 ${h}시` : `오후 ${h - 12}시`;
-  return `${formatDay(iso)} ${hour}`;
+/** 0~23 → "오전 9시" / "정오" / "오후 2시" */
+export function formatHourLabel(hour: number) {
+  if (hour === 12) return "정오";
+  return hour < 12 ? `오전 ${hour}시` : `오후 ${hour - 12}시`;
 }
 
 const WEEKDAY = ["일", "월", "화", "수", "목", "금", "토"];
@@ -91,7 +90,7 @@ const WEEKDAY = ["일", "월", "화", "수", "목", "금", "토"];
 /** 목록에 쓰는 짧은 날짜 — "9월 11일 (목)". 올해가 아닐 때만 연도를 붙인다. */
 function shortLabel(parsed: Date) {
   const year =
-    parsed.getFullYear() === new Date().getFullYear()
+    String(parsed.getFullYear()) === kstDay().slice(0, 4)
       ? ""
       : `${parsed.getFullYear()}년 `;
   return `${year}${parsed.getMonth() + 1}월 ${parsed.getDate()}일 (${WEEKDAY[parsed.getDay()]})`;
@@ -103,35 +102,21 @@ export function formatDateShort(date: string) {
   return Number.isNaN(parsed.getTime()) ? date : shortLabel(parsed);
 }
 
-/** ISO 타임스탬프 → "9월 11일 (목)" */
+/** ISO 타임스탬프 → "9월 11일 (목)" (한국 날짜) */
 export function formatDayShort(iso: string) {
-  const parsed = new Date(iso);
-  return Number.isNaN(parsed.getTime()) ? iso : shortLabel(parsed);
+  return isValidIso(iso) ? formatDateShort(kstDay(iso)) : iso;
 }
 
-/** ISO 타임스탬프 → "오후 3시" */
+/** ISO 타임스탬프 → "오후 3시" (한국 시각) */
 export function formatHour(iso: string) {
-  const parsed = new Date(iso);
-  if (Number.isNaN(parsed.getTime())) return "";
-  const h = parsed.getHours();
-  return h === 12 ? "정오" : h < 12 ? `오전 ${h}시` : `오후 ${h - 12}시`;
+  return isValidIso(iso) ? formatHourLabel(kstHour(iso)) : "";
 }
 
-/** ISO 타임스탬프 → "2026. 9. 11. 오후 3:20" */
-export function formatDateTime(iso: string) {
-  const parsed = new Date(iso);
-  if (Number.isNaN(parsed.getTime())) return iso;
-  return parsed.toLocaleString("ko-KR", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
-/** 고른 날짜(YYYY-MM-DD)와 시(0~23)를 차감 시각으로 바꾼다. 분·초는 0으로 둔다. */
+/** 고른 한국 날짜(YYYY-MM-DD)와 시(0~23)를 수업 시각으로 바꾼다. 분·초는 0으로 둔다. */
 export function completedAtFrom(date: string, hour: number) {
-  const [y, m, d] = date.split("-").map(Number);
-  return new Date(y, m - 1, d, hour).toISOString();
+  return kstIso(date, hour);
+}
+
+function isValidIso(iso: string) {
+  return !Number.isNaN(new Date(iso).getTime());
 }

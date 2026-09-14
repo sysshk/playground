@@ -1,3 +1,9 @@
+/*
+  최상위 레이아웃 — 메타데이터, 글꼴, 테마 스크립트
+
+  @date : 2025-12-10
+*/
+
 import type { Metadata, Viewport } from "next";
 import { THEME_SCRIPT } from "@/components/custom/theme";
 import "./globals.css";

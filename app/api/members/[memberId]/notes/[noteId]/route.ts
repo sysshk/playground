@@ -1,3 +1,9 @@
+/*
+  API — 코칭 메모 수정·삭제
+
+  @date : 2026-09-12
+*/
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
@@ -16,7 +22,7 @@ const NOT_FOUND = { error: "코칭 메모를 찾을 수 없습니다." };
 /** 코칭 메모 수정 */
 export async function PATCH(request: Request, { params }: Params) {
   const { memberId, noteId } = await params;
-  const { trainerId, error } = await requireTrainerId();
+  const { scope, error } = await requireTrainerId();
   if (error) return error;
 
   try {
@@ -35,7 +41,7 @@ export async function PATCH(request: Request, { params }: Params) {
 
     // 회원과 트레이너까지 조건에 넣어 소유권 확인과 수정을 한 번에 한다.
     const note = await prisma.coachingNote.update({
-      where: { id: noteId, memberId, member: { trainerId } },
+      where: { id: noteId, memberId, member: scope },
       data: { date: body.date, pain, posture, movement, homework },
     });
 
@@ -49,12 +55,12 @@ export async function PATCH(request: Request, { params }: Params) {
 /** 코칭 메모 삭제 */
 export async function DELETE(_request: Request, { params }: Params) {
   const { memberId, noteId } = await params;
-  const { trainerId, error } = await requireTrainerId();
+  const { scope, error } = await requireTrainerId();
   if (error) return error;
 
   try {
     const { count } = await prisma.coachingNote.deleteMany({
-      where: { id: noteId, memberId, member: { trainerId } },
+      where: { id: noteId, memberId, member: scope },
     });
     if (count === 0) return NextResponse.json(NOT_FOUND, { status: 404 });
 

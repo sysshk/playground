@@ -1,3 +1,9 @@
+/*
+  회원 상세 화면 — 영양 계산 결과 섹션
+
+  @date : 2026-09-12
+*/
+
 "use client";
 
 import Link from "next/link";
@@ -6,7 +12,8 @@ import { Icon } from "@/components/custom/icons";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/custom/empty-state";
 import { Section, SectionAction } from "./section";
-import { formatDateTime } from "@/lib/client";
+import { formatDate } from "@/lib/client";
+import { kstDay } from "@/lib/kst";
 import { ACTIVITY_HINT, GOAL_LABEL } from "@/lib/nutrition";
 import type { NutritionProfile } from "@/lib/types";
 
@@ -14,9 +21,12 @@ import type { NutritionProfile } from "@/lib/types";
 export default function NutritionPanel({
   memberId,
   nutrition,
+  readOnly = false,
 }: {
   memberId: string;
   nutrition: NutritionProfile | null;
+  /** 회원 본인 화면 — 다시 계산 버튼을 숨긴다. */
+  readOnly?: boolean;
 }) {
   const href = `/members/${memberId}/nutrition`;
 
@@ -25,11 +35,11 @@ export default function NutritionPanel({
       title="칼로리 및 영양 계산"
       subtitle={
         nutrition
-          ? `${GOAL_LABEL[nutrition.goal]} 목표 · ${formatDateTime(nutrition.updatedAt)} 계산`
+          ? `${GOAL_LABEL[nutrition.goal]} 목표 · ${formatDate(kstDay(nutrition.updatedAt))} 계산`
           : "회원의 신체 정보와 목표에 맞춘 일일 섭취 기준입니다."
       }
       action={
-        nutrition ? (
+        nutrition && !readOnly ? (
           <SectionAction icon="flame" label="다시 계산" href={href} />
         ) : null
       }
@@ -109,7 +119,7 @@ export default function NutritionPanel({
   );
 }
 
-/** 계산 기준 — 평소에는 접어 두고, 펼칠 때 높이가 부드럽게 늘어난다. */
+/** 계산 기준 (접었다 펴기) */
 function CalculationBasis({ lines }: { lines: string[] }) {
   const [open, setOpen] = useState(false);
 

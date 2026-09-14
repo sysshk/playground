@@ -1,3 +1,9 @@
+/*
+  회원 등록·수정 폼 — 회원 등록 화면과 회원 상세 머리가 함께 쓴다
+
+  @date : 2026-09-12
+*/
+
 "use client";
 
 import { FormEvent, useState } from "react";

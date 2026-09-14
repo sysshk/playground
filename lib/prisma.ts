@@ -1,3 +1,9 @@
+/*
+  서버 공통 — DB 클라이언트 (쓰기용 WebSocket, 읽기용 HTTP)
+
+  @date : 2025-12-11
+*/
+
 import { PrismaClient } from '@/app/generated/prisma'
 import { PrismaNeon, PrismaNeonHttp } from '@prisma/adapter-neon'
 

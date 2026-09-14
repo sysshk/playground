@@ -2,25 +2,10 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* shadcn 컴포넌트의 dark: 변형은 .dark 클래스가 있을 때만 켠다.
-   이렇게 안 하면 OS가 다크 모드일 때 입력칸 같은 곳만 어둡게 바뀐다. */
+/* dark: 변형은 .dark 클래스가 있을 때만 켠다 (OS 다크 설정은 따르지 않는다) */
 @custom-variant dark (&:is(.dark *));
 
-/*
- * PT 매니저 — 고대비 흑백 + 파란 악센트
- *
- * 색은 거의 쓰지 않는다. 회색·흰색·먹색이 화면을 이루고,
- * 파랑은 "숫자"와 "주 동작"에만 쓴다. 로고와 같은 파랑이다.
- *
- * 테두리는 두 종류다. 카드 바깥은 edge(먹색 1.5px)로 또렷하게 두르고,
- * 카드 안을 나누는 선은 line(연회색)을 쓴다. 둘을 섞으면 화면이 탁해진다.
- *
- * 색 값은 shadcn 변수(--background, --primary …)에만 두고,
- * 우리가 먼저 쓰던 이름(canvas, ink, line …)은 그 변수를 가리키게 한다.
- * 그래서 shadcn 컴포넌트와 우리 화면이 같은 색을 쓴다.
- *
- * 주의: shadcn의 muted는 연한 회색 "배경"이다. 회색 글자는 muted-foreground.
- */
+/* 라이트 색 (muted는 배경색, 회색 글자는 muted-foreground) */
 :root {
   --radius: 0.75rem;
 
@@ -44,16 +29,7 @@
   --ring: #1f6feb;
 }
 
-/*
- * 다크 모드.
- *
- * html에 .dark가 붙으면 켜진다. 색 이름은 그대로 두고 값만 바꾸므로
- * 화면 코드는 한 줄도 건드릴 필요가 없다.
- *
- * 악센트는 라이트와 같은 파랑 계열을 쓴다. 로고가 파랑이라 다른 색을
- * 끼우면 모드를 바꿀 때마다 브랜드가 달라 보인다. 다만 어두운 바탕에서는
- * 같은 파랑이 가라앉아서 한 단계 밝은 값으로 올린다.
- */
+/* 다크 색 — html에 .dark가 붙으면 켜진다 */
 .dark {
   --background: #0e0f11;
   --foreground: #f1f2f4;
@@ -74,7 +50,6 @@
   --input: #30353b;
   --ring: #3b82f6;
 
-  /* 먹색 테두리는 어두운 바탕에서 보이지 않는다. 한 단계 밝게 올린다. */
   --color-edge: #42474f;
   --color-primary-bright: #7fb0ff;
   --color-primary-dark: #2f6fd0;
@@ -85,7 +60,6 @@
   --color-danger-dark: #fca5a5;
   --color-warning: #d9a441;
 
-  /* 어두운 배경 위에서는 순먹색이 배경과 붙는다. 한 단계 띄운다. */
   --color-hero: #20242a;
   --color-chip: #2f343b;
 }
@@ -137,101 +111,78 @@
   --color-danger-dark: #8f1e18;
   --color-warning: #a15c00;
 
-  /*
-   * 카드 바깥을 두르는 테두리. 안쪽 구분선(line)과 구별해서 쓴다.
-   * 먹색(#12120f)은 글자색과 같아서 1.5px로 두르면 카드마다 검은 윤곽이
-   * 생기고 화면이 딱딱해진다. line(#dddcd8) < edge < line-strong 순으로
-   * 한 단계씩 짙어지게 두어, 테두리인 건 보이되 먼저 눈에 띄지는 않게 한다.
-   */
+  /* 체중 그래프의 목표 체중 */
+  --color-goal: #e8590c;
+
+  /* 카드 바깥 테두리 */
   --color-edge: #cdccc6;
 
-  /* 먹색 위에 올리는 파랑. 본래 파랑은 어두운 바탕에서 가라앉는다. */
+  /* 어두운 바탕 위 파랑 */
   --color-primary-bright: #6aa5ff;
 
-  /*
-   * 히어로 블록(남은 수업)은 테마와 상관없이 항상 어둡다.
-   * ink로 칠하면 다크 모드에서 값이 뒤집혀 흰 블록에 흰 글씨가 된다.
-   */
+  /* 히어로 블록 (테마와 상관없이 어둡다) */
   --color-hero: #12120f;
   --color-hero-foreground: #f2f3f5;
 
-  /*
-   * 카드 > raised 블록 > 칩. 세 단계짜리 중첩이라 칩에는 한 칸 더 필요하다.
-   * 라이트에서는 흰 카드 위라 raised와 같지만, 다크에서는 raised보다
-   * 밝아야 한다. 어두운 쪽을 쓰면 칩이 구멍처럼 파여 보인다.
-   */
+  /* 칩 */
   --color-chip: #ebebe8;
 
-  /* 테두리로 형태를 잡으므로 그림자는 거의 쓰지 않는다.
-     띄워야 하는 것(팝오버, 토스트)에만 남긴다. */
+  /* 그림자 */
   --shadow-card: none;
   --shadow-raised: 0 2px 6px rgba(18, 18, 15, 0.05);
   --shadow-float: 0 12px 32px rgba(18, 18, 15, 0.14);
 
   --radius-card: 16px;
 
-  /*
-   * 타입 스케일. 크기를 그때그때 정하면 화면마다 제각각이 되므로
-   * 쓸 수 있는 단계를 여기서만 정의하고, 화면에서는 이 이름만 쓴다.
-   * 작은 글자일수록 행간을 넉넉히 줘야 한글이 읽힌다.
-   */
-  --text-2xs: 11px;
+  /* 글자 크기 */
+  --text-2xs: 12px;
   --text-2xs--line-height: 1.45;
-  --text-xs: 12px;
+  --text-xs: 13px;
   --text-xs--line-height: 1.55;
-  --text-sm: 13px;
+  --text-sm: 14px;
   --text-sm--line-height: 1.6;
-  --text-base: 14px;
+  --text-base: 15px;
   --text-base--line-height: 1.65;
-  --text-md: 15px;
+  --text-md: 16px;
   --text-md--line-height: 1.7;
-  --text-lg: 17px;
+  --text-lg: 18px;
   --text-lg--line-height: 1.7;
-  --text-xl: 20px;
+  --text-xl: 21px;
   --text-xl--line-height: 1.45;
-  --text-2xl: 24px;
+  --text-2xl: 25px;
   --text-2xl--line-height: 1.35;
-  --text-3xl: 30px;
+  --text-3xl: 31px;
   --text-3xl--line-height: 1.28;
-  --text-4xl: 38px;
+  --text-4xl: 39px;
   --text-4xl--line-height: 1.22;
-  --text-5xl: 48px;
+  --text-5xl: 49px;
   --text-5xl--line-height: 1.16;
-  --text-6xl: 60px;
+  --text-6xl: 61px;
   --text-6xl--line-height: 1.12;
 
   --font-sans: "Pretendard Variable", Pretendard, -apple-system,
     BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
 }
 
-/*
- * 같은 크기라도 폰에서는 화면에 얼굴을 가까이 대고 보지만
- * 데스크톱은 멀리서 본다. 그래서 큰 화면에서 스케일을 한 단계 올린다.
- * 유틸리티가 이 변수를 참조하므로 여기서만 바꾸면 전체가 따라온다.
- */
+/* 태블릿·데스크톱 글자 크기 */
 @media (min-width: 768px) {
   :root {
-    --text-2xs: 12px;
-    --text-xs: 13px;
-    --text-sm: 14px;
-    --text-base: 15px;
-    --text-md: 16px;
-    --text-lg: 18px;
-    --text-xl: 22px;
-    --text-2xl: 28px;
-    --text-3xl: 34px;
-    --text-4xl: 44px;
-    --text-5xl: 54px;
-    --text-6xl: 68px;
+    --text-2xs: 13px;
+    --text-xs: 14px;
+    --text-sm: 15px;
+    --text-base: 16px;
+    --text-md: 17px;
+    --text-lg: 19px;
+    --text-xl: 23px;
+    --text-2xl: 29px;
+    --text-3xl: 35px;
+    --text-4xl: 45px;
+    --text-5xl: 55px;
+    --text-6xl: 69px;
   }
 }
 
-/*
- * 리셋은 전부 base 레이어 안에 둔다.
- * 레이어 밖에 둔 스타일은 레이어 안의 Tailwind 유틸리티보다 항상 이긴다.
- * 예전에 button { color: inherit } 가 밖에 있어서 모든 버튼에서
- * text-white·font-bold 같은 클래스가 무시됐다.
- */
+/* 리셋 — base 레이어 밖에 두면 Tailwind 유틸리티를 덮어쓴다 */
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -245,15 +196,13 @@
 
   body {
     margin: 0;
-    /* 한글은 기본 줄바꿈이 글자 단위라 "다/음"처럼 단어가 줄 끝에서 쪼개진다.
-       띄어쓰기에서만 끊고, 공백 없이 긴 문자열만 예외로 끊는다. */
     word-break: keep-all;
     overflow-wrap: break-word;
     background: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
-    /* 홈 화면 앱에서 하단 안전영역 확보 */
+    /* 홈 화면 앱 하단 안전영역 */
     padding-bottom: env(safe-area-inset-bottom);
   }
 
@@ -293,7 +242,7 @@
   }
 }
 
-/* 로고 획의 그라데이션 양 끝. 테마를 따라간다. */
+/* 로고 그라데이션 */
 .pt-logo-from {
   stop-color: #1f6feb;
 }

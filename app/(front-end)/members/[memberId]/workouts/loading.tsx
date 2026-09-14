@@ -1,3 +1,9 @@
+/*
+  수업 기록 작성·수정 화면 — 불러오는 동안 뼈대
+
+  @date : 2026-09-14
+*/
+
 "use client";
 
 import { useParams } from "next/navigation";

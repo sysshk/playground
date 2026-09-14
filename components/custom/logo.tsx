@@ -1,11 +1,9 @@
-// PT 매니저 로고
-//
-// P와 T를 한 줄로 이어 그린 모노그램. T의 가로획이 오른쪽에서 말려 내려와
-// P의 둥근 부분이 되고, 세로 기둥은 둘이 함께 쓴다. 선에는 파랑→검정
-// (어두운 배경에서는 하늘색→흰색) 그라데이션을 준다.
-// 시안은 .pencil/design.pen의 "Logo 시안" D2.
-//
-// app/favicon.ico와 public/icons/*.png도 같은 도형이다. 여기를 바꾸면 함께 바꾼다.
+/*
+  공통 — PT 매니저 로고
+  app/favicon.ico, public/icons/*.png도 같은 도형이다. 여기를 바꾸면 함께 바꾼다.
+
+  @date : 2026-09-12
+*/
 
 /** 32×32 좌표계. 끝의 V6V26은 기둥을 되짚어 올라갔다 내려오는 것이라 한 획으로 그려진다. */
 export const LOGO_PATH = "M5.25 6H20.25A6.5 6.5 0 0 1 20.25 19H16.25V6V26";
@@ -17,7 +15,7 @@ export function LogoMark({
   gradientId,
 }: {
   size?: number;
-  /** 어두운 배경 위에 놓일 때. 그라데이션이 하늘색→흰색으로 바뀐다. */
+  /** 어두운 배경 위에 놓일 때 */
   onDark?: boolean;
   className?: string;
   /**
@@ -27,8 +25,6 @@ export function LogoMark({
   gradientId?: string;
 }) {
   // useId()를 쓰면 서버와 클라이언트가 다른 값을 내 hydration이 깨진다.
-  // onDark는 테마와 무관하게 어두운 바탕(사진, 먹색 블록) 위에 놓일 때다.
-  // 그 외에는 stop-color를 CSS가 정해 테마를 따라간다.
   const id = gradientId ?? (onDark ? "pt-logo-gradient-dark" : "pt-logo-gradient");
 
   return (

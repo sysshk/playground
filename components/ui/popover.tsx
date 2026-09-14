@@ -1,3 +1,9 @@
+/*
+  공통 UI (shadcn) — 팝오버
+
+  @date : 2026-09-12
+*/
+
 "use client"
 
 import * as React from "react"

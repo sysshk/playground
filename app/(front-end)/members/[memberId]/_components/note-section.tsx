@@ -1,3 +1,9 @@
+/*
+  회원 상세 화면 — 코칭 메모 섹션
+
+  @date : 2026-09-12
+*/
+
 "use client";
 
 import { EmptyState } from "@/components/custom/empty-state";
@@ -16,11 +22,14 @@ const FIELDS = [
 export function NoteSection({
   memberId,
   notes,
+  readOnly = false,
   onDelete,
 }: {
   memberId: string;
   notes: CoachingNote[];
-  onDelete: (note: CoachingNote) => void;
+  /** 회원 본인 화면 — 작성·수정·삭제 버튼을 숨긴다. */
+  readOnly?: boolean;
+  onDelete?: (note: CoachingNote) => void;
 }) {
   const base = `/members/${memberId}/notes`;
 
@@ -33,14 +42,20 @@ export function NoteSection({
           : "통증, 자세와 움직임 평가를 다음 수업에 활용하세요."
       }
       action={
-        <SectionAction icon="plus" label="메모 작성" href={`${base}/new`} />
+        readOnly ? undefined : (
+          <SectionAction icon="plus" label="메모 작성" href={`${base}/new`} />
+        )
       }
     >
       {notes.length === 0 ? (
         <EmptyState
           icon="clipboard"
           title="코칭 메모가 없습니다"
-          description="통증·자세·움직임·숙제를 남겨 다음 수업에 이어가세요."
+          description={
+            readOnly
+              ? "트레이너가 남긴 코칭 메모가 여기에 보입니다."
+              : "통증·자세·움직임·숙제를 남겨 다음 수업에 이어가세요."
+          }
         />
       ) : (
         <ul className="flex flex-col">
@@ -48,7 +63,7 @@ export function NoteSection({
             <li key={note.id} className="border-b border-line py-4 last:border-0 last:pb-0 first:pt-0">
               <div className="flex items-start justify-between gap-3">
                 <p className="text-sm font-bold">{formatDateShort(note.date)}</p>
-                <div className="flex gap-1">
+                <div className={readOnly ? "hidden" : "flex gap-1"}>
                   <IconButton
                     icon="pencil"
                     label="코칭 메모 수정"
@@ -58,7 +73,7 @@ export function NoteSection({
                     icon="trash"
                     label="코칭 메모 삭제"
                     danger
-                    onClick={() => onDelete(note)}
+                    onClick={() => onDelete?.(note)}
                   />
                 </div>
               </div>

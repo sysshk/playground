@@ -1,3 +1,9 @@
+/*
+  API — 영양 계산 저장
+
+  @date : 2026-09-12
+*/
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
@@ -22,13 +28,13 @@ const GOALS: NutritionGoal[] = ["loss", "maintain", "gain"];
 /** 칼로리·영양 계산 후 저장 (회원당 1건, 다시 계산하면 덮어쓴다) */
 export async function PUT(request: Request, { params }: Params) {
   const { memberId } = await params;
-  const { trainerId, error } = await requireTrainerId();
+  const { scope, error } = await requireTrainerId();
   if (error) return error;
 
-  const owned = await requireOwnedMember(memberId, trainerId);
-  if (owned.error) return owned.error;
-
   try {
+    const owned = await requireOwnedMember(memberId, scope);
+    if (owned.error) return owned.error;
+
     const body = await request.json();
 
     const gender: Gender = body.gender === "female" ? "female" : "male";
@@ -115,22 +121,5 @@ export async function PUT(request: Request, { params }: Params) {
     return NextResponse.json({ nutrition });
   } catch (e) {
     return serverError("nutrition.PUT", e);
-  }
-}
-
-/** 영양 계산 결과 삭제 */
-export async function DELETE(_request: Request, { params }: Params) {
-  const { memberId } = await params;
-  const { trainerId, error } = await requireTrainerId();
-  if (error) return error;
-
-  try {
-    // 트레이너까지 조건에 넣어 소유권 확인과 삭제를 한 번에 한다.
-    await prisma.nutritionProfile.deleteMany({
-      where: { memberId, member: { trainerId } },
-    });
-    return NextResponse.json({ ok: true });
-  } catch (e) {
-    return serverError("nutrition.DELETE", e);
   }
 }

@@ -1,3 +1,9 @@
+/*
+  공통 — 빈 목록 안내
+
+  @date : 2026-09-12
+*/
+
 import type { ReactNode } from "react";
 import { Icon, type IconName } from "@/components/custom/icons";
 
