@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireOwnedMember, requireTrainerId, serverError } from "@/lib/api";
+import { requireTrainerId, serverError } from "@/lib/api";
 
 type Params = { params: Promise<{ memberId: string; completionId: string }> };
 
@@ -13,14 +13,11 @@ export async function DELETE(_request: Request, { params }: Params) {
   const { trainerId, error } = await requireTrainerId();
   if (error) return error;
 
-  const owned = await requireOwnedMember(memberId, trainerId);
-  if (owned.error) return owned.error;
-
   try {
     const result = await prisma.$transaction(async (tx) => {
-      // memberId까지 조건에 넣어 다른 회원의 내역을 지우지 못하게 한다.
+      // 회원과 트레이너까지 조건에 넣어 남의 내역을 지우지 못하게 한다.
       const { count } = await tx.sessionCompletion.deleteMany({
-        where: { id: completionId, memberId },
+        where: { id: completionId, memberId, member: { trainerId } },
       });
 
       if (count === 0) return null;

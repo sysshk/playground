@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getMemberDetail } from "@/lib/queries";
 import {
   badRequest,
-  requireOwnedMember,
+  isRecordNotFound,
   requireTrainerId,
   serverError,
   toNumber,
@@ -11,6 +12,8 @@ import {
 
 type Params = { params: Promise<{ memberId: string }> };
 
+const NOT_FOUND = { error: "회원을 찾을 수 없습니다." };
+
 /** 회원 상세 — 운동/체중/코칭메모/수업완료/영양을 한 번에 내려준다. */
 export async function GET(_request: Request, { params }: Params) {
   const { memberId } = await params;
@@ -18,28 +21,8 @@ export async function GET(_request: Request, { params }: Params) {
   if (error) return error;
 
   try {
-    const member = await prisma.member.findFirst({
-      where: { id: memberId, trainerId },
-      include: {
-        workouts: {
-          orderBy: [{ date: "desc" }, { createdAt: "desc" }],
-          include: {
-            exercises: {
-              orderBy: { order: "asc" },
-              include: { sets: { orderBy: { order: "asc" } } },
-            },
-          },
-        },
-        weights: { orderBy: [{ date: "desc" }, { createdAt: "desc" }] },
-        notes: { orderBy: [{ date: "desc" }, { createdAt: "desc" }] },
-        completions: { orderBy: { completedAt: "desc" } },
-        nutrition: true,
-      },
-    });
-
-    if (!member) {
-      return NextResponse.json({ error: "회원을 찾을 수 없습니다." }, { status: 404 });
-    }
+    const member = await getMemberDetail(memberId, trainerId);
+    if (!member) return NextResponse.json(NOT_FOUND, { status: 404 });
 
     return NextResponse.json({ member });
   } catch (e) {
@@ -52,9 +35,6 @@ export async function PATCH(request: Request, { params }: Params) {
   const { memberId } = await params;
   const { trainerId, error } = await requireTrainerId();
   if (error) return error;
-
-  const owned = await requireOwnedMember(memberId, trainerId);
-  if (owned.error) return owned.error;
 
   try {
     const body = await request.json();
@@ -70,8 +50,9 @@ export async function PATCH(request: Request, { params }: Params) {
       return badRequest("남은 수업은 0 이상의 정수로 입력해 주세요.");
     }
 
+    // trainerId를 조건에 넣어 소유권 확인과 수정을 한 번에 한다.
     const member = await prisma.member.update({
-      where: { id: memberId },
+      where: { id: memberId, trainerId },
       data: {
         name,
         phone,
@@ -83,6 +64,7 @@ export async function PATCH(request: Request, { params }: Params) {
 
     return NextResponse.json({ member });
   } catch (e) {
+    if (isRecordNotFound(e)) return NextResponse.json(NOT_FOUND, { status: 404 });
     return serverError("member.PATCH", e);
   }
 }
@@ -93,11 +75,12 @@ export async function DELETE(_request: Request, { params }: Params) {
   const { trainerId, error } = await requireTrainerId();
   if (error) return error;
 
-  const owned = await requireOwnedMember(memberId, trainerId);
-  if (owned.error) return owned.error;
-
   try {
-    await prisma.member.delete({ where: { id: memberId } });
+    const { count } = await prisma.member.deleteMany({
+      where: { id: memberId, trainerId },
+    });
+    if (count === 0) return NextResponse.json(NOT_FOUND, { status: 404 });
+
     return NextResponse.json({ ok: true });
   } catch (e) {
     return serverError("member.DELETE", e);

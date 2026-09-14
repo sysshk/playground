@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation";
-import { auth } from "@/app/api/auth/auth-config";
+import { requireTrainer } from "@/lib/session";
 
 /** 회원 화면 접근 가드. */
 export default async function MembersLayout({
@@ -7,8 +6,7 @@ export default async function MembersLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  await requireTrainer();
 
   return <>{children}</>;
 }

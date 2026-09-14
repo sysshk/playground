@@ -124,11 +124,11 @@ export async function DELETE(_request: Request, { params }: Params) {
   const { trainerId, error } = await requireTrainerId();
   if (error) return error;
 
-  const owned = await requireOwnedMember(memberId, trainerId);
-  if (owned.error) return owned.error;
-
   try {
-    await prisma.nutritionProfile.deleteMany({ where: { memberId } });
+    // 트레이너까지 조건에 넣어 소유권 확인과 삭제를 한 번에 한다.
+    await prisma.nutritionProfile.deleteMany({
+      where: { memberId, member: { trainerId } },
+    });
     return NextResponse.json({ ok: true });
   } catch (e) {
     return serverError("nutrition.DELETE", e);

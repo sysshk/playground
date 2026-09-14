@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   badRequest,
+  isRecordNotFound,
   isValidDate,
-  requireOwnedMember,
   requireTrainerId,
   serverError,
   toTrimmed,
@@ -11,14 +11,13 @@ import {
 
 type Params = { params: Promise<{ memberId: string; noteId: string }> };
 
+const NOT_FOUND = { error: "코칭 메모를 찾을 수 없습니다." };
+
 /** 코칭 메모 수정 */
 export async function PATCH(request: Request, { params }: Params) {
   const { memberId, noteId } = await params;
   const { trainerId, error } = await requireTrainerId();
   if (error) return error;
-
-  const owned = await requireOwnedMember(memberId, trainerId);
-  if (owned.error) return owned.error;
 
   try {
     const body = await request.json();
@@ -34,21 +33,15 @@ export async function PATCH(request: Request, { params }: Params) {
       return badRequest("코칭 항목을 하나 이상 입력해 주세요.");
     }
 
-    const { count } = await prisma.coachingNote.updateMany({
-      where: { id: noteId, memberId },
+    // 회원과 트레이너까지 조건에 넣어 소유권 확인과 수정을 한 번에 한다.
+    const note = await prisma.coachingNote.update({
+      where: { id: noteId, memberId, member: { trainerId } },
       data: { date: body.date, pain, posture, movement, homework },
     });
 
-    if (count === 0) {
-      return NextResponse.json(
-        { error: "코칭 메모를 찾을 수 없습니다." },
-        { status: 404 },
-      );
-    }
-
-    const note = await prisma.coachingNote.findUnique({ where: { id: noteId } });
     return NextResponse.json({ note });
   } catch (e) {
+    if (isRecordNotFound(e)) return NextResponse.json(NOT_FOUND, { status: 404 });
     return serverError("note.PATCH", e);
   }
 }
@@ -59,20 +52,11 @@ export async function DELETE(_request: Request, { params }: Params) {
   const { trainerId, error } = await requireTrainerId();
   if (error) return error;
 
-  const owned = await requireOwnedMember(memberId, trainerId);
-  if (owned.error) return owned.error;
-
   try {
     const { count } = await prisma.coachingNote.deleteMany({
-      where: { id: noteId, memberId },
+      where: { id: noteId, memberId, member: { trainerId } },
     });
-
-    if (count === 0) {
-      return NextResponse.json(
-        { error: "코칭 메모를 찾을 수 없습니다." },
-        { status: 404 },
-      );
-    }
+    if (count === 0) return NextResponse.json(NOT_FOUND, { status: 404 });
 
     return NextResponse.json({ ok: true });
   } catch (e) {

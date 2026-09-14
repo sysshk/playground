@@ -1,13 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getMemberList } from "@/lib/queries";
 import { badRequest, requireTrainerId, serverError, toNumber, toTrimmed } from "@/lib/api";
-
-/** 한국 시각 기준 오늘에서 days일 전의 YYYY-MM-DD */
-function kstDateString(daysAgo: number) {
-  const KST_OFFSET = 9 * 60 * 60 * 1000;
-  const t = Date.now() + KST_OFFSET - daysAgo * 24 * 60 * 60 * 1000;
-  return new Date(t).toISOString().slice(0, 10);
-}
 
 /** 로그인한 트레이너의 회원 목록 + 대시보드 집계 */
 export async function GET() {
@@ -15,52 +9,7 @@ export async function GET() {
   if (error) return error;
 
   try {
-    // "이번 주"는 타임존에 따라 경계가 흔들린다. 최근 7일로 잡고 그대로 표기한다.
-    const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const sinceDate = kstDateString(6);
-
-    const [recentCompletions, recentWorkouts] = await Promise.all([
-      prisma.sessionCompletion.count({
-        where: { member: { trainerId }, completedAt: { gte: since } },
-      }),
-      prisma.workout.count({
-        where: { member: { trainerId }, date: { gte: sinceDate } },
-      }),
-    ]);
-
-    const members = await prisma.member.findMany({
-      where: { trainerId },
-      orderBy: { createdAt: "desc" },
-      include: {
-        weights: {
-          orderBy: [{ date: "desc" }, { createdAt: "desc" }],
-          take: 1,
-          select: { weight: true },
-        },
-        _count: { select: { workouts: true, completions: true } },
-      },
-    });
-
-    const summaries = members.map(({ weights, _count, ...member }) => ({
-      ...member,
-      latestWeight: weights[0]?.weight ?? null,
-      workoutCount: _count.workouts,
-      // 진행 막대를 그리려면 쓴 횟수가 필요하다.
-      completedSessions: _count.completions,
-    }));
-
-    return NextResponse.json({
-      members: summaries,
-      stats: {
-        total: summaries.length,
-        recentCompletions,
-        recentWorkouts,
-        // 3회 이하로 남은 회원은 재등록 안내가 필요하다.
-        runningLow: summaries.filter(
-          (m) => m.remainingSessions > 0 && m.remainingSessions <= 3,
-        ).length,
-      },
-    });
+    return NextResponse.json(await getMemberList(trainerId));
   } catch (e) {
     return serverError("members.GET", e);
   }
@@ -99,5 +48,32 @@ export async function POST(request: Request) {
     return NextResponse.json({ member }, { status: 201 });
   } catch (e) {
     return serverError("members.POST", e);
+  }
+}
+
+/** 회원 여러 명 삭제 — 연결된 기록도 함께 지워진다 (onDelete: Cascade). */
+export async function DELETE(request: Request) {
+  const { trainerId, error } = await requireTrainerId();
+  if (error) return error;
+
+  try {
+    const body = await request.json().catch(() => null);
+    const ids = body?.ids;
+    if (
+      !Array.isArray(ids) ||
+      ids.length === 0 ||
+      !ids.every((id) => typeof id === "string")
+    ) {
+      return badRequest("삭제할 회원을 선택해 주세요.");
+    }
+
+    // trainerId를 조건에 넣어 남의 회원은 지워지지 않게 한다.
+    const { count } = await prisma.member.deleteMany({
+      where: { id: { in: ids }, trainerId },
+    });
+
+    return NextResponse.json({ ok: true, count });
+  } catch (e) {
+    return serverError("members.DELETE", e);
   }
 }

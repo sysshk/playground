@@ -44,6 +44,16 @@ export async function requireOwnedMember(memberId: string, trainerId: string) {
   return { member, error: null };
 }
 
+/** update·delete가 조건에 맞는 행을 못 찾았을 때 Prisma가 던지는 오류인지 */
+export function isRecordNotFound(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "P2025"
+  );
+}
+
 export function badRequest(message: string) {
   return NextResponse.json({ error: message }, { status: 400 });
 }

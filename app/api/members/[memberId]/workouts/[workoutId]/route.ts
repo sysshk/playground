@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 import {
   badRequest,
   isValidDate,
-  requireOwnedMember,
   requireTrainerId,
   serverError,
   toTrimmed,
@@ -18,9 +17,6 @@ export async function PATCH(request: Request, { params }: Params) {
   const { trainerId, error } = await requireTrainerId();
   if (error) return error;
 
-  const owned = await requireOwnedMember(memberId, trainerId);
-  if (owned.error) return owned.error;
-
   try {
     const body = await request.json();
 
@@ -29,8 +25,9 @@ export async function PATCH(request: Request, { params }: Params) {
     const parsed = parseExercises(body.exercises);
     if ("error" in parsed) return badRequest(parsed.error);
 
+    // 회원과 트레이너까지 조건에 넣어 소유권 확인을 겸한다.
     const existing = await prisma.workout.findFirst({
-      where: { id: workoutId, memberId },
+      where: { id: workoutId, memberId, member: { trainerId } },
       select: { id: true },
     });
     if (!existing) {
@@ -72,13 +69,10 @@ export async function DELETE(_request: Request, { params }: Params) {
   const { trainerId, error } = await requireTrainerId();
   if (error) return error;
 
-  const owned = await requireOwnedMember(memberId, trainerId);
-  if (owned.error) return owned.error;
-
   try {
-    // memberId까지 조건에 넣어 다른 회원의 기록을 지우지 못하게 한다.
+    // 회원과 트레이너까지 조건에 넣어 남의 기록을 지우지 못하게 한다.
     const { count } = await prisma.workout.deleteMany({
-      where: { id: workoutId, memberId },
+      where: { id: workoutId, memberId, member: { trainerId } },
     });
 
     if (count === 0) {

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Icon } from "@/components/custom/icons";
+import { Button } from "@/components/ui/button";
 
 /** 회원 아래 작성 화면(운동 기록·코칭 메모·영양 계산)이 함께 쓰는 껍데기. */
 export function EditorFrame({
@@ -45,5 +46,38 @@ export function EditorFrame({
 
       {children}
     </div>
+  );
+}
+
+/** 없는 회원이나 기록으로 들어왔을 때 작성 화면 자리에 띄운다. */
+export function EditorMissing({
+  back,
+  title,
+  name,
+  message,
+}: {
+  back: string;
+  title: string;
+  name?: string;
+  message: string;
+}) {
+  return (
+    <EditorFrame back={back} title={title} name={name}>
+      <div className="rounded-2xl border-[1.5px] border-edge bg-surface p-6 text-center">
+        <p className="text-base font-bold">{message}</p>
+        <Button asChild variant="outline" className="mt-4">
+          <Link href={back}>회원으로 돌아가기</Link>
+        </Button>
+      </div>
+    </EditorFrame>
+  );
+}
+
+/** 작성 화면 데이터를 읽는 동안 */
+export function EditorSkeleton({ back, title }: { back: string; title: string }) {
+  return (
+    <EditorFrame back={back} title={title}>
+      <div className="h-[420px] animate-pulse rounded-2xl border-[1.5px] border-edge bg-surface" />
+    </EditorFrame>
   );
 }

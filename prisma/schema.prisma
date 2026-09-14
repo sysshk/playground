@@ -4,6 +4,8 @@
 generator client {
   provider = "prisma-client-js"
   output   = "../app/generated/prisma"
+  // 중첩 include를 관계마다 따로 보내지 않고 JOIN 한 번으로 읽는다.
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {

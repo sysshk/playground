@@ -1,78 +1,42 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { apiFetch, errorMessage, formatDate } from "@/lib/client";
-import type { MemberDetail } from "@/lib/types";
+import type { Workout } from "@/lib/types";
 import { EditorFrame } from "../../_components/editor-frame";
 import WorkoutForm, {
   type WorkoutPayload,
 } from "../../_components/workout-form";
 
-/** 운동 기록 작성·수정 화면. */
+/**
+ * 운동 기록 작성·수정 화면. 데이터는 서버 컴포넌트가 읽어 넘긴다.
+ * 종목별 직전 기록(lastSets)도 서버에서 계산해 문구만 받는다.
+ */
 export function WorkoutEditor({
-  memberId,
-  workoutId,
+  member,
+  workout: found,
+  lastSets: lastSetsRecord,
 }: {
-  memberId: string;
+  member: { id: string; name: string; remainingSessions: number };
   /** 주면 수정, 없으면 새 기록 */
-  workoutId?: string;
+  workout: Workout | null;
+  lastSets: Record<string, string>;
 }) {
   const router = useRouter();
-  const [member, setMember] = useState<MemberDetail | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
+  const memberId = member.id;
+  const workout = found ?? undefined;
+  const workoutId = workout?.id;
   const back = `/members/${memberId}`;
 
-  useEffect(() => {
-    let alive = true;
-    apiFetch<{ member: MemberDetail }>(`/api/members/${memberId}`).then(
-      (data) => {
-        if (alive) setMember(data.member);
-      },
-      (e) => {
-        if (alive) setLoadError(errorMessage(e, "회원을 불러오지 못했습니다."));
-      },
-    );
-    return () => {
-      alive = false;
-    };
-  }, [memberId]);
-
-  const workout = workoutId
-    ? member?.workouts.find((w) => w.id === workoutId)
-    : undefined;
-
-  /**
-   * 종목별 직전 기록. 무게를 정할 때 지난번 수치를 보러 나갔다 오지 않게
-   * 종목 이름 옆에 띄운다. workouts는 최신순이라 처음 만난 것이 가장 최근이다.
-   */
-  const lastSets = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const w of member?.workouts ?? []) {
-      if (w.id === workoutId) continue;
-      for (const e of w.exercises) {
-        if (map.has(e.name)) continue;
-        const top = e.sets.reduce(
-          (best, s) => ((s.weight ?? 0) > (best.weight ?? 0) ? s : best),
-          e.sets[0],
-        );
-        if (!top) continue;
-        map.set(
-          e.name,
-          top.unit === "bodyweight"
-            ? `${top.reps}회`
-            : `${top.weight}kg × ${top.reps}회`,
-        );
-      }
-    }
-    return map;
-  }, [member, workoutId]);
+  const lastSets = useMemo(
+    () => new Map(Object.entries(lastSetsRecord)),
+    [lastSetsRecord],
+  );
 
   const handleSubmit = useCallback(
     async (payload: WorkoutPayload) => {
@@ -114,41 +78,6 @@ export function WorkoutEditor({
     },
     [back, memberId, router, workoutId],
   );
-
-  if (loadError) {
-    return (
-      <EditorFrame back={back} title="수업 기록">
-        <div className="rounded-2xl border-[1.5px] border-edge bg-surface p-6 text-center">
-          <p className="text-base font-bold">{loadError}</p>
-          <Button asChild variant="outline" className="mt-4">
-            <Link href={back}>회원으로 돌아가기</Link>
-          </Button>
-        </div>
-      </EditorFrame>
-    );
-  }
-
-  if (!member) {
-    return (
-      <EditorFrame back={back} title="수업 기록">
-        <div className="h-[420px] animate-pulse rounded-2xl border-[1.5px] border-edge bg-surface" />
-      </EditorFrame>
-    );
-  }
-
-  // 주소를 직접 쳐서 없는 기록으로 들어온 경우
-  if (workoutId && !workout) {
-    return (
-      <EditorFrame back={back} title="수업 기록" name={member.name}>
-        <div className="rounded-2xl border-[1.5px] border-edge bg-surface p-6 text-center">
-          <p className="text-base font-bold">기록을 찾을 수 없습니다.</p>
-          <Button asChild variant="outline" className="mt-4">
-            <Link href={back}>회원으로 돌아가기</Link>
-          </Button>
-        </div>
-      </EditorFrame>
-    );
-  }
 
   return (
     <EditorFrame

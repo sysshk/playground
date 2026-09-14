@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireOwnedMember, requireTrainerId, serverError } from "@/lib/api";
+import { requireTrainerId, serverError } from "@/lib/api";
 
 type Params = { params: Promise<{ memberId: string; weightId: string }> };
 
@@ -10,12 +10,10 @@ export async function DELETE(_request: Request, { params }: Params) {
   const { trainerId, error } = await requireTrainerId();
   if (error) return error;
 
-  const owned = await requireOwnedMember(memberId, trainerId);
-  if (owned.error) return owned.error;
-
   try {
+    // 회원과 트레이너까지 조건에 넣어 소유권 확인과 삭제를 한 번에 한다.
     const { count } = await prisma.weightRecord.deleteMany({
-      where: { id: weightId, memberId },
+      where: { id: weightId, memberId, member: { trainerId } },
     });
 
     if (count === 0) {

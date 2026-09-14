@@ -19,9 +19,6 @@ export async function POST(request: Request, { params }: Params) {
   const { trainerId, error } = await requireTrainerId();
   if (error) return error;
 
-  const owned = await requireOwnedMember(memberId, trainerId);
-  if (owned.error) return owned.error;
-
   let completedAt: Date | undefined;
   let reason: string | null = null;
   try {
@@ -50,8 +47,9 @@ export async function POST(request: Request, { params }: Params) {
   try {
     const result = await prisma.$transaction(async (tx) => {
       // 동시에 두 번 눌러도 음수로 내려가지 않도록 조건부로 차감한다.
+      // trainerId도 조건에 넣어 소유권 확인을 겸한다.
       const decremented = await tx.member.updateMany({
-        where: { id: memberId, remainingSessions: { gt: 0 } },
+        where: { id: memberId, trainerId, remainingSessions: { gt: 0 } },
         data: { remainingSessions: { decrement: 1 } },
       });
 
@@ -66,6 +64,10 @@ export async function POST(request: Request, { params }: Params) {
     });
 
     if (!result) {
+      // 실패 경로에서만 남의 회원인지, 수업이 없는지 가린다.
+      const owned = await requireOwnedMember(memberId, trainerId);
+      if (owned.error) return owned.error;
+
       return NextResponse.json(
         { error: "남은 수업이 없습니다." },
         { status: 409 },

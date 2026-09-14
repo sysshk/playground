@@ -18,9 +18,6 @@ export async function POST(request: Request, { params }: Params) {
   const { trainerId, error } = await requireTrainerId();
   if (error) return error;
 
-  const owned = await requireOwnedMember(memberId, trainerId);
-  if (owned.error) return owned.error;
-
   try {
     const body = await request.json();
 
@@ -52,6 +49,15 @@ export async function POST(request: Request, { params }: Params) {
     }
 
     const result = await prisma.$transaction(async (tx) => {
+      // 기록 한 건이 곧 수업 한 번이다. 차감부터 해서, 못 하면 기록을 만들지 않는다.
+      // 트랜잭션 콜백은 값을 돌려주면 커밋되므로 만든 뒤에 빠져나가면 기록만 남는다.
+      // trainerId도 조건에 넣어 소유권 확인을 겸한다.
+      const { count } = await tx.member.updateMany({
+        where: { id: memberId, trainerId, remainingSessions: { gt: 0 } },
+        data: { remainingSessions: { decrement: 1 } },
+      });
+      if (count === 0) return null;
+
       const workout = await tx.workout.create({
         data: {
           memberId,
@@ -67,14 +73,6 @@ export async function POST(request: Request, { params }: Params) {
         },
       });
 
-      // 기록 한 건이 곧 수업 한 번이다. 차감하지 못하면 기록도 남기지 않는다 —
-      // 기록만 남으면 목록에는 있는데 횟수는 그대로인 상태가 된다.
-      const { count } = await tx.member.updateMany({
-        where: { id: memberId, remainingSessions: { gt: 0 } },
-        data: { remainingSessions: { decrement: 1 } },
-      });
-      if (count === 0) return null;
-
       await tx.sessionCompletion.create({
         data: { memberId, workoutId: workout.id, completedAt },
       });
@@ -82,6 +80,10 @@ export async function POST(request: Request, { params }: Params) {
     });
 
     if (!result) {
+      // 실패 경로에서만 남의 회원인지, 수업이 없는지 가린다.
+      const owned = await requireOwnedMember(memberId, trainerId);
+      if (owned.error) return owned.error;
+
       return NextResponse.json(
         {
           error:
