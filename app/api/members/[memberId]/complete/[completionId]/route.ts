@@ -1,3 +1,9 @@
+/*
+  API — 수업 완료 취소 (차감한 1회 되돌리기)
+
+  @date : 2026-09-12
+*/
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireTrainerId, serverError } from "@/lib/api";
@@ -10,33 +16,34 @@ type Params = { params: Promise<{ memberId: string; completionId: string }> };
  */
 export async function DELETE(_request: Request, { params }: Params) {
   const { memberId, completionId } = await params;
-  const { trainerId, error } = await requireTrainerId();
+  const { scope, error } = await requireTrainerId();
   if (error) return error;
 
   try {
-    const result = await prisma.$transaction(async (tx) => {
+    const refunded = await prisma.$transaction(async (tx) => {
       // 회원과 트레이너까지 조건에 넣어 남의 내역을 지우지 못하게 한다.
       const { count } = await tx.sessionCompletion.deleteMany({
-        where: { id: completionId, memberId, member: { trainerId } },
+        where: { id: completionId, memberId, member: scope },
       });
 
-      if (count === 0) return null;
+      if (count === 0) return false;
 
       // 지운 만큼 수업을 되돌린다.
-      return tx.member.update({
+      await tx.member.update({
         where: { id: memberId },
         data: { remainingSessions: { increment: 1 } },
       });
+      return true;
     });
 
-    if (!result) {
+    if (!refunded) {
       return NextResponse.json(
         { error: "수업 완료 내역을 찾을 수 없습니다." },
         { status: 404 },
       );
     }
 
-    return NextResponse.json({ ok: true, member: result });
+    return NextResponse.json({ ok: true });
   } catch (e) {
     return serverError("completion.DELETE", e);
   }

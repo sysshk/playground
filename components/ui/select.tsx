@@ -1,3 +1,9 @@
+/*
+  공통 UI (shadcn) — 선택 목록
+
+  @date : 2026-09-12
+*/
+
 "use client"
 
 import * as React from "react"
@@ -59,8 +65,8 @@ function SelectTrigger({
 function SelectContent({
   className,
   children,
-  position = "item-aligned",
-  align = "center",
+  position = "popper",
+  align = "start",
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
   return (

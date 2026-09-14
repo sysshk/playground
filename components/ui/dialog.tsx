@@ -1,3 +1,9 @@
+/*
+  공통 UI (shadcn) — 모달 창
+
+  @date : 2026-09-12
+*/
+
 "use client"
 
 import * as React from "react"
@@ -36,7 +42,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 z-50 bg-black/45 duration-100 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        "fixed inset-0 z-50 bg-black/45 backdrop-blur-[2px] duration-100 dark:bg-black/70 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
         className
       )}
       {...props}
@@ -76,9 +82,9 @@ function DialogContent({
         {children}
         <DialogPrimitive.Close
           aria-label="닫기"
-          className="absolute top-5 right-5 grid size-8 place-items-center rounded-lg text-subtle transition-colors hover:bg-raised hover:text-ink"
+          className="absolute top-3.5 right-3.5 grid size-10 place-items-center rounded-lg text-subtle transition-colors hover:bg-raised hover:text-ink"
         >
-          <Icon name="close" size={17} />
+          <Icon name="close" size={20} />
         </DialogPrimitive.Close>
       </DialogPrimitive.Content>
     </DialogPortal>

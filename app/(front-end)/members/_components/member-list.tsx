@@ -1,37 +1,41 @@
+/*
+  회원 목록 화면 — 인사, 지표, 수업 달력, 진행 중·종료 회원 목록과 일괄 삭제
+
+  @date : 2026-09-12
+*/
+
 "use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/custom/confirm-dialog";
+import { EmptyState } from "@/components/custom/empty-state";
 import { Icon } from "@/components/custom/icons";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/custom/empty-state";
-import { ConfirmDialog } from "@/components/custom/confirm-dialog";
-import { toast } from "sonner";
 import { apiFetch, errorMessage } from "@/lib/client";
-import type { MemberStats, MemberSummary } from "@/lib/types";
+import { kstDay, kstHour } from "@/lib/kst";
+import type { MemberStats, MemberSummary, MonthCalendar } from "@/lib/types";
+import { LessonCalendar } from "./lesson-calendar";
 
 /** 수업이 이만큼 이하로 남으면 재등록 안내가 필요하다. */
 const LOW_SESSION_THRESHOLD = 3;
 
-function todayLabel() {
-  return new Date().toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    weekday: "long",
-  });
-}
-
-/** 회원 목록 화면. 데이터는 서버 컴포넌트(page.tsx)가 읽어 넘긴다. */
+/** 데이터는 서버 컴포넌트(page.tsx)가 읽어 넘긴다. */
 export function MemberList({
   members,
   stats,
   trainerName,
+  month,
+  calendar,
 }: {
   members: MemberSummary[];
   stats: MemberStats;
   trainerName: string;
+  /** 달력이 처음 보여줄 달 (YYYY-MM) */
+  month: string;
+  calendar: MonthCalendar;
 }) {
   const router = useRouter();
   const [refreshing, startRefresh] = useTransition();
@@ -112,12 +116,7 @@ export function MemberList({
     <div className="mx-auto flex w-full max-w-[760px] flex-col gap-7">
       {/* ── 인사 ───────────────────────────── */}
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-[-0.025em] sm:text-3xl">
-            오늘도 수고하셨어요, {trainerName} 님
-          </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">{todayLabel()}</p>
-        </div>
+        <Greeting name={trainerName} />
         <Button asChild>
           <Link href="/members/new">
             <Icon name="plus" size={16} />
@@ -151,6 +150,9 @@ export function MemberList({
           unit="건"
         />
       </div>
+
+      {/* ── 수업 달력 ─────────────────────── */}
+      <LessonCalendar initialMonth={month} initial={calendar} members={members} />
 
       {/* ── 회원 목록 ─────────────────────── */}
       <section className="flex flex-col gap-3.5">
@@ -219,7 +221,7 @@ export function MemberList({
         ) : (
           <ul className="flex flex-col">
             {active.map((member) => (
-<MemberCard
+              <MemberCard
                 key={member.id}
                 member={member}
                 editing={editing}
@@ -239,7 +241,7 @@ export function MemberList({
           </h2>
           <ul className="flex flex-col">
             {ended.map((member) => (
-<MemberCard
+              <MemberCard
                 key={member.id}
                 member={member}
                 editing={editing}
@@ -275,6 +277,93 @@ export function MemberList({
   );
 }
 
+// ── 인사 ─────────────────────────────────
+
+// 시간대에 맞는 문구 묶음에서 한 시간마다 다른 문구를 고른다.
+// 무작위 대신 "한국 날짜+시"로 고르므로 서버와 브라우저가 같은 문구를 그린다.
+type Line = (name: string) => string;
+
+/** [시작 시, 문구들] — 시작 시가 큰 것부터 맞춰 본다. */
+const SLOTS: [number, Line[]][] = [
+  [22, [
+    (n) => `늦게까지 고생 많으셨어요, ${n} 님`,
+    (n) => `오늘 하루도 정말 수고하셨어요, ${n} 님`,
+    (n) => `푹 쉬고 내일 봬요, ${n} 님`,
+  ]],
+  [18, [
+    (n) => `오늘도 수고하셨어요, ${n} 님`,
+    (n) => `저녁 수업까지 힘내세요, ${n} 님`,
+    (n) => `하루 마무리 잘하고 계신가요, ${n} 님`,
+  ]],
+  [14, [
+    (n) => `오후도 힘내세요, ${n} 님`,
+    (n) => `회원들이 기다리고 있어요, ${n} 님`,
+    (n) => `오늘 수업 잘 흘러가고 있나요, ${n} 님`,
+  ]],
+  [11, [
+    (n) => `점심은 챙기셨어요, ${n} 님?`,
+    (n) => `오후 수업 전에 잠깐 쉬어 가세요, ${n} 님`,
+    (n) => `든든하게 먹고 오후도 달려요, ${n} 님`,
+  ]],
+  [5, [
+    (n) => `좋은 아침이에요, ${n} 님`,
+    (n) => `오늘 첫 수업도 힘차게, ${n} 님`,
+    (n) => `상쾌하게 하루 시작해요, ${n} 님`,
+  ]],
+  [0, [
+    (n) => `이 시간까지 고생 많으세요, ${n} 님`,
+    (n) => `새벽 수업 준비 중이신가요, ${n} 님`,
+  ]],
+];
+
+const DATE_LABEL = new Intl.DateTimeFormat("ko-KR", {
+  timeZone: "Asia/Seoul",
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  weekday: "long",
+});
+
+function greetingAt(now: Date, name: string) {
+  const hour = kstHour(now);
+  const lines = SLOTS.find(([from]) => hour >= from)![1];
+  const seed = Number(`${kstDay(now).replaceAll("-", "")}${hour}`);
+  const index = Math.imul(seed, 2654435761) >>> 0;
+  return lines[index % lines.length](name);
+}
+
+function Greeting({ name }: { name: string }) {
+  const [now, setNow] = useState(() => new Date());
+
+  // 켜 둔 채 정각을 넘기면 문구도 바뀐다. 분이 바뀌는 순간에 맞춰 확인한다.
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      const next = new Date();
+      setNow(next);
+      timer = setTimeout(tick, 60_000 - (next.getTime() % 60_000));
+    };
+    timer = setTimeout(tick, 60_000 - (Date.now() % 60_000));
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div>
+      <h1
+        suppressHydrationWarning
+        className="text-2xl font-extrabold tracking-[-0.025em] sm:text-3xl"
+      >
+        {greetingAt(now, name)}
+      </h1>
+      <p suppressHydrationWarning className="mt-1.5 text-sm text-muted-foreground">
+        {DATE_LABEL.format(now)}
+      </p>
+    </div>
+  );
+}
+
+// ── 회원 카드 ──────────────────────────────
+
 /** 목록에 놓이는 회원 한 장. 진행 중과 종료 목록이 같은 카드를 쓴다. */
 function MemberCard({
   member,
@@ -289,55 +378,46 @@ function MemberCard({
 }) {
   const left = member.remainingSessions;
   const totalSessions = left + member.completedSessions;
-  /*
-   * 숫자와 진행바는 "수업이 얼마나 남았나"라는 같은 사실을 말한다.
-   * 색을 따로 주면 카드 한 장에 강조색이 둘이 되어 색만 늘고 뜻은 안 는다.
-   * 한 색으로 묶어 카드마다 강조색이 하나만 남게 한다.
-   */
   const tone =
-    left === 0
-      ? { text: "text-subtle" }
-      : left <= LOW_SESSION_THRESHOLD
-        ? { text: "text-danger" }
-        : { text: "text-primary" };
+    left === 0 ? "text-subtle" : left <= LOW_SESSION_THRESHOLD ? "text-danger" : "text-primary";
 
   const inner = (
     <>
-        <span className="flex min-w-0 flex-col gap-1">
-          <span className="flex min-w-0 flex-wrap items-center gap-2">
-            <span className="truncate text-base font-extrabold tracking-[-0.02em] group-hover:text-primary">
-              {member.name}
-            </span>
-            {member.goal && (
-              <span className="shrink-0 text-2xs text-subtle">{member.goal}</span>
-            )}
+      <span className="flex min-w-0 flex-col gap-1">
+        <span className="flex min-w-0 flex-wrap items-center gap-2">
+          <span className="truncate text-base font-extrabold tracking-[-0.02em] group-hover:text-primary">
+            {member.name}
           </span>
-          <span className="text-2xs text-subtle">
-            {totalSessions > 0
-              ? `등록 ${totalSessions}회 중 ${member.completedSessions}회 사용`
-              : "등록된 수업 없음"}
-            {member.latestWeight !== null && ` · ${member.latestWeight}kg`}
-            {` · 기록 ${member.workoutCount}건`}
-          </span>
-        </span>
-
-        <span className="flex shrink-0 items-center gap-2">
-          <span className="flex items-end gap-1">
-            <span
-              className={`text-xl font-extrabold leading-none tracking-[-0.03em] ${tone.text}`}
-            >
-              {left}
-            </span>
-            <span className="text-2xs font-bold text-muted-foreground">회</span>
-          </span>
-          {!editing && (
-            <Icon
-              name="chevronRight"
-              size={16}
-              className="text-subtle transition-colors group-hover:text-ink"
-            />
+          {member.goal && (
+            <span className="shrink-0 text-2xs text-subtle">{member.goal}</span>
           )}
         </span>
+        <span className="text-2xs text-subtle">
+          {totalSessions > 0
+            ? `등록 ${totalSessions}회 중 ${member.completedSessions}회 사용`
+            : "등록된 수업 없음"}
+          {member.latestWeight !== null && ` · ${member.latestWeight}kg`}
+          {` · 기록 ${member.workoutCount}건`}
+        </span>
+      </span>
+
+      <span className="flex shrink-0 items-center gap-2">
+        <span className="flex items-end gap-1">
+          <span
+            className={`text-xl font-extrabold leading-none tracking-[-0.03em] ${tone}`}
+          >
+            {left}
+          </span>
+          <span className="text-2xs font-bold text-muted-foreground">회</span>
+        </span>
+        {!editing && (
+          <Icon
+            name="chevronRight"
+            size={16}
+            className="text-subtle transition-colors group-hover:text-ink"
+          />
+        )}
+      </span>
     </>
   );
 
@@ -372,6 +452,8 @@ function MemberCard({
     </li>
   );
 }
+
+// ── 지표 ─────────────────────────────────
 
 function Kpi({
   label,

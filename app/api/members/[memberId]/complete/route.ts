@@ -1,12 +1,20 @@
+/*
+  API — 운동 없이 수업 1회 차감
+
+  @date : 2026-09-12
+*/
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   badRequest,
+  linkSameDayAppointment,
   requireOwnedMember,
   requireTrainerId,
   serverError,
   toTrimmed,
 } from "@/lib/api";
+import { parseCompletedAt } from "../workouts/parse";
 
 type Params = { params: Promise<{ memberId: string }> };
 
@@ -16,7 +24,7 @@ const REASON_MAX = 40;
 /** 수업 완료 처리 — 남은 수업 1회 차감 후 완료 내역을 남긴다. */
 export async function POST(request: Request, { params }: Params) {
   const { memberId } = await params;
-  const { trainerId, error } = await requireTrainerId();
+  const { scope, error } = await requireTrainerId();
   if (error) return error;
 
   let completedAt: Date | undefined;
@@ -29,17 +37,9 @@ export async function POST(request: Request, { params }: Params) {
       return badRequest(`사유는 ${REASON_MAX}자 이내로 입력해 주세요.`);
     }
 
-    if (body?.completedAt) {
-      const parsed = new Date(body.completedAt);
-      if (Number.isNaN(parsed.getTime())) {
-        return badRequest("완료 시각이 올바르지 않습니다.");
-      }
-      // 미래로 기록하면 이력이 뒤엉킨다. 약간의 시계 오차만 허용한다.
-      if (parsed.getTime() > Date.now() + 5 * 60 * 1000) {
-        return badRequest("완료 시각은 미래로 지정할 수 없습니다.");
-      }
-      completedAt = parsed;
-    }
+    const picked = parseCompletedAt(body?.completedAt);
+    if ("error" in picked) return badRequest(picked.error);
+    completedAt = picked.value;
   } catch {
     return badRequest("요청을 읽지 못했습니다.");
   }
@@ -47,9 +47,9 @@ export async function POST(request: Request, { params }: Params) {
   try {
     const result = await prisma.$transaction(async (tx) => {
       // 동시에 두 번 눌러도 음수로 내려가지 않도록 조건부로 차감한다.
-      // trainerId도 조건에 넣어 소유권 확인을 겸한다.
+      // scope도 조건에 넣어 소유권 확인을 겸한다.
       const decremented = await tx.member.updateMany({
-        where: { id: memberId, trainerId, remainingSessions: { gt: 0 } },
+        where: { id: memberId, ...scope, remainingSessions: { gt: 0 } },
         data: { remainingSessions: { decrement: 1 } },
       });
 
@@ -58,14 +58,13 @@ export async function POST(request: Request, { params }: Params) {
       const completion = await tx.sessionCompletion.create({
         data: { memberId, reason, ...(completedAt ? { completedAt } : {}) },
       });
-      const member = await tx.member.findUnique({ where: { id: memberId } });
-
-      return { completion, member };
+      await linkSameDayAppointment(tx, memberId, completion.id, completion.completedAt);
+      return { completion };
     });
 
     if (!result) {
       // 실패 경로에서만 남의 회원인지, 수업이 없는지 가린다.
-      const owned = await requireOwnedMember(memberId, trainerId);
+      const owned = await requireOwnedMember(memberId, scope);
       if (owned.error) return owned.error;
 
       return NextResponse.json(

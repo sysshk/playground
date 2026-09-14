@@ -1,21 +1,29 @@
+/*
+  API — 수업 기록 추가 (기록 1건 = 수업 1회 차감)
+
+  @date : 2026-09-12
+*/
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   badRequest,
   isValidDate,
+  linkSameDayAppointment,
   requireOwnedMember,
   requireTrainerId,
   serverError,
   toTrimmed,
 } from "@/lib/api";
-import { parseExercises } from "./parse";
+import { kstDay } from "@/lib/kst";
+import { parseCompletedAt, parseExercises } from "./parse";
 
 type Params = { params: Promise<{ memberId: string }> };
 
 /** 하루치 운동 기록 추가 (종목 여러 개) */
 export async function POST(request: Request, { params }: Params) {
   const { memberId } = await params;
-  const { trainerId, error } = await requireTrainerId();
+  const { scope, error } = await requireTrainerId();
   if (error) return error;
 
   try {
@@ -27,33 +35,22 @@ export async function POST(request: Request, { params }: Params) {
     if ("error" in parsed) return badRequest(parsed.error);
 
     // 수업 시각은 폼에서 받는다. 없으면 오늘은 지금, 지난 날짜는 그날 정오(한국 시각).
-    const kstToday = new Date(Date.now() + 9 * 60 * 60 * 1000)
-      .toISOString()
-      .slice(0, 10);
 
-    let completedAt: Date;
-    if (body.completedAt) {
-      const picked = new Date(body.completedAt);
-      if (Number.isNaN(picked.getTime())) {
-        return badRequest("수업 시각이 올바르지 않습니다.");
-      }
-      if (picked.getTime() > Date.now() + 5 * 60 * 1000) {
-        return badRequest("수업 시각은 미래로 지정할 수 없습니다.");
-      }
-      completedAt = picked;
-    } else {
-      completedAt =
-        body.date === kstToday
-          ? new Date()
-          : new Date(`${body.date}T12:00:00+09:00`);
-    }
+    const picked = parseCompletedAt(body.completedAt);
+    if ("error" in picked) return badRequest(picked.error);
+
+    const completedAt =
+      picked.value ??
+      (body.date === kstDay()
+        ? new Date()
+        : new Date(`${body.date}T12:00:00+09:00`));
 
     const result = await prisma.$transaction(async (tx) => {
       // 기록 한 건이 곧 수업 한 번이다. 차감부터 해서, 못 하면 기록을 만들지 않는다.
       // 트랜잭션 콜백은 값을 돌려주면 커밋되므로 만든 뒤에 빠져나가면 기록만 남는다.
-      // trainerId도 조건에 넣어 소유권 확인을 겸한다.
+      // scope도 조건에 넣어 소유권 확인을 겸한다.
       const { count } = await tx.member.updateMany({
-        where: { id: memberId, trainerId, remainingSessions: { gt: 0 } },
+        where: { id: memberId, ...scope, remainingSessions: { gt: 0 } },
         data: { remainingSessions: { decrement: 1 } },
       });
       if (count === 0) return null;
@@ -73,15 +70,16 @@ export async function POST(request: Request, { params }: Params) {
         },
       });
 
-      await tx.sessionCompletion.create({
+      const completion = await tx.sessionCompletion.create({
         data: { memberId, workoutId: workout.id, completedAt },
       });
+      await linkSameDayAppointment(tx, memberId, completion.id, completedAt);
       return { workout, completed: true };
     });
 
     if (!result) {
       // 실패 경로에서만 남의 회원인지, 수업이 없는지 가린다.
-      const owned = await requireOwnedMember(memberId, trainerId);
+      const owned = await requireOwnedMember(memberId, scope);
       if (owned.error) return owned.error;
 
       return NextResponse.json(

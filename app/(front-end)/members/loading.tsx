@@ -1,3 +1,9 @@
+/*
+  회원 목록 화면 — 불러오는 동안 뼈대
+
+  @date : 2026-09-14
+*/
+
 /** 회원 목록을 읽는 동안 */
 export default function MembersLoading() {
   return (

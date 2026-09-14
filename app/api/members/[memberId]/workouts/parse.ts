@@ -1,4 +1,8 @@
-// 운동 기록의 종목·세트 검증. 추가(POST)와 수정(PATCH)이 같은 규칙을 쓴다.
+/*
+  API 공통 — 수업 기록의 종목·세트·수업 시각 검증 (추가·수정이 함께 쓴다)
+
+  @date : 2026-09-12
+*/
 
 import { toNumber, toTrimmed } from "@/lib/api";
 
@@ -17,10 +21,36 @@ export interface ExerciseInput {
 
 type ParseResult = { exercises: ExerciseInput[] } | { error: string };
 
+const MAX_EXERCISES = 30;
+const MAX_SETS = 30;
+const NAME_MAX = 50;
+const REPS_MAX = 1000;
+const WEIGHT_MAX = 1000;
+
+/** 폼이 보낸 수업 시각. 안 보냈으면 value가 없다. */
+export function parseCompletedAt(
+  raw: unknown,
+): { value?: Date } | { error: string } {
+  if (!raw) return {};
+
+  const picked = new Date(raw as string);
+  if (Number.isNaN(picked.getTime())) {
+    return { error: "수업 시각이 올바르지 않습니다." };
+  }
+  // 시계 오차만큼은 봐준다.
+  if (picked.getTime() > Date.now() + 5 * 60 * 1000) {
+    return { error: "수업 시각은 미래로 지정할 수 없습니다." };
+  }
+  return { value: picked };
+}
+
 /** 요청 본문의 exercises를 Prisma가 바로 받을 수 있는 형태로 바꾼다. */
 export function parseExercises(raw: unknown): ParseResult {
   if (!Array.isArray(raw) || raw.length === 0) {
     return { error: "종목을 하나 이상 추가해 주세요." };
+  }
+  if (raw.length > MAX_EXERCISES) {
+    return { error: `종목은 한 번에 ${MAX_EXERCISES}개까지 기록할 수 있습니다.` };
   }
 
   const exercises: ExerciseInput[] = [];
@@ -28,9 +58,15 @@ export function parseExercises(raw: unknown): ParseResult {
   for (const [index, item] of raw.entries()) {
     const name = toTrimmed(item?.name);
     if (!name) return { error: `종목 ${index + 1}: 종목명을 입력해 주세요.` };
+    if (name.length > NAME_MAX) {
+      return { error: `종목 ${index + 1}: 종목명은 ${NAME_MAX}자 이내로 입력해 주세요.` };
+    }
 
     if (!Array.isArray(item?.sets) || item.sets.length === 0) {
       return { error: `${name}: 세트를 하나 이상 입력해 주세요.` };
+    }
+    if (item.sets.length > MAX_SETS) {
+      return { error: `${name}: 세트는 ${MAX_SETS}개까지 기록할 수 있습니다.` };
     }
 
     const sets: SetInput[] = [];
@@ -39,8 +75,8 @@ export function parseExercises(raw: unknown): ParseResult {
       const label = `${name} ${setIndex + 1}세트`;
 
       const reps = toNumber(rawSet?.reps);
-      if (reps === undefined || reps < 1 || !Number.isInteger(reps)) {
-        return { error: `${label}: 횟수는 1 이상 입력해 주세요.` };
+      if (reps === undefined || reps < 1 || reps > REPS_MAX || !Number.isInteger(reps)) {
+        return { error: `${label}: 횟수는 1~${REPS_MAX} 사이로 입력해 주세요.` };
       }
 
       const unit: "kg" | "bodyweight" =
@@ -49,8 +85,8 @@ export function parseExercises(raw: unknown): ParseResult {
       let weight: number | null = null;
       if (unit === "kg") {
         const parsed = toNumber(rawSet?.weight);
-        if (parsed === undefined || parsed < 0) {
-          return { error: `${label}: 무게는 0 이상 입력해 주세요.` };
+        if (parsed === undefined || parsed < 0 || parsed > WEIGHT_MAX) {
+          return { error: `${label}: 무게는 0~${WEIGHT_MAX}kg 사이로 입력해 주세요.` };
         }
         weight = parsed;
       }

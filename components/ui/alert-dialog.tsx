@@ -1,3 +1,9 @@
+/*
+  공통 UI (shadcn) — 알림 확인 창
+
+  @date : 2026-09-12
+*/
+
 "use client"
 
 import * as React from "react"
@@ -36,7 +42,7 @@ function AlertDialogOverlay({
     <AlertDialogPrimitive.Overlay
       data-slot="alert-dialog-overlay"
       className={cn(
-        "fixed inset-0 z-50 bg-black/45 duration-100 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        "fixed inset-0 z-50 bg-black/45 backdrop-blur-[2px] duration-100 dark:bg-black/70 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
         className
       )}
       {...props}
