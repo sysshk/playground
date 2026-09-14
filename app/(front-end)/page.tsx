@@ -1,23 +1,19 @@
-"use client";
+/*
+  소개 화면 (랜딩) — 히어로·제품 미리보기·기능 소개
+
+  @date : 2026-09-12
+*/
 
 import Link from "next/link";
 import Image from "next/image";
-import { useSession } from "next-auth/react";
-import AppPreview from "./app-preview";
 import { Icon } from "@/components/custom/icons";
 import Logo from "@/components/custom/logo";
 import { asset } from "@/lib/client";
-import { SIGNUP_ENABLED } from "@/lib/config";
+import { StartLink } from "./start-link";
 
-const START_HREF = SIGNUP_ENABLED ? "/join" : "/login";
-const START_LABEL = SIGNUP_ENABLED ? "무료로 시작하기" : "로그인하고 시작하기";
-
-/*
- * 소개 페이지 글자·버튼 기준. 섹션마다 따로 정하면 크기가 제각각이 된다.
- * 제목(3xl)과 본문 사이가 너무 벌어지지 않게 본문은 데스크톱에서 lg로 올린다.
- */
+/** 소개 본문 글자 */
 const BODY = "mt-5 max-w-[520px] text-md leading-[1.8] text-muted-foreground sm:text-lg";
-/** 첫 화면과 마지막의 주요 버튼. 두 버튼의 크기를 똑같이 맞춘다. */
+/** 주요 버튼 */
 const CTA = "inline-flex h-12 items-center gap-2 rounded-xl px-6 text-md font-bold transition-colors";
 
 const STATS = [
@@ -51,12 +47,6 @@ const ROWS = [
 ];
 
 export default function HomePage() {
-  const { status } = useSession();
-  const loggedIn = status === "authenticated";
-
-  const ctaHref = loggedIn ? "/members" : START_HREF;
-  const ctaLabel = loggedIn ? "회원 관리로 이동" : START_LABEL;
-
   return (
     <div className="bg-surface">
       {/* ── 히어로 ───────────────────────────── */}
@@ -69,7 +59,7 @@ export default function HomePage() {
           sizes="100vw"
           className="object-cover object-center"
         />
-        {/* 사진 위 글자를 읽히게 하는 어둠. 왼쪽이 더 짙다. */}
+        {/* 사진 어둡게 */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-black/30" />
 
         <div className="relative mx-auto flex min-h-[620px] max-w-[1200px] flex-col px-5 sm:min-h-[680px] sm:px-8">
@@ -94,13 +84,7 @@ export default function HomePage() {
             </p>
 
             <div className="mt-9">
-              <Link
-                href={ctaHref}
-                className={`${CTA} bg-primary text-white hover:bg-primary-dark`}
-              >
-                {ctaLabel}
-                <Icon name="arrowRight" size={17} />
-              </Link>
+              <StartLink className={`${CTA} bg-primary text-white hover:bg-primary-dark`} />
             </div>
           </div>
         </div>
@@ -205,13 +189,7 @@ export default function HomePage() {
           <p className="max-w-[600px] text-md leading-[1.75] text-white/60 sm:text-lg">
             브라우저에서 바로 열립니다. 홈 화면에 추가하면 앱처럼 쓸 수 있습니다.
           </p>
-          <Link
-            href={ctaHref}
-            className={`mt-2 ${CTA} bg-white text-hero hover:bg-white/90`}
-          >
-            {ctaLabel}
-            <Icon name="arrowRight" size={17} />
-          </Link>
+          <StartLink className={`mt-2 ${CTA} bg-white text-hero hover:bg-white/90`} />
         </div>
       </section>
 
@@ -260,7 +238,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* 사진 출처 표기는 넣지 않는다. Unsplash 라이선스는 표기를 요구하지 않고, */}
+          {/* 사진 출처 표기 없음 — Unsplash 라이선스는 표기를 요구하지 않는다 */}
           <div className="mt-10 border-t border-line pt-6">
             <p className="text-xs text-subtle">
               © {new Date().getFullYear()} PT 매니저
@@ -268,6 +246,109 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+// ── 제품 미리보기 ───────────────────────────
+
+const PREVIEW_STATS = [
+  { label: "남은 수업", value: "8", unit: "회", highlight: true },
+  { label: "최신 체중", value: "78.4", unit: "kg", highlight: false },
+  { label: "운동 기록", value: "12", unit: "건", highlight: false },
+];
+
+const PREVIEW_EXERCISES = [
+  { name: "벤치프레스", sets: "4세트 × 10회", weight: "60kg" },
+  { name: "바벨 스쿼트", sets: "5세트 × 8회", weight: "80kg" },
+  { name: "랫 풀다운", sets: "3세트 × 12회", weight: "45kg" },
+  { name: "풀업", sets: "3세트 × 8회", weight: "바디웨이트" },
+];
+
+/** 히어로의 제품 미리보기 — 실제 회원 상세 화면을 축소해 담았다. */
+function AppPreview() {
+  return (
+    <div className="overflow-hidden rounded-[20px] border border-line bg-canvas shadow-[0_24px_60px_-18px_rgba(15,23,42,0.22)]">
+      {/* 앱 바 */}
+      <div className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
+        <Logo size="sm" />
+        <span className="text-2xs font-semibold text-muted-foreground">김트레이너</span>
+      </div>
+
+      <div className="flex flex-col gap-3.5 p-4">
+        {/* 회원 */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xl font-extrabold tracking-tight">김지훈</p>
+            <p className="mt-0.5 truncate text-2xs text-muted-foreground">
+              010-2847-1120 · 체중 감량
+            </p>
+          </div>
+          <span className="shrink-0 rounded-full bg-primary-light px-2.5 py-1 text-2xs font-bold text-primary-dark dark:text-primary-bright">
+            남은 수업 8회
+          </span>
+        </div>
+
+        {/* 지표 */}
+        <div className="grid grid-cols-3 gap-2">
+          {PREVIEW_STATS.map((s) => (
+            <div
+              key={s.label}
+              className={`rounded-xl border px-2.5 py-2.5 ${
+                s.highlight
+                  ? "border-primary bg-primary-light"
+                  : "border-line bg-surface"
+              }`}
+            >
+              <p
+                className={`text-2xs font-semibold ${
+                  s.highlight ? "text-primary-dark" : "text-muted-foreground"
+                }`}
+              >
+                {s.label}
+              </p>
+              <p className="mt-1 text-xl font-extrabold leading-none tracking-tight">
+                {s.value}
+                <span className="ml-0.5 text-2xs font-bold text-muted-foreground">
+                  {s.unit}
+                </span>
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* 운동 기록 */}
+        <div className="rounded-xl border border-line bg-surface p-3.5">
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-xs font-bold">
+              <Icon name="dumbbell" size={14} className="text-primary-dark" />
+              오늘 운동 기록
+            </span>
+            <span className="text-2xs font-semibold text-muted-foreground">9월 12일</span>
+          </div>
+
+          <ul className="mt-2.5 flex flex-col gap-2">
+            {PREVIEW_EXERCISES.map((e) => (
+              <li key={e.name} className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2 text-xs font-semibold">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  {e.name}
+                </span>
+                <span className="flex items-center gap-2 whitespace-nowrap">
+                  <span className="text-2xs text-muted-foreground">{e.sets}</span>
+                  <span className="text-2xs font-bold">{e.weight}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* 수업 완료 */}
+        <div className="flex items-center justify-center gap-1.5 rounded-xl bg-primary-dark py-3 text-xs font-bold text-white">
+          <Icon name="check" size={14} />
+          운동 기록 저장 · 수업 1회 완료
+        </div>
+      </div>
     </div>
   );
 }
