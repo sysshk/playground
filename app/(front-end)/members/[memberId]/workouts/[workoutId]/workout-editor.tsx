@@ -330,20 +330,65 @@ export function WorkoutEditor({
                       </span>
                     </li>
                   ) : (
-                  <li
-                    key={s}
-                    className="grid grid-cols-2 items-center gap-2 rounded-lg p-1 sm:flex sm:min-w-0 sm:gap-3"
-                  >
-                    <div className="col-span-2 flex items-center justify-between sm:w-14 sm:shrink-0">
-                      <span className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-muted-foreground">{s + 1}세트</span>
-                        <BodyweightToggle
-                          on={set.bodyweight}
-                          label={`${s + 1}세트 바디웨이트`}
-                          onToggle={() => patchSet(i, s, { bodyweight: !set.bodyweight })}
-                          className="flex h-9 sm:hidden"
+                    <li
+                      key={s}
+                      className="grid grid-cols-2 items-center gap-2 rounded-lg p-1 sm:flex sm:min-w-0 sm:gap-3"
+                    >
+                      <div className="col-span-2 flex items-center justify-between sm:w-14 sm:shrink-0">
+                        <span className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-muted-foreground">{s + 1}세트</span>
+                          <BodyweightToggle
+                            on={set.bodyweight}
+                            label={`${s + 1}세트 바디웨이트`}
+                            onToggle={() => patchSet(i, s, { bodyweight: !set.bodyweight })}
+                            className="flex h-9 sm:hidden"
+                          />
+                        </span>
+                        {row.sets.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              patchExercise(i, { sets: row.sets.filter((_, m) => m !== s) })
+                            }
+                            aria-label={`${s + 1}세트 삭제`}
+                            className="grid h-9 w-9 place-items-center rounded-lg text-subtle transition-colors hover:bg-raised hover:text-danger sm:hidden"
+                          >
+                            <Icon name="close" size={16} />
+                          </button>
+                        )}
+                      </div>
+
+                      <Stepper
+                        label={`${s + 1}세트 횟수`}
+                        unit="회"
+                        value={set.reps}
+                        step={1}
+                        min={1}
+                        inputMode="numeric"
+                        wide={set.bodyweight}
+                        onChange={(reps) => patchSet(i, s, { reps })}
+                      />
+
+                      {!set.bodyweight && (
+                        <Stepper
+                          label={`${s + 1}세트 무게`}
+                          unit="kg"
+                          value={set.weight}
+                          step={WEIGHT_STEP}
+                          min={0}
+                          inputMode="decimal"
+                          placeholder="무게"
+                          onChange={(weight) => patchSet(i, s, { weight })}
                         />
-                      </span>
+                      )}
+
+                      <BodyweightToggle
+                        on={set.bodyweight}
+                        label={`${s + 1}세트 바디웨이트`}
+                        onToggle={() => patchSet(i, s, { bodyweight: !set.bodyweight })}
+                        className="hidden h-11 sm:flex"
+                      />
+
                       {row.sets.length > 1 && (
                         <button
                           type="button"
@@ -351,57 +396,12 @@ export function WorkoutEditor({
                             patchExercise(i, { sets: row.sets.filter((_, m) => m !== s) })
                           }
                           aria-label={`${s + 1}세트 삭제`}
-                          className="grid h-9 w-9 place-items-center rounded-lg text-subtle transition-colors hover:bg-raised hover:text-danger sm:hidden"
+                          className="hidden h-11 w-11 shrink-0 place-items-center rounded-lg text-subtle transition-colors hover:bg-raised hover:text-danger sm:grid"
                         >
-                          <Icon name="close" size={16} />
+                          <Icon name="close" size={17} />
                         </button>
                       )}
-                    </div>
-
-                    <Stepper
-                      label={`${s + 1}세트 횟수`}
-                      unit="회"
-                      value={set.reps}
-                      step={1}
-                      min={1}
-                      inputMode="numeric"
-                      wide={set.bodyweight}
-                      onChange={(reps) => patchSet(i, s, { reps })}
-                    />
-
-                    {!set.bodyweight && (
-                      <Stepper
-                        label={`${s + 1}세트 무게`}
-                        unit="kg"
-                        value={set.weight}
-                        step={WEIGHT_STEP}
-                        min={0}
-                        inputMode="decimal"
-                        placeholder="무게"
-                        onChange={(weight) => patchSet(i, s, { weight })}
-                      />
-                    )}
-
-                    <BodyweightToggle
-                      on={set.bodyweight}
-                      label={`${s + 1}세트 바디웨이트`}
-                      onToggle={() => patchSet(i, s, { bodyweight: !set.bodyweight })}
-                      className="hidden h-11 sm:flex"
-                    />
-
-                    {row.sets.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          patchExercise(i, { sets: row.sets.filter((_, m) => m !== s) })
-                        }
-                        aria-label={`${s + 1}세트 삭제`}
-                        className="hidden h-11 w-11 shrink-0 place-items-center rounded-lg text-subtle transition-colors hover:bg-raised hover:text-danger sm:grid"
-                      >
-                        <Icon name="close" size={17} />
-                      </button>
-                    )}
-                  </li>
+                    </li>
                   ),
                 )}
               </ol>
