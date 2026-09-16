@@ -32,7 +32,8 @@ function shiftDays(key: string, days: number) {
   return toKey(d);
 }
 
-const TRIGGER = "h-10 gap-2 px-3 font-semibold";
+/** 입력칸과 같은 높이·테두리·바탕 */
+const TRIGGER = "h-11 gap-2 border-[1.5px] bg-field px-3 font-semibold dark:border-edge dark:bg-field";
 
 type DayCalendarProps = {
   value: string;

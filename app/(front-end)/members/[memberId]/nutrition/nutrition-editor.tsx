@@ -299,7 +299,7 @@ export function NutritionEditor({
             value={form.activityLevel}
             onValueChange={(v) => set("activityLevel", v as ActivityLevel)}
           >
-            <SelectTrigger className="h-11 w-full">
+            <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

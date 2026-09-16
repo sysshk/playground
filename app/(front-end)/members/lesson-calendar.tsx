@@ -470,7 +470,7 @@ function BookingForm({
     <div className="flex flex-col gap-4">
       <Field label="회원" required>
         <Select value={memberId} onValueChange={setMemberId} disabled={options.length === 0}>
-          <SelectTrigger className="h-11 w-full">
+          <SelectTrigger className="w-full">
             <SelectValue
               placeholder={options.length === 0 ? "진행 중인 회원이 없습니다" : "회원 선택"}
             />
@@ -493,7 +493,7 @@ function BookingForm({
         <div className="flex flex-wrap gap-2">
           <DatePicker value={day} onChange={changeDay} ariaLabel="예약 날짜" />
           <Select value={String(hour)} onValueChange={(v) => changeHour(Number(v))}>
-            <SelectTrigger className="h-10 w-24" aria-label="예약 시">
+            <SelectTrigger className="w-24 font-semibold" aria-label="예약 시">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -515,7 +515,7 @@ function BookingForm({
               setError(null);
             }}
           >
-            <SelectTrigger className="h-10 w-24" aria-label="예약 분">
+            <SelectTrigger className="w-24 font-semibold" aria-label="예약 분">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
