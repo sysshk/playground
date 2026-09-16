@@ -39,18 +39,21 @@ export default async function ProfilePage() {
       </div>
 
       {/* 계정 요약 */}
-      <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 rounded-2xl border border-edge bg-surface px-5 py-4 text-sm">
-        <dt className="text-muted-foreground">이메일</dt>
-        <dd className="min-w-0 truncate font-semibold">{user.email}</dd>
-        <dt className="text-muted-foreground">로그인</dt>
-        <dd className="font-semibold">{google ? "구글 계정으로 로그인" : "이메일·비밀번호"}</dd>
-        <dt className="text-muted-foreground">권한</dt>
-        <dd className="font-semibold">{ROLE_LABEL[viewer.role]}</dd>
-        <dt className="text-muted-foreground">가입일</dt>
-        <dd className="font-semibold tabular-nums">
-          {user.createdAt.toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" })}
-        </dd>
-      </dl>
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-extrabold tracking-[-0.02em]">계정</h2>
+        <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 rounded-2xl border border-edge bg-surface px-5 py-4 text-sm">
+          <dt className="text-muted-foreground">이메일</dt>
+          <dd className="min-w-0 truncate font-semibold">{user.email}</dd>
+          <dt className="text-muted-foreground">로그인</dt>
+          <dd className="font-semibold">{google ? "구글 계정으로 로그인" : "이메일·비밀번호"}</dd>
+          <dt className="text-muted-foreground">권한</dt>
+          <dd className="font-semibold">{ROLE_LABEL[viewer.role]}</dd>
+          <dt className="text-muted-foreground">가입일</dt>
+          <dd className="font-semibold tabular-nums">
+            {user.createdAt.toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" })}
+          </dd>
+        </dl>
+      </section>
 
       <ProfileForm
         name={user.name ?? ""}

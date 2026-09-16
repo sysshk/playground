@@ -1,5 +1,5 @@
 /*
-  내 정보 화면 — 이름·연락처 입력 폼. 저장하거나 취소하면 역할에 맞는 첫 화면으로 돌아감
+  내 정보 화면 — 이름·연락처. 평소엔 글자로 보이고, 수정을 눌러야 입력칸과 취소·저장이 나옴
 
   @date : 2026-09-16
 */
@@ -11,14 +11,14 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { Field } from "@/components/custom/form-field";
+import { Icon } from "@/components/custom/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { apiFetch, errorMessage } from "@/lib/client";
-import { ROLE_HOME, toRole } from "@/lib/types";
 
 export function ProfileForm({
-  name: initialName,
-  phone: initialPhone,
+  name: savedName,
+  phone: savedPhone,
   phoneRequired,
 }: {
   name: string;
@@ -26,13 +26,19 @@ export function ProfileForm({
   phoneRequired: boolean; // 회원 기록이 연결된 계정은 트레이너가 연락해야 해서 필수
 }) {
   const router = useRouter();
-  const { data: session, update } = useSession();
-  const [name, setName] = useState(initialName);
-  const [phone, setPhone] = useState(initialPhone);
+  const { update } = useSession();
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(savedName);
+  const [phone, setPhone] = useState(savedPhone);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const home = ROLE_HOME[toRole(session?.user?.role)];
+  const startEdit = () => {
+    setName(savedName);
+    setPhone(savedPhone);
+    setError("");
+    setEditing(true);
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -51,15 +57,13 @@ export function ProfileForm({
     try {
       await apiFetch("/api/profile", {
         method: "PATCH",
-        body: JSON.stringify({
-          name: name.trim(),
-          phone: phone.trim(),
-        }),
+        body: JSON.stringify({ name: name.trim(), phone: phone.trim() }),
       });
       // 세션에 담긴 이름을 DB 값으로 다시 받음
       await update();
       toast("저장했습니다.");
-      router.push(home);
+      setEditing(false);
+      router.refresh();
     } catch (e) {
       setError(errorMessage(e, "저장하지 못했습니다."));
     } finally {
@@ -68,52 +72,80 @@ export function ProfileForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <Field label="이름" required>
-        <Input
-          id="profile-name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          maxLength={30}
-          autoComplete="name"
-          required
-        />
-      </Field>
-
-      <Field
-        label="연락처"
-        required={phoneRequired}
-        hint={phoneRequired ? "트레이너에게도 이 번호가 보입니다" : undefined}
-      >
-        <Input
-          id="profile-phone"
-          type="tel"
-          inputMode="tel"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          maxLength={20}
-          placeholder="010-0000-0000"
-          autoComplete="tel"
-          required={phoneRequired}
-        />
-      </Field>
-
-      {error && <p className="rounded-xl bg-danger/8 px-4 py-3 text-sm text-danger">{error}</p>}
-
-      {/* 뒤로 가기 대신 첫 화면으로. 주소로 바로 들어왔으면 뒤가 사이트 밖일 수 있음 */}
-      <div className="flex gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          className="flex-1"
-          onClick={() => router.push(home)}
-        >
-          취소
-        </Button>
-        <Button type="submit" loading={busy} className="flex-1">
-          저장
-        </Button>
+    <section className="flex flex-col gap-3">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-lg font-extrabold tracking-[-0.02em]">기본 정보</h2>
+        {!editing && (
+          <button
+            type="button"
+            onClick={startEdit}
+            className="flex h-8 items-center gap-1 rounded-lg px-2 text-sm font-bold text-primary transition-colors hover:bg-primary-light"
+          >
+            <Icon name="pencil" size={14} />
+            수정
+          </button>
+        )}
       </div>
-    </form>
+
+      {editing ? (
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <Field label="이름" required>
+            <Input
+              id="profile-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={30}
+              autoComplete="name"
+              autoFocus
+              required
+            />
+          </Field>
+
+          <Field
+            label="연락처"
+            required={phoneRequired}
+            hint={phoneRequired ? "트레이너에게도 이 번호가 보입니다" : undefined}
+          >
+            <Input
+              id="profile-phone"
+              type="tel"
+              inputMode="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              maxLength={20}
+              placeholder="010-0000-0000"
+              autoComplete="tel"
+              required={phoneRequired}
+            />
+          </Field>
+
+          {error && <p className="rounded-xl bg-danger/8 px-4 py-3 text-sm text-danger">{error}</p>}
+
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              disabled={busy}
+              onClick={() => setEditing(false)}
+            >
+              취소
+            </Button>
+            <Button type="submit" loading={busy} className="flex-1">
+              저장
+            </Button>
+          </div>
+        </form>
+      ) : (
+        <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 rounded-2xl border border-edge bg-surface px-5 py-4 text-sm">
+          <dt className="text-muted-foreground">이름</dt>
+          <dd className="min-w-0 truncate font-semibold">{savedName || "없음"}</dd>
+          <dt className="text-muted-foreground">연락처</dt>
+          <dd className={`font-semibold tabular-nums ${savedPhone ? "" : "text-subtle"}`}>
+            {savedPhone || "등록 안 됨"}
+          </dd>
+        </dl>
+      )}
+    </section>
   );
 }
