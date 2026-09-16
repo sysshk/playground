@@ -29,6 +29,8 @@ interface SetRow {
   weight: string;
   /** 켜면 무게 없이 한 세트. 무게 칸을 숨긴다. */
   bodyweight: boolean;
+  /** 다 넣은 세트. −/+ 를 감춰서 잘못 눌러도 값이 바뀌지 않는다. */
+  locked: boolean;
 }
 
 interface ExerciseRow {
@@ -54,7 +56,28 @@ const emptySet = (from?: SetRow): SetRow => ({
   reps: from?.reps ?? "10",
   weight: from?.weight ?? "",
   bodyweight: from?.bodyweight ?? false,
+  locked: false,
 });
+
+/** 세트 한 줄이 제대로 찼는지. 덜 찼으면 보여 줄 문구를 돌려준다. */
+function setProblem(set: SetRow, label: string) {
+  const reps = Number(set.reps);
+  if (set.reps.trim() === "" || !Number.isInteger(reps) || reps < 1) {
+    return `${label}: 횟수는 1 이상 입력해 주세요.`;
+  }
+  if (set.bodyweight) return null;
+
+  const weight = Number(set.weight.trim());
+  if (set.weight.trim() === "" || !Number.isFinite(weight) || weight < 0) {
+    return `${label}: 무게를 입력하거나 바디웨이트를 눌러 주세요.`;
+  }
+  return null;
+}
+
+/** 잠긴 세트에 적는 글 — "60kg × 12회", 바디웨이트면 "바디웨이트 12회" */
+function setLabel(set: SetRow) {
+  return set.bodyweight ? `바디웨이트 ${set.reps}회` : `${set.weight}kg × ${set.reps}회`;
+}
 
 const emptyExercise = (): ExerciseRow => ({
   name: "",
@@ -70,6 +93,8 @@ function toRows(workout: Workout | null): ExerciseRow[] {
       reps: String(s.reps),
       weight: s.weight === null ? "" : String(s.weight),
       bodyweight: s.unit === "bodyweight",
+      // 저장해 둔 세트는 잠근 채로 연다.
+      locked: true,
     })),
   }));
 }
@@ -125,6 +150,37 @@ export function WorkoutEditor({
     setError(null);
   };
 
+  /** 세트 한 줄을 잠근다. 덜 찼으면 문구만 띄우고 그대로 둔다. */
+  const lockSet = (i: number, s: number) => {
+    const row = rows[i];
+    const problem = setProblem(row.sets[s], `${row.name.trim() || `${i + 1}번째 종목`} ${s + 1}세트`);
+    if (problem) {
+      setError(problem);
+      return false;
+    }
+    patchSet(i, s, { locked: true });
+    return true;
+  };
+
+  /** 세트를 더 넣는다. 쓰던 줄은 잠가서 아래로 밀어 둔다. */
+  const addSet = (i: number) => {
+    const row = rows[i];
+    const name = row.name.trim() || `${i + 1}번째 종목`;
+    for (const [s, set] of row.sets.entries()) {
+      const problem = setProblem(set, `${name} ${s + 1}세트`);
+      if (problem) {
+        setError(problem);
+        return;
+      }
+    }
+    patchExercise(i, {
+      sets: [
+        ...row.sets.map((set) => ({ ...set, locked: true })),
+        emptySet(row.sets[row.sets.length - 1]),
+      ],
+    });
+  };
+
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
@@ -141,29 +197,19 @@ export function WorkoutEditor({
       const sets: WorkoutPayload["exercises"][number]["sets"] = [];
 
       for (const [s, set] of row.sets.entries()) {
-        const reps = Number(set.reps);
-        if (set.reps === "" || !Number.isInteger(reps) || reps < 1) {
-          setError(`${name} ${s + 1}세트: 횟수는 1 이상 입력해 주세요.`);
+        const problem = setProblem(set, `${name} ${s + 1}세트`);
+        if (problem) {
+          setError(problem);
           return;
         }
 
         // 1세트는 바디웨이트로 하고 2세트부터 무게를 다는 식으로 한 종목
         // 안에서 섞이므로 세트마다 따로 본다.
-        if (set.bodyweight) {
-          sets.push({ reps, weight: null, unit: "bodyweight" });
-          continue;
-        }
-
-        const raw = set.weight.trim();
-        const parsed = Number(raw);
-        if (raw === "" || !Number.isFinite(parsed) || parsed < 0) {
-          setError(
-            `${name} ${s + 1}세트: 무게를 입력하거나 바디웨이트를 눌러 주세요.`,
-          );
-          return;
-        }
-
-        sets.push({ reps, weight: parsed, unit: "kg" });
+        sets.push(
+          set.bodyweight
+            ? { reps: Number(set.reps), weight: null, unit: "bodyweight" }
+            : { reps: Number(set.reps), weight: Number(set.weight), unit: "kg" },
+        );
       }
 
       exercises.push({ name, sets });
@@ -289,7 +335,40 @@ export function WorkoutEditor({
             <div className="flex flex-col gap-3 p-3">
               {/* 세트 */}
               <ol className="flex flex-col gap-2">
-                {row.sets.map((set, s) => (
+                {row.sets.map((set, s) =>
+                  set.locked ? (
+                    <li
+                      key={s}
+                      className="flex items-center gap-2 rounded-lg bg-canvas px-3 py-2"
+                    >
+                      <span className="w-12 shrink-0 text-sm font-bold text-muted-foreground">
+                        {s + 1}세트
+                      </span>
+                      <span className="min-w-0 flex-1 text-md font-bold tabular-nums">
+                        {setLabel(set)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => patchSet(i, s, { locked: false })}
+                        aria-label={`${s + 1}세트 수정`}
+                        className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-subtle transition-colors hover:bg-raised hover:text-ink"
+                      >
+                        <Icon name="pencil" size={16} />
+                      </button>
+                      {row.sets.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            patchExercise(i, { sets: row.sets.filter((_, m) => m !== s) })
+                          }
+                          aria-label={`${s + 1}세트 삭제`}
+                          className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-subtle transition-colors hover:bg-raised hover:text-danger"
+                        >
+                          <Icon name="close" size={16} />
+                        </button>
+                      )}
+                    </li>
+                  ) : (
                   <li
                     key={s}
                     className="grid grid-cols-2 items-center gap-2 rounded-lg p-1 sm:flex sm:min-w-0 sm:gap-3"
@@ -361,17 +440,24 @@ export function WorkoutEditor({
                         <Icon name="close" size={17} />
                       </button>
                     )}
+
+                    <button
+                      type="button"
+                      onClick={() => lockSet(i, s)}
+                      aria-label={`${s + 1}세트 저장`}
+                      className="col-span-2 flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary-light text-sm font-bold text-primary-dark transition-colors hover:brightness-95 dark:text-primary-bright sm:col-span-1 sm:w-11 sm:shrink-0"
+                    >
+                      <Icon name="check" size={17} />
+                      <span className="sm:hidden">세트 저장</span>
+                    </button>
                   </li>
-                ))}
+                  ),
+                )}
               </ol>
 
               <button
                 type="button"
-                onClick={() =>
-                  patchExercise(i, {
-                    sets: [...row.sets, emptySet(row.sets[row.sets.length - 1])],
-                  })
-                }
+                onClick={() => addSet(i)}
                 className="flex h-11 items-center justify-center gap-1.5 rounded-lg bg-canvas text-sm font-bold text-ink transition-colors hover:bg-raised"
               >
                 <Icon name="plus" size={16} />
