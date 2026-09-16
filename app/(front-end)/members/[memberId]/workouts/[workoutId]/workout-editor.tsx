@@ -446,7 +446,7 @@ export function WorkoutEditor({
         />
 
         <div className="flex gap-2 sm:justify-end">
-          <Button type="button" variant="outline" onClick={() => router.push(back)} className="px-5">
+          <Button type="button" variant="outline" onClick={() => router.push(back)} className="flex-1 sm:flex-none sm:px-5">
             취소
           </Button>
           <Button type="submit" loading={busy} className="flex-1 sm:flex-none sm:px-7">
