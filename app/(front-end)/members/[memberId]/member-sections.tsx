@@ -420,9 +420,7 @@ function SessionRow({
       )}
 
       {!workout && completion?.reason && (
-        <p className="text-sm font-semibold text-muted-foreground">
-          {completion.reason}
-        </p>
+        <Memo text={completion.reason} />
       )}
     </li>
   );

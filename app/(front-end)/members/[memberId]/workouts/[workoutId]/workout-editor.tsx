@@ -22,8 +22,8 @@ import type { ExerciseRow, SetRow, WorkoutPayload } from "./types";
 /** 무게 −/+ 한 번에 움직이는 양. 원판 한 쌍(1.25kg × 2) 기준. */
 const WEIGHT_STEP = 2.5;
 
-/** 종목 없이 수업만 남길 때 고르는 사유. 폰에서 키보드를 올리지 않고 넣음 */
-const QUICK_REASONS = ["상담", "체형 평가", "노쇼"];
+/** 날짜·운동·메모 영역 제목 */
+const SECTION_TITLE = "text-sm font-bold";
 
 const emptySet = (from?: SetRow): SetRow => ({
   reps: from?.reps ?? "10",
@@ -101,10 +101,9 @@ export function WorkoutEditor({
   const [error, setError] = useState<string | null>(null);
 
   const [hour, setHour] = useState(() => kstHour(completedAt ?? new Date()));
-  const [reason, setReason] = useState("");
   const [removing, setRemoving] = useState<number | null>(null);
 
-  // 이름을 적은 종목만 저장함. 하나도 없으면 수업만 남기는 날임
+  // 이름을 적은 종목만 저장함. 하나도 없으면 수업만 남기는 날이고 메모가 사유가 됨
   const named = rows.filter((r) => r.name.trim() !== "");
   const sessionOnly = named.length === 0;
 
@@ -201,7 +200,7 @@ export function WorkoutEditor({
           method: "POST",
           body: JSON.stringify({
             completedAt: payload.completedAt,
-            reason: reason.trim() || null,
+            reason: memo.trim() || null,
           }),
         });
       } else {
@@ -231,7 +230,7 @@ export function WorkoutEditor({
       subtitle={
         workout
           ? `${formatDate(workout.date)} 기록을 고칩니다.`
-          : "종목을 남기면 수업 1회가 함께 기록됩니다. 상담처럼 남길 운동이 없는 날은 종목 없이 저장하세요."
+          : "저장하면 수업 1회가 기록됩니다. 상담·노쇼처럼 운동이 없던 날은 종목을 비우고 메모만 남기세요."
       }
       aside={
         !workout && (
@@ -264,79 +263,120 @@ export function WorkoutEditor({
           </p>
         )}
 
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="shrink-0 whitespace-nowrap text-sm font-semibold">날짜</span>
-          <DatePicker value={date} onChange={setDate} max={today()} />
-          <HourPicker value={hour} onChange={setHour} ariaLabel="수업 시각" />
-        </div>
+        <section className="flex flex-col gap-2">
+          <h2 className={SECTION_TITLE}>날짜</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <DatePicker value={date} onChange={setDate} max={today()} />
+            <HourPicker value={hour} onChange={setHour} ariaLabel="수업 시각" />
+          </div>
+        </section>
 
-        {rows.map((row, i) => (
-          <div key={i} className="rounded-xl border-[1.5px] border-edge bg-surface">
-            {/* 종목 */}
-            <div className="flex items-center gap-2 border-b border-line py-1.5 pl-3 pr-1.5">
-              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-canvas text-xs font-bold text-muted-foreground">
-                {i + 1}
-              </span>
-              <input
-                className="h-11 min-w-0 flex-1 bg-transparent text-md font-bold outline-none placeholder:font-normal placeholder:text-subtle"
-                value={row.name}
-                onChange={(e) => patchExercise(i, { name: e.target.value })}
-                placeholder="종목명 (벤치프레스, 스쿼트 등)"
-                aria-label={`${i + 1}번째 종목명`}
-              />
-              {lastSets[row.name.trim()] && (
-                <span className="shrink-0 rounded-full bg-primary-light px-2 py-0.5 text-2xs font-bold text-primary-dark dark:text-primary-bright">
-                  지난 {lastSets[row.name.trim()]}
+        <section className="flex flex-col gap-3">
+          <h2 className={SECTION_TITLE}>운동</h2>
+          {rows.map((row, i) => (
+            <div key={i} className="rounded-xl border-[1.5px] border-edge bg-surface">
+              {/* 종목 */}
+              <div className="flex items-center gap-2 border-b border-line py-1.5 pl-3 pr-1.5">
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-canvas text-xs font-bold text-muted-foreground">
+                  {i + 1}
                 </span>
-              )}
-              <button
-                type="button"
-                onClick={() => toggleExercise(i)}
-                aria-label={`${i + 1}번째 종목 ${row.editing ? "완료" : "수정"}`}
-                className={`flex h-11 shrink-0 items-center gap-1 rounded-lg px-2.5 text-sm font-bold transition-colors ${
-                  row.editing
-                    ? "text-primary hover:bg-primary-light"
-                    : "text-subtle hover:bg-raised hover:text-ink"
-                }`}
-              >
-                <Icon name={row.editing ? "check" : "pencil"} size={16} />
-                {row.editing ? "완료" : "수정"}
-              </button>
-              {rows.length > 1 && (
+                <input
+                  className="h-11 min-w-0 flex-1 bg-transparent text-md font-bold outline-none placeholder:font-normal placeholder:text-subtle"
+                  value={row.name}
+                  onChange={(e) => patchExercise(i, { name: e.target.value })}
+                  placeholder="종목명 (벤치프레스, 스쿼트 등)"
+                  aria-label={`${i + 1}번째 종목명`}
+                />
+                {lastSets[row.name.trim()] && (
+                  <span className="shrink-0 rounded-full bg-primary-light px-2 py-0.5 text-2xs font-bold text-primary-dark dark:text-primary-bright">
+                    지난 {lastSets[row.name.trim()]}
+                  </span>
+                )}
                 <button
                   type="button"
-                  onClick={() => setRemoving(i)}
-                  aria-label={`${i + 1}번째 종목 삭제`}
-                  className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-subtle transition-colors hover:bg-raised hover:text-danger"
+                  onClick={() => toggleExercise(i)}
+                  aria-label={`${i + 1}번째 종목 ${row.editing ? "완료" : "수정"}`}
+                  className={`flex h-11 shrink-0 items-center gap-1 rounded-lg px-2.5 text-sm font-bold transition-colors ${
+                    row.editing
+                      ? "text-primary hover:bg-primary-light"
+                      : "text-subtle hover:bg-raised hover:text-ink"
+                  }`}
                 >
-                  <Icon name="trash" size={18} />
+                  <Icon name={row.editing ? "check" : "pencil"} size={16} />
+                  {row.editing ? "완료" : "수정"}
                 </button>
-              )}
-            </div>
+                {rows.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setRemoving(i)}
+                    aria-label={`${i + 1}번째 종목 삭제`}
+                    className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-subtle transition-colors hover:bg-raised hover:text-danger"
+                  >
+                    <Icon name="trash" size={18} />
+                  </button>
+                )}
+              </div>
 
-            <div className="flex flex-col gap-3 p-3">
-              {/* 세트 */}
-              <ol className="flex flex-col gap-2">
-                {row.sets.map((set, s) =>
-                  !row.editing ? (
-                    <li
-                      key={s}
-                      className="flex items-center gap-2 rounded-lg bg-canvas px-3 py-2"
-                    >
-                      <span className="w-12 shrink-0 text-sm font-bold text-muted-foreground">
-                        {s + 1}세트
-                      </span>
-                      <span className="min-w-0 flex-1 text-md font-bold tabular-nums">
-                        {setLabel(set)}
-                      </span>
-                    </li>
-                  ) : (
-                    <li
-                      key={s}
-                      className="grid grid-cols-2 items-center gap-2 rounded-lg p-1 sm:flex sm:min-w-0 sm:gap-3"
-                    >
-                      <div className="col-span-2 flex items-center justify-between sm:w-14 sm:shrink-0">
-                        <span className="text-sm font-bold text-muted-foreground">{s + 1}세트</span>
+              <div className="flex flex-col gap-3 p-3">
+                {/* 세트 */}
+                <ol className="flex flex-col gap-2">
+                  {row.sets.map((set, s) =>
+                    !row.editing ? (
+                      <li
+                        key={s}
+                        className="flex items-center gap-2 rounded-lg bg-canvas px-3 py-2"
+                      >
+                        <span className="w-12 shrink-0 text-sm font-bold text-muted-foreground">
+                          {s + 1}세트
+                        </span>
+                        <span className="min-w-0 flex-1 text-md font-bold tabular-nums">
+                          {setLabel(set)}
+                        </span>
+                      </li>
+                    ) : (
+                      <li
+                        key={s}
+                        className="grid grid-cols-2 items-center gap-2 rounded-lg p-1 sm:flex sm:min-w-0 sm:gap-3"
+                      >
+                        <div className="col-span-2 flex items-center justify-between sm:w-14 sm:shrink-0">
+                          <span className="text-sm font-bold text-muted-foreground">{s + 1}세트</span>
+                          {row.sets.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                patchExercise(i, { sets: row.sets.filter((_, m) => m !== s) })
+                              }
+                              aria-label={`${s + 1}세트 삭제`}
+                              className="grid h-9 w-9 place-items-center rounded-lg text-subtle transition-colors hover:bg-raised hover:text-danger sm:hidden"
+                            >
+                              <Icon name="close" size={16} />
+                            </button>
+                          )}
+                        </div>
+
+                        <Stepper
+                          label={`${s + 1}세트 횟수`}
+                          unit="회"
+                          value={set.reps}
+                          step={1}
+                          min={1}
+                          inputMode="numeric"
+                          onChange={(reps) => patchSet(i, s, { reps })}
+                        />
+
+                        {/* 무게 칸 — 비워 두면 바디웨이트. 0kg에서 −를 한 번 더 누르면 비워짐 */}
+                        <Stepper
+                          label={`${s + 1}세트 무게`}
+                          unit="kg"
+                          value={set.weight}
+                          step={WEIGHT_STEP}
+                          min={0}
+                          inputMode="decimal"
+                          placeholder="바디웨이트"
+                          emptyBelowMin
+                          onChange={(weight) => patchSet(i, s, { weight })}
+                        />
+
                         {row.sets.length > 1 && (
                           <button
                             type="button"
@@ -344,108 +384,51 @@ export function WorkoutEditor({
                               patchExercise(i, { sets: row.sets.filter((_, m) => m !== s) })
                             }
                             aria-label={`${s + 1}세트 삭제`}
-                            className="grid h-9 w-9 place-items-center rounded-lg text-subtle transition-colors hover:bg-raised hover:text-danger sm:hidden"
+                            className="hidden h-11 w-11 shrink-0 place-items-center rounded-lg text-subtle transition-colors hover:bg-raised hover:text-danger sm:grid"
                           >
-                            <Icon name="close" size={16} />
+                            <Icon name="close" size={17} />
                           </button>
                         )}
-                      </div>
+                      </li>
+                    ),
+                  )}
+                </ol>
 
-                      <Stepper
-                        label={`${s + 1}세트 횟수`}
-                        unit="회"
-                        value={set.reps}
-                        step={1}
-                        min={1}
-                        inputMode="numeric"
-                        onChange={(reps) => patchSet(i, s, { reps })}
-                      />
-
-                      {/* 무게 칸 — 비워 두면 바디웨이트. 0kg에서 −를 한 번 더 누르면 비워짐 */}
-                      <Stepper
-                        label={`${s + 1}세트 무게`}
-                        unit="kg"
-                        value={set.weight}
-                        step={WEIGHT_STEP}
-                        min={0}
-                        inputMode="decimal"
-                        placeholder="바디웨이트"
-                        emptyBelowMin
-                        onChange={(weight) => patchSet(i, s, { weight })}
-                      />
-
-                      {row.sets.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            patchExercise(i, { sets: row.sets.filter((_, m) => m !== s) })
-                          }
-                          aria-label={`${s + 1}세트 삭제`}
-                          className="hidden h-11 w-11 shrink-0 place-items-center rounded-lg text-subtle transition-colors hover:bg-raised hover:text-danger sm:grid"
-                        >
-                          <Icon name="close" size={17} />
-                        </button>
-                      )}
-                    </li>
-                  ),
+                {row.editing && (
+                  <button
+                    type="button"
+                    onClick={() => addSet(i)}
+                    className="flex h-11 items-center justify-center gap-1.5 rounded-lg bg-canvas text-sm font-bold text-ink transition-colors hover:bg-raised"
+                  >
+                    <Icon name="plus" size={16} />
+                    세트 추가
+                  </button>
                 )}
-              </ol>
-
-              {row.editing && (
-                <button
-                  type="button"
-                  onClick={() => addSet(i)}
-                  className="flex h-11 items-center justify-center gap-1.5 rounded-lg bg-canvas text-sm font-bold text-ink transition-colors hover:bg-raised"
-                >
-                  <Icon name="plus" size={16} />
-                  세트 추가
-                </button>
-              )}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
 
-        <button
-          type="button"
-          onClick={() => setRows((p) => [...p, emptyExercise()])}
-          className="flex h-12 items-center justify-center gap-1.5 rounded-xl border-[1.5px] border-dashed border-line-strong bg-surface text-sm font-bold text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-        >
-          <Icon name="plus" size={16} />
-          종목 추가
-        </button>
+          <button
+            type="button"
+            onClick={() => setRows((p) => [...p, emptyExercise()])}
+            className="flex h-12 items-center justify-center gap-1.5 rounded-xl border-[1.5px] border-dashed border-line-strong bg-surface text-sm font-bold text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+          >
+            <Icon name="plus" size={16} />
+            종목 추가
+          </button>
+        </section>
 
-        {sessionOnly && !workout && (
-          <div className="flex flex-col gap-2.5">
-            <input
-              className="h-12 w-full rounded-xl border-[1.5px] border-edge bg-field px-3.5 text-base outline-none transition-colors placeholder:text-subtle focus:border-primary"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="사유 — 상담, 체형 평가 등 (선택)"
-              aria-label="사유"
-              maxLength={40}
-            />
-            <div className="flex flex-wrap gap-2">
-              {QUICK_REASONS.map((label) => (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => setReason(label)}
-                  className="h-9 rounded-full border border-line bg-surface px-3.5 text-xs font-bold text-muted-foreground transition-colors hover:border-edge hover:text-ink"
-                >
-                  + {label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <textarea
-          className="h-24 w-full resize-none rounded-xl border-[1.5px] border-edge bg-field px-3.5 py-3 text-base outline-none transition-colors placeholder:text-subtle focus:border-primary"
-          value={memo}
-          onChange={(e) => setMemo(e.target.value)}
-          placeholder="메모 — 폼 체크, 컨디션 등"
-          aria-label="메모"
-        />
+        <section className="flex flex-col gap-2">
+          <h2 className={SECTION_TITLE}>메모</h2>
+          <textarea
+            className="h-24 w-full resize-none rounded-xl border-[1.5px] border-edge bg-field px-3.5 py-3 text-base outline-none transition-colors placeholder:text-subtle focus:border-primary"
+            value={memo}
+            onChange={(e) => setMemo(e.target.value)}
+            maxLength={sessionOnly && !workout ? 200 : undefined}
+            placeholder="폼 체크, 컨디션, 상담·노쇼 사유 등"
+            aria-label="메모"
+          />
+        </section>
 
 
         {error && <p className="text-sm text-danger">{error}</p>}
@@ -467,7 +450,7 @@ export function WorkoutEditor({
             취소
           </Button>
           <Button type="submit" loading={busy} className="flex-1 sm:flex-none sm:px-7">
-            {workout ? "수정 저장" : sessionOnly ? "수업만 기록" : "저장"}
+            {workout ? "수정 저장" : "저장"}
           </Button>
         </div>
       </form>
@@ -510,7 +493,7 @@ function Stepper({
     <div
       className="flex h-11 min-w-0 items-center overflow-hidden rounded-lg bg-canvas sm:flex-1"
     >
-      <label className="flex min-w-0 flex-1 items-baseline justify-end gap-0.5 pl-3">
+      <label className="flex min-w-0 flex-1 items-baseline justify-end gap-0.5 pl-2 sm:pl-3">
         <input
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -519,7 +502,7 @@ function Stepper({
           aria-label={label}
           className={`min-w-0 flex-1 bg-transparent text-right text-md font-bold tabular-nums outline-none ${
             // 빈 무게 칸은 바디웨이트라는 값이라 진하게
-            emptyBelowMin ? "placeholder:text-sm placeholder:text-ink" : "placeholder:text-line-strong"
+            emptyBelowMin ? "placeholder:text-xs placeholder:text-ink sm:placeholder:text-sm" : "placeholder:text-line-strong"
           }`}
         />
         {!(emptyBelowMin && empty) && (
@@ -534,7 +517,7 @@ function Stepper({
           onClick={() => bump(-step)}
           disabled={minusDisabled}
           aria-label={`${label} 줄이기`}
-          className="grid h-full w-10 place-items-center text-muted-foreground transition-colors hover:bg-raised hover:text-ink disabled:opacity-30 sm:w-11"
+          className="grid h-full w-9 place-items-center text-muted-foreground transition-colors hover:bg-raised hover:text-ink disabled:opacity-30 sm:w-11"
         >
           <Icon name="minus" size={17} />
         </button>
@@ -542,7 +525,7 @@ function Stepper({
           type="button"
           onClick={() => bump(step)}
           aria-label={`${label} 늘리기`}
-          className="grid h-full w-10 place-items-center rounded-r-lg text-muted-foreground transition-colors hover:bg-raised hover:text-ink sm:w-11"
+          className="grid h-full w-9 place-items-center rounded-r-lg text-muted-foreground transition-colors hover:bg-raised hover:text-ink sm:w-11"
         >
           <Icon name="plus" size={17} />
         </button>

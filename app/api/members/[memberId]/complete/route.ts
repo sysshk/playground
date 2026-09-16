@@ -18,8 +18,8 @@ import { parseCompletedAt } from "../workouts/parse";
 
 type Params = { params: Promise<{ memberId: string }> };
 
-/** 사유는 이력 목록에 한 줄로 보이는 값이라 길게 받지 않음 */
-const REASON_MAX = 40;
+/** 사유는 기록 화면의 메모 칸에서 옴. 이력 목록에 그대로 보여 줌 */
+const REASON_MAX = 200;
 
 /** 수업 완료 처리 — 남은 수업 1회 차감 후 완료 내역을 남김 */
 export async function POST(request: Request, { params }: Params) {
