@@ -1,5 +1,5 @@
 /*
-  공통 — 라이트/다크 모드 (첫 페인트 전 테마 스크립트, useTheme)
+  공통 — 라이트/다크 모드 (첫 페인트 전 테마 스크립트, useTheme, 해/달 버튼)
 
   @date : 2026-09-12
 */
@@ -7,8 +7,7 @@
 "use client";
 
 import { useCallback, useSyncExternalStore } from "react";
-
-/** 라이트/다크 모드. */
+import { Icon } from "@/components/custom/icons";
 
 const STORAGE_KEY = "pt.theme";
 const DARK_QUERY = "(prefers-color-scheme: dark)";
@@ -67,4 +66,23 @@ export function useTheme() {
   }, []);
 
   return { dark, setDark };
+}
+
+/** 해/달 버튼 — 사이드바가 없는 로그인 전 화면용. onDark는 늘 어두운 바탕 위 */
+export function ThemeToggle({ onDark = false }: { onDark?: boolean }) {
+  const { dark, setDark } = useTheme();
+  return (
+    <button
+      type="button"
+      onClick={() => setDark(!dark)}
+      aria-label={dark ? "라이트 모드로 바꾸기" : "다크 모드로 바꾸기"}
+      className={`grid size-9 shrink-0 place-items-center rounded-lg transition-colors ${
+        onDark
+          ? "text-white/70 hover:bg-white/10 hover:text-white"
+          : "text-muted-foreground hover:bg-raised hover:text-ink"
+      }`}
+    >
+      <Icon name={dark ? "sun" : "moon"} size={18} />
+    </button>
+  );
 }

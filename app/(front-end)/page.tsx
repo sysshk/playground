@@ -9,6 +9,7 @@ import Image from "next/image";
 import { Icon } from "@/components/custom/icons";
 import Logo from "@/components/custom/logo";
 import { asset } from "@/lib/client";
+import { ThemeToggle } from "@/components/custom/theme";
 import { SIGNUP_ENABLED } from "@/lib/config";
 
 /** 소개 본문 글자 */
@@ -69,6 +70,7 @@ export default function HomePage() {
         <div className="relative mx-auto flex min-h-[620px] max-w-[1200px] flex-col px-5 sm:min-h-[680px] sm:px-8">
           <header className="flex items-center justify-between py-6">
             <Logo onDark />
+            <ThemeToggle onDark />
           </header>
 
           <div className="flex flex-1 flex-col justify-center py-14">

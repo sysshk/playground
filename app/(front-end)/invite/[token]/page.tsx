@@ -7,6 +7,7 @@
 import Link from "next/link";
 import { GoogleButton } from "@/components/custom/google-button";
 import { LogoMark } from "@/components/custom/logo";
+import { ThemeToggle } from "@/components/custom/theme";
 import { getInvite } from "@/lib/queries";
 
 export default async function InvitePage({
@@ -18,7 +19,10 @@ export default async function InvitePage({
   const invite = await getInvite(token);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-surface px-5 py-12">
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-surface px-5 py-12">
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-[360px]">
         <div className="flex flex-col items-center text-center">
           <LogoMark size={48} />

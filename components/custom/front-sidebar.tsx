@@ -41,6 +41,7 @@ function topBar(pathname: string) {
   if (pathname === "/members") return { label: "회원" };
   if (pathname === "/accounts") return { label: "계정 관리" };
   if (pathname === "/me") return { label: "내 기록" };
+  if (pathname === "/profile") return { label: "내 정보" };
 
   const seg = pathname.split("/").filter(Boolean);
   if (seg[0] !== "members") return { label: "PT 매니저" };
@@ -287,7 +288,7 @@ function Nav({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-/** 사이드바 맨 아래 계정 줄 — 화면 모드와 로그아웃. */
+/** 사이드바 맨 아래 계정 줄 — 내 정보, 화면 모드, 로그아웃 */
 function Account() {
   const { data: session } = useSession();
   const { dark, setDark } = useTheme();
@@ -341,7 +342,15 @@ function Account() {
             <Switch checked={dark} onChange={setDark} label="다크 모드" />
           </div>
 
-          <div className="mt-1 border-t border-line pt-1">
+          <div className="mt-1 flex flex-col gap-0.5 border-t border-line pt-1">
+            <Link
+              href="/profile"
+              onClick={() => setOpen(false)}
+              className="flex h-10 w-full items-center gap-2.5 rounded-lg px-2.5 text-sm font-bold text-muted-foreground transition-colors hover:bg-raised hover:text-ink"
+            >
+              <Icon name="user" size={16} />
+              내 정보
+            </Link>
             <button
               type="button"
               onClick={() => {

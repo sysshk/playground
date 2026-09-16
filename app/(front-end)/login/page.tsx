@@ -15,6 +15,7 @@ import { LogoMark } from "@/components/custom/logo";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/custom/form-field";
 import { GoogleButton } from "@/components/custom/google-button";
+import { ThemeToggle } from "@/components/custom/theme";
 import { SIGNUP_ENABLED } from "@/lib/config";
 import { ROLE_HOME, toRole } from "@/lib/types";
 
@@ -62,7 +63,7 @@ export default function LoginPage() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(70%_55%_at_50%_30%,#dce9fd_0%,rgb(234_242_254/0.55)_45%,transparent_100%)] dark:bg-[radial-gradient(70%_55%_at_50%_30%,rgb(59_130_246/0.18)_0%,rgb(59_130_246/0.06)_45%,transparent_100%)]"
       />
-      <header className="mx-auto flex w-full max-w-[1200px] py-6">
+      <header className="mx-auto flex w-full max-w-[1200px] items-center justify-between py-6">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 py-1.5 text-base font-semibold text-muted-foreground transition-colors hover:text-ink"
@@ -70,6 +71,7 @@ export default function LoginPage() {
           <Icon name="arrowLeft" size={17} />
           홈으로
         </Link>
+        <ThemeToggle />
       </header>
 
       <main className="flex flex-1 items-center justify-center pb-16">

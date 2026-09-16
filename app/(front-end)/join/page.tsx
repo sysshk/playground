@@ -14,6 +14,7 @@ import { Field } from "@/components/custom/form-field";
 import { BASE_PATH } from "@/lib/client";
 
 import { Input } from "@/components/ui/input";
+import { ThemeToggle } from "@/components/custom/theme";
 import { isEmail, PASSWORD_MIN } from "@/lib/account";
 export default function JoinPage() {
   const router = useRouter();
@@ -90,6 +91,9 @@ export default function JoinPage() {
           </svg>
         </Link>
         <h2 className="text-lg font-bold tracking-tight">회원가입</h2>
+        <div className="ml-auto">
+          <ThemeToggle />
+        </div>
       </div>
 
       <div className="flex flex-1 justify-center px-5 pb-10">

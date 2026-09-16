@@ -18,6 +18,7 @@ import {
   LogOut,
   Menu,
   Minus,
+  Moon,
   Pencil,
   Plus,
   RotateCcw,
@@ -25,10 +26,12 @@ import {
   Settings,
   Smartphone,
   Sparkles,
+  Sun,
   Target,
   Trash2,
   TrendingUp,
   TriangleAlert,
+  UserRound,
   Users,
   X,
   type LucideProps,
@@ -61,6 +64,9 @@ const ICONS = {
   undo: RotateCcw,
   menu: Menu,
   settings: Settings,
+  sun: Sun,
+  moon: Moon,
+  user: UserRound,
 } as const;
 
 export type IconName = keyof typeof ICONS;

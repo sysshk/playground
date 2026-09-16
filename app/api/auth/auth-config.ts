@@ -24,7 +24,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: "/login",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id
         token.role = user.role
@@ -32,14 +32,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       // 관리자가 역할을 바꿔도 다시 로그인하지 않게, 몇 분마다 DB에서 역할을 다시 읽음
       const checkedAt = typeof token.roleCheckedAt === "number" ? token.roleCheckedAt : 0
-      if (token.id && Date.now() - checkedAt > ROLE_REFRESH_MS) {
+      // 내 정보 화면에서 이름을 바꾸면 update()로 들어와 바로 다시 읽음
+      if (token.id && (trigger === "update" || Date.now() - checkedAt > ROLE_REFRESH_MS)) {
         const found = await prismaRead.user.findUnique({
           where: { id: token.id as string },
-          select: { role: true },
+          select: { role: true, name: true },
         })
         // 계정이 지워졌으면 세션을 끊음. 남은 쿠키로 권한이 되살아나지 않게
         if (!found) return null
         token.role = toRole(found.role)
+        token.name = found.name
         token.roleCheckedAt = Date.now()
       }
       return token
