@@ -27,7 +27,7 @@ export default async function InvitePage({
               <h1 className="mt-5 text-2xl font-extrabold tracking-[-0.025em] text-balance">
                 {invite.memberName}님, 반가워요
               </h1>
-              <p className="mt-2 text-base text-muted-foreground">
+              <p className="mt-2 text-base text-balance text-muted-foreground">
                 구글 계정으로 시작하면 수업 기록과 체중 변화를 언제든 볼 수 있어요.
               </p>
             </>
@@ -36,7 +36,7 @@ export default async function InvitePage({
               <h1 className="mt-5 text-2xl font-extrabold tracking-[-0.025em]">
                 쓸 수 없는 링크입니다
               </h1>
-              <p className="mt-2 text-base text-muted-foreground">
+              <p className="mt-2 text-base text-balance text-muted-foreground">
                 만료됐거나 이미 사용한 링크예요. 트레이너에게 새 링크를 받아 주세요.
               </p>
             </>
