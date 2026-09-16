@@ -147,7 +147,7 @@ export default function FrontSidebar({ children }: { children: ReactNode }) {
           </div>
 
           <div className="px-4">
-            <Account />
+            <Account onNavigate={() => setDrawerOpen(false)} />
           </div>
         </aside>
       </div>
@@ -289,7 +289,7 @@ function Nav({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 /** 사이드바 맨 아래 계정 줄 — 내 정보, 화면 모드, 로그아웃 */
-function Account() {
+function Account({ onNavigate }: { onNavigate?: () => void }) {
   const { data: session } = useSession();
   const { dark, setDark } = useTheme();
   const [open, setOpen] = useState(false);
@@ -345,7 +345,10 @@ function Account() {
           <div className="mt-1 flex flex-col gap-0.5 border-t border-line pt-1">
             <Link
               href="/profile"
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                setOpen(false);
+                onNavigate?.();
+              }}
               className="flex h-10 w-full items-center gap-2.5 rounded-lg px-2.5 text-sm font-bold text-muted-foreground transition-colors hover:bg-raised hover:text-ink"
             >
               <Icon name="user" size={16} />
