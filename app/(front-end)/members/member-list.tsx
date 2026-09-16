@@ -33,8 +33,7 @@ export function MemberList({
   members: MemberSummary[];
   stats: MemberStats;
   trainerName: string;
-  /** 달력이 처음 보여줄 달 (YYYY-MM) */
-  month: string;
+  month: string; // 달력이 처음 보여줄 달 YYYY-MM
   calendar: MonthCalendar;
 }) {
   const router = useRouter();
@@ -44,6 +43,19 @@ export function MemberList({
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [now, setNow] = useState(() => new Date());
+
+  // 켜 둔 채 정각을 넘기면 인사 문구도 바뀐다. 분이 바뀌는 순간에 맞춰 확인한다.
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      const next = new Date();
+      setNow(next);
+      timer = setTimeout(tick, 60_000 - (next.getTime() % 60_000));
+    };
+    timer = setTimeout(tick, 60_000 - (Date.now() % 60_000));
+    return () => clearTimeout(timer);
+  }, []);
 
   const toggleEditing = () => {
     setEditing((on) => !on);
@@ -85,38 +97,108 @@ export function MemberList({
     const keyword = query.trim().toLowerCase();
     if (!keyword) return members;
     return members.filter((member) =>
-      [member.name, member.phone, member.goal ?? ""]
-        .join(" ")
-        .toLowerCase()
-        .includes(keyword),
+      [member.name, member.phone, member.goal ?? ""].join(" ").toLowerCase().includes(keyword),
     );
   }, [members, query]);
 
-  /*
-   * 남은 수업이 0회면 사실상 종료한 회원이다. 진행 중인 회원과 한 목록에
-   * 섞여 있으면 매일 보는 목록이 지난 회원들로 길어진다.
-   * 검색은 양쪽 모두에 걸리도록 filtered를 나눠서 쓴다.
-   */
-  const active = useMemo(
-    () => filtered.filter((m) => m.remainingSessions > 0),
-    [filtered],
-  );
-  const ended = useMemo(
-    () => filtered.filter((m) => m.remainingSessions === 0),
-    [filtered],
-  );
+  // 남은 수업이 0회면 종료한 회원이다. 검색은 양쪽 모두에 걸리도록 filtered를 나눈다.
+  const active = filtered.filter((m) => m.remainingSessions > 0);
+  const ended = filtered.filter((m) => m.remainingSessions === 0);
 
   const total = members.length;
-  const endedTotal = members.filter(
-    (m) => m.remainingSessions === 0,
-  ).length;
-  const activeTotal = total - endedTotal;
+  const activeTotal = members.filter((m) => m.remainingSessions > 0).length;
+
+  // "전체"는 종료한 회원까지 세어 실제로 관리 중인 인원과 어긋나서 진행 중만 센다.
+  const kpis = [
+    { label: "진행 중 회원", value: activeTotal, unit: "명", warn: false },
+    { label: "최근 7일 수업", value: stats.recentCompletions, unit: "회", warn: false },
+    { label: "수업 소진 임박", value: stats.runningLow, unit: "명", warn: stats.runningLow > 0 },
+    { label: "최근 7일 기록", value: stats.recentWorkouts, unit: "건", warn: false },
+  ];
+
+  /** 회원 한 줄. 진행 중과 종료 목록이 같이 쓴다. */
+  const memberRow = (member: MemberSummary) => {
+    const left = member.remainingSessions;
+    const totalSessions = left + member.completedSessions;
+    const tone =
+      left === 0 ? "text-subtle" : left <= LOW_SESSION_THRESHOLD ? "text-danger" : "text-primary";
+    const rowClass = "group flex min-w-0 flex-1 items-center justify-between gap-3 py-3.5";
+
+    const inner = (
+      <>
+        <span className="flex min-w-0 flex-col gap-1">
+          <span className="flex min-w-0 flex-wrap items-center gap-2">
+            <span className="truncate text-base font-extrabold tracking-[-0.02em] group-hover:text-primary">
+              {member.name}
+            </span>
+            {member.goal && <span className="shrink-0 text-2xs text-subtle">{member.goal}</span>}
+          </span>
+          <span className="text-2xs text-subtle">
+            {totalSessions > 0
+              ? `등록 ${totalSessions}회 중 ${member.completedSessions}회 사용`
+              : "등록된 수업 없음"}
+            {member.latestWeight !== null && ` · ${member.latestWeight}kg`}
+            {` · 기록 ${member.workoutCount}건`}
+          </span>
+        </span>
+
+        <span className="flex shrink-0 items-center gap-2">
+          <span className="flex items-end gap-1">
+            <span className={`text-xl font-extrabold leading-none tracking-[-0.03em] ${tone}`}>
+              {left}
+            </span>
+            <span className="text-2xs font-bold text-muted-foreground">회</span>
+          </span>
+          {!editing && (
+            <Icon
+              name="chevronRight"
+              size={16}
+              className="text-subtle transition-colors group-hover:text-ink"
+            />
+          )}
+        </span>
+      </>
+    );
+
+    return (
+      <li key={member.id} className="flex items-center gap-3 border-b border-line last:border-0">
+        {editing ? (
+          <>
+            <input
+              type="checkbox"
+              checked={picked.has(member.id)}
+              onChange={() => togglePick(member.id)}
+              aria-label={`${member.name} 선택`}
+              className="size-4 shrink-0 accent-primary"
+            />
+            <button type="button" onClick={() => togglePick(member.id)} className={`${rowClass} text-left`}>
+              {inner}
+            </button>
+          </>
+        ) : (
+          <Link href={`/members/${member.id}`} className={rowClass}>
+            {inner}
+          </Link>
+        )}
+      </li>
+    );
+  };
 
   return (
     <div className="mx-auto flex w-full max-w-[760px] flex-col gap-7">
       {/* ── 인사 ───────────────────────────── */}
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <Greeting name={trainerName} />
+        <div>
+          <h1
+            suppressHydrationWarning
+            className="text-2xl font-extrabold tracking-[-0.025em] sm:text-3xl"
+          >
+            {greetingAt(now, trainerName)}
+          </h1>
+          <p suppressHydrationWarning className="mt-1.5 text-sm text-muted-foreground">
+            {DATE_LABEL.format(now)}
+          </p>
+        </div>
         <Button asChild>
           <Link href="/members/new">
             <Icon name="plus" size={16} />
@@ -127,28 +209,21 @@ export function MemberList({
 
       {/* ── 지표 ───────────────────────────── */}
       <div className="grid grid-cols-2 gap-x-4 gap-y-5 border-y border-line py-4 sm:grid-cols-4">
-        {/* "전체"는 종료한 회원까지 세어 실제로 관리 중인 인원과 어긋난다. */}
-        <Kpi
-          label="진행 중 회원"
-          value={activeTotal}
-          unit="명"
-        />
-        <Kpi
-          label="최근 7일 수업"
-          value={stats.recentCompletions}
-          unit="회"
-        />
-        <Kpi
-          label="수업 소진 임박"
-          value={stats.runningLow}
-          unit="명"
-          warn={stats.runningLow > 0}
-        />
-        <Kpi
-          label="최근 7일 기록"
-          value={stats.recentWorkouts}
-          unit="건"
-        />
+        {kpis.map((kpi) => (
+          <div key={kpi.label} className="flex flex-col gap-1">
+            <p className="flex items-baseline gap-1">
+              <span
+                className={`text-xl font-extrabold leading-none tracking-[-0.03em] ${
+                  kpi.warn ? "text-danger" : ""
+                }`}
+              >
+                {kpi.value}
+              </span>
+              <span className="text-xs font-bold text-muted-foreground">{kpi.unit}</span>
+            </p>
+            <p className="text-xs font-bold text-ink">{kpi.label}</p>
+          </div>
+        ))}
       </div>
 
       {/* ── 수업 달력 ─────────────────────── */}
@@ -158,9 +233,7 @@ export function MemberList({
       <section className="flex flex-col gap-3.5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <h2 className="text-lg font-extrabold tracking-[-0.02em]">
-              진행 중 {activeTotal}명
-            </h2>
+            <h2 className="text-lg font-extrabold tracking-[-0.02em]">진행 중 {activeTotal}명</h2>
             {total > 0 && (
               <button
                 type="button"
@@ -213,23 +286,12 @@ export function MemberList({
             description="다른 검색어로 다시 시도해 보세요."
           />
         ) : active.length === 0 ? (
-          // 검색 결과가 종료한 회원뿐일 때. 빈 자리만 두면 아래 종료 목록이
-          // 진행 중 목록인 것처럼 보인다.
+          // 검색 결과가 종료한 회원뿐일 때. 빈 자리만 두면 아래 종료 목록이 진행 중 목록처럼 보인다.
           <p className="rounded-2xl border-[1.5px] border-edge bg-surface px-4 py-5 text-sm text-muted-foreground">
             수업이 남은 회원이 없습니다.
           </p>
         ) : (
-          <ul className="flex flex-col">
-            {active.map((member) => (
-              <MemberCard
-                key={member.id}
-                member={member}
-                editing={editing}
-                picked={picked.has(member.id)}
-                onPick={togglePick}
-              />
-            ))}
-          </ul>
+          <ul className="flex flex-col">{active.map(memberRow)}</ul>
         )}
       </section>
 
@@ -239,19 +301,11 @@ export function MemberList({
           <h2 className="text-lg font-extrabold tracking-[-0.02em] text-muted-foreground">
             종료 {ended.length}명
           </h2>
-          <ul className="flex flex-col">
-            {ended.map((member) => (
-              <MemberCard
-                key={member.id}
-                member={member}
-                editing={editing}
-                picked={picked.has(member.id)}
-                onPick={togglePick}
-              />
-            ))}
-          </ul>
+          <ul className="flex flex-col">{ended.map(memberRow)}</ul>
         </section>
       )}
+
+      {/* ── 선택 삭제 ─────────────────────── */}
       {editing && picked.size > 0 && (
         <div className="sticky bottom-4 z-10 flex items-center justify-between gap-3 rounded-2xl border-[1.5px] border-edge bg-surface px-4 py-3 shadow-float">
           <span className="text-sm font-bold">{picked.size}명 선택됨</span>
@@ -277,7 +331,7 @@ export function MemberList({
   );
 }
 
-// ── 인사 ─────────────────────────────────
+// ── 인사 문구 ─────────────────────────────
 
 // 시간대에 맞는 문구 묶음에서 한 시간마다 다른 문구를 고른다.
 // 무작위 대신 "한국 날짜+시"로 고르므로 서버와 브라우저가 같은 문구를 그린다.
@@ -377,155 +431,4 @@ function greetingAt(now: Date, name: string) {
   const seed = Number(`${day.replaceAll("-", "")}${hour}`);
   const index = Math.imul(seed, 2654435761) >>> 0;
   return lines[index % lines.length](name);
-}
-
-function Greeting({ name }: { name: string }) {
-  const [now, setNow] = useState(() => new Date());
-
-  // 켜 둔 채 정각을 넘기면 문구도 바뀐다. 분이 바뀌는 순간에 맞춰 확인한다.
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>;
-    const tick = () => {
-      const next = new Date();
-      setNow(next);
-      timer = setTimeout(tick, 60_000 - (next.getTime() % 60_000));
-    };
-    timer = setTimeout(tick, 60_000 - (Date.now() % 60_000));
-    return () => clearTimeout(timer);
-  }, []);
-
-  return (
-    <div>
-      <h1
-        suppressHydrationWarning
-        className="text-2xl font-extrabold tracking-[-0.025em] sm:text-3xl"
-      >
-        {greetingAt(now, name)}
-      </h1>
-      <p suppressHydrationWarning className="mt-1.5 text-sm text-muted-foreground">
-        {DATE_LABEL.format(now)}
-      </p>
-    </div>
-  );
-}
-
-// ── 회원 카드 ──────────────────────────────
-
-/** 목록에 놓이는 회원 한 장. 진행 중과 종료 목록이 같은 카드를 쓴다. */
-function MemberCard({
-  member,
-  editing,
-  picked,
-  onPick,
-}: {
-  member: MemberSummary;
-  editing: boolean;
-  picked: boolean;
-  onPick: (id: string) => void;
-}) {
-  const left = member.remainingSessions;
-  const totalSessions = left + member.completedSessions;
-  const tone =
-    left === 0 ? "text-subtle" : left <= LOW_SESSION_THRESHOLD ? "text-danger" : "text-primary";
-
-  const inner = (
-    <>
-      <span className="flex min-w-0 flex-col gap-1">
-        <span className="flex min-w-0 flex-wrap items-center gap-2">
-          <span className="truncate text-base font-extrabold tracking-[-0.02em] group-hover:text-primary">
-            {member.name}
-          </span>
-          {member.goal && (
-            <span className="shrink-0 text-2xs text-subtle">{member.goal}</span>
-          )}
-        </span>
-        <span className="text-2xs text-subtle">
-          {totalSessions > 0
-            ? `등록 ${totalSessions}회 중 ${member.completedSessions}회 사용`
-            : "등록된 수업 없음"}
-          {member.latestWeight !== null && ` · ${member.latestWeight}kg`}
-          {` · 기록 ${member.workoutCount}건`}
-        </span>
-      </span>
-
-      <span className="flex shrink-0 items-center gap-2">
-        <span className="flex items-end gap-1">
-          <span
-            className={`text-xl font-extrabold leading-none tracking-[-0.03em] ${tone}`}
-          >
-            {left}
-          </span>
-          <span className="text-2xs font-bold text-muted-foreground">회</span>
-        </span>
-        {!editing && (
-          <Icon
-            name="chevronRight"
-            size={16}
-            className="text-subtle transition-colors group-hover:text-ink"
-          />
-        )}
-      </span>
-    </>
-  );
-
-  return (
-    <li className="flex items-center gap-3 border-b border-line last:border-0">
-      {editing && (
-        <input
-          type="checkbox"
-          checked={picked}
-          onChange={() => onPick(member.id)}
-          aria-label={`${member.name} 선택`}
-          className="size-4 shrink-0 accent-primary"
-        />
-      )}
-
-      {editing ? (
-        <button
-          type="button"
-          onClick={() => onPick(member.id)}
-          className="group flex min-w-0 flex-1 items-center justify-between gap-3 py-3.5 text-left"
-        >
-          {inner}
-        </button>
-      ) : (
-        <Link
-          href={`/members/${member.id}`}
-          className="group flex min-w-0 flex-1 items-center justify-between gap-3 py-3.5"
-        >
-          {inner}
-        </Link>
-      )}
-    </li>
-  );
-}
-
-// ── 지표 ─────────────────────────────────
-
-function Kpi({
-  label,
-  value,
-  unit,
-  warn = false,
-}: {
-  label: string;
-  value: number;
-  unit: string;
-  warn?: boolean;
-}) {
-  return (
-    <div className="flex flex-col gap-1">
-      <p className="flex items-baseline gap-1">
-        <span
-          className={`text-xl font-extrabold leading-none tracking-[-0.03em] ${
-            warn ? "text-danger" : ""
-          }`}
-        >
-          {value}
-        </span>
-        <span className="text-xs font-bold text-muted-foreground">{unit}</span>
-      </p>
-      <p className="text-xs font-bold text-ink">{label}</p>
-    </div>
-  );
 }
