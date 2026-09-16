@@ -15,8 +15,9 @@ import { Icon } from "@/components/custom/icons";
 import { Button } from "@/components/ui/button";
 import { apiFetch, completedAtFrom, errorMessage, formatDate, today } from "@/lib/client";
 import { kstHour } from "@/lib/kst";
-import type { WeightUnit, Workout } from "@/lib/types";
+import type { Workout } from "@/lib/types";
 import { EditorFrame } from "../../editor-frame";
+import type { ExerciseRow, SetRow, WorkoutPayload } from "./types";
 
 /** 무게 −/+ 한 번에 움직이는 양. 원판 한 쌍(1.25kg × 2) 기준. */
 const WEIGHT_STEP = 2.5;
@@ -24,39 +25,10 @@ const WEIGHT_STEP = 2.5;
 /** 종목 없이 수업만 남길 때 고르는 사유. 폰에서 키보드를 올리지 않고 넣는다. */
 const QUICK_REASONS = ["상담", "체형 평가", "노쇼"];
 
-interface SetRow {
-  reps: string;
-  weight: string;
-  /** 켜면 무게 없이 한 세트. 무게 칸을 숨긴다. */
-  bodyweight: boolean;
-  /** 다 넣은 세트. −/+ 를 감춰서 잘못 눌러도 값이 바뀌지 않는다. */
-  locked: boolean;
-}
-
-interface ExerciseRow {
-  name: string;
-  sets: SetRow[];
-}
-
-interface WorkoutPayload {
-  date: string;
-  memo: string | null;
-  /** 수업이 있었던 시각. 수정할 때는 연결된 수업의 시각을 바꾼다. */
-  completedAt: string;
-  /** 종목이 하나도 없을 때 남기는 사유 */
-  reason?: string | null;
-  /** 비어 있으면 운동 없이 수업만 기록한다. */
-  exercises: {
-    name: string;
-    sets: { reps: number; weight: number | null; unit: WeightUnit }[];
-  }[];
-}
-
 const emptySet = (from?: SetRow): SetRow => ({
   reps: from?.reps ?? "10",
   weight: from?.weight ?? "",
   bodyweight: from?.bodyweight ?? false,
-  locked: false,
 });
 
 /** 세트 한 줄이 제대로 찼는지. 덜 찼으면 보여 줄 문구를 돌려준다. */
@@ -74,7 +46,7 @@ function setProblem(set: SetRow, label: string) {
   return null;
 }
 
-/** 잠긴 세트에 적는 글 — "60kg × 12회", 바디웨이트면 "바디웨이트 12회" */
+/** 접어 둔 세트에 적는 글 — "60kg × 12회", 바디웨이트면 "바디웨이트 12회" */
 function setLabel(set: SetRow) {
   return set.bodyweight ? `바디웨이트 ${set.reps}회` : `${set.weight}kg × ${set.reps}회`;
 }
@@ -82,6 +54,7 @@ function setLabel(set: SetRow) {
 const emptyExercise = (): ExerciseRow => ({
   name: "",
   sets: [emptySet()],
+  editing: true,
 });
 
 /** 저장된 기록을 폼 입력 상태(전부 문자열)로 되돌린다. */
@@ -93,9 +66,9 @@ function toRows(workout: Workout | null): ExerciseRow[] {
       reps: String(s.reps),
       weight: s.weight === null ? "" : String(s.weight),
       bodyweight: s.unit === "bodyweight",
-      // 저장해 둔 세트는 잠근 채로 연다.
-      locked: true,
     })),
+    // 저장해 둔 종목은 접은 채로 연다. 수정을 눌러야 펼쳐진다.
+    editing: false,
   }));
 }
 
@@ -150,35 +123,31 @@ export function WorkoutEditor({
     setError(null);
   };
 
-  /** 세트 한 줄을 잠근다. 덜 찼으면 문구만 띄우고 그대로 둔다. */
-  const lockSet = (i: number, s: number) => {
-    const row = rows[i];
-    const problem = setProblem(row.sets[s], `${row.name.trim() || `${i + 1}번째 종목`} ${s + 1}세트`);
-    if (problem) {
-      setError(problem);
-      return false;
-    }
-    patchSet(i, s, { locked: true });
-    return true;
-  };
-
-  /** 세트를 더 넣는다. 쓰던 줄은 잠가서 아래로 밀어 둔다. */
-  const addSet = (i: number) => {
+  /** 종목의 세트가 다 찼는지 본다. 덜 찼으면 문구를 띄운다. */
+  const checkSets = (i: number) => {
     const row = rows[i];
     const name = row.name.trim() || `${i + 1}번째 종목`;
     for (const [s, set] of row.sets.entries()) {
       const problem = setProblem(set, `${name} ${s + 1}세트`);
       if (problem) {
         setError(problem);
-        return;
+        return false;
       }
     }
-    patchExercise(i, {
-      sets: [
-        ...row.sets.map((set) => ({ ...set, locked: true })),
-        emptySet(row.sets[row.sets.length - 1]),
-      ],
-    });
+    return true;
+  };
+
+  /** 종목을 펼치거나 접는다. 접을 때는 다 찼는지 보고 접는다. */
+  const toggleExercise = (i: number) => {
+    if (rows[i].editing && !checkSets(i)) return;
+    patchExercise(i, { editing: !rows[i].editing });
+  };
+
+  /** 세트를 더 넣는다. */
+  const addSet = (i: number) => {
+    if (!checkSets(i)) return;
+    const row = rows[i];
+    patchExercise(i, { sets: [...row.sets, emptySet(row.sets[row.sets.length - 1])] });
   };
 
   const handleSubmit = async (event: FormEvent) => {
@@ -219,7 +188,6 @@ export function WorkoutEditor({
       date,
       memo: memo.trim() || null,
       exercises,
-      ...(sessionOnly ? { reason: reason.trim() || null } : {}),
       completedAt: completedAtFrom(date, hour),
     };
 
@@ -232,7 +200,7 @@ export function WorkoutEditor({
           method: "POST",
           body: JSON.stringify({
             completedAt: payload.completedAt,
-            reason: payload.reason ?? null,
+            reason: reason.trim() || null,
           }),
         });
       } else {
@@ -320,6 +288,19 @@ export function WorkoutEditor({
                   지난 {lastSets[row.name.trim()]}
                 </span>
               )}
+              <button
+                type="button"
+                onClick={() => toggleExercise(i)}
+                aria-label={`${i + 1}번째 종목 ${row.editing ? "완료" : "수정"}`}
+                className={`flex h-11 shrink-0 items-center gap-1 rounded-lg px-2.5 text-sm font-bold transition-colors ${
+                  row.editing
+                    ? "text-primary hover:bg-primary-light"
+                    : "text-subtle hover:bg-raised hover:text-ink"
+                }`}
+              >
+                <Icon name={row.editing ? "check" : "pencil"} size={16} />
+                {row.editing ? "완료" : "수정"}
+              </button>
               {rows.length > 1 && (
                 <button
                   type="button"
@@ -336,7 +317,7 @@ export function WorkoutEditor({
               {/* 세트 */}
               <ol className="flex flex-col gap-2">
                 {row.sets.map((set, s) =>
-                  set.locked ? (
+                  !row.editing ? (
                     <li
                       key={s}
                       className="flex items-center gap-2 rounded-lg bg-canvas px-3 py-2"
@@ -347,26 +328,6 @@ export function WorkoutEditor({
                       <span className="min-w-0 flex-1 text-md font-bold tabular-nums">
                         {setLabel(set)}
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => patchSet(i, s, { locked: false })}
-                        aria-label={`${s + 1}세트 수정`}
-                        className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-subtle transition-colors hover:bg-raised hover:text-ink"
-                      >
-                        <Icon name="pencil" size={16} />
-                      </button>
-                      {row.sets.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            patchExercise(i, { sets: row.sets.filter((_, m) => m !== s) })
-                          }
-                          aria-label={`${s + 1}세트 삭제`}
-                          className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-subtle transition-colors hover:bg-raised hover:text-danger"
-                        >
-                          <Icon name="close" size={16} />
-                        </button>
-                      )}
                     </li>
                   ) : (
                   <li
@@ -440,29 +401,21 @@ export function WorkoutEditor({
                         <Icon name="close" size={17} />
                       </button>
                     )}
-
-                    <button
-                      type="button"
-                      onClick={() => lockSet(i, s)}
-                      aria-label={`${s + 1}세트 저장`}
-                      className="col-span-2 flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary-light text-sm font-bold text-primary-dark transition-colors hover:brightness-95 dark:text-primary-bright sm:col-span-1 sm:w-11 sm:shrink-0"
-                    >
-                      <Icon name="check" size={17} />
-                      <span className="sm:hidden">세트 저장</span>
-                    </button>
                   </li>
                   ),
                 )}
               </ol>
 
-              <button
-                type="button"
-                onClick={() => addSet(i)}
-                className="flex h-11 items-center justify-center gap-1.5 rounded-lg bg-canvas text-sm font-bold text-ink transition-colors hover:bg-raised"
-              >
-                <Icon name="plus" size={16} />
-                세트 추가
-              </button>
+              {row.editing && (
+                <button
+                  type="button"
+                  onClick={() => addSet(i)}
+                  className="flex h-11 items-center justify-center gap-1.5 rounded-lg bg-canvas text-sm font-bold text-ink transition-colors hover:bg-raised"
+                >
+                  <Icon name="plus" size={16} />
+                  세트 추가
+                </button>
+              )}
             </div>
           </div>
         ))}
