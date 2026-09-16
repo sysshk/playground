@@ -182,7 +182,7 @@ export default function FrontSidebar({ children }: { children: ReactNode }) {
             {!loggedIn && status !== "loading" && (
               <Link
                 href="/login"
-                className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-primary-dark"
+                className="rounded-lg bg-action px-4 py-2 text-sm font-bold text-action-foreground transition-colors hover:bg-action-hover"
               >
                 로그인
               </Link>

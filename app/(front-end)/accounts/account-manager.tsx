@@ -693,10 +693,13 @@ function TextButton({
 
 function InviteBox({ name, url, onClose }: { name: string; url: string; onClose: () => void }) {
   return (
-    <div role="status" className="flex flex-col gap-3 rounded-xl border border-primary bg-primary-light px-4 py-4 sm:px-5">
+    <div role="status" className="flex flex-col gap-3 rounded-xl border border-primary bg-primary-light px-4 py-4 sm:px-5 dark:border-edge dark:bg-surface">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm font-bold text-ink">{name} 회원 초대 링크</p>
+          <p className="flex items-center gap-1.5 text-sm font-bold text-ink">
+            <span className="size-1.5 shrink-0 rounded-full bg-primary" />
+            {name} 회원 초대 링크
+          </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             카톡이나 문자로 보내 주세요. 7일 동안 한 번만 쓸 수 있습니다.
           </p>
@@ -711,13 +714,13 @@ function InviteBox({ name, url, onClose }: { name: string; url: string; onClose:
         </button>
       </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
-        <code className="min-w-0 flex-1 select-all break-all rounded-lg border border-line bg-surface px-3 py-2 font-mono text-xs text-ink sm:text-sm">
+        <code className="min-w-0 flex-1 select-all break-all rounded-lg border border-line bg-surface px-3 py-2 font-mono dark:bg-canvas text-xs text-ink sm:text-sm">
           {url}
         </code>
         <button
           type="button"
           onClick={() => copy(url, "초대 링크를 복사했습니다.")}
-          className="h-10 shrink-0 rounded-lg bg-primary px-4 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary-dark"
+          className="h-10 shrink-0 rounded-lg bg-action px-4 text-sm font-bold text-action-foreground transition-colors hover:bg-action-hover"
         >
           복사
         </button>
