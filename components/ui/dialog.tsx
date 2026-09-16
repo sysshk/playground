@@ -50,7 +50,7 @@ function DialogOverlay({
   )
 }
 
-/** 짧은 입력을 받는 창. 되돌릴 수 없는 동작을 확인만 하는 자리는 AlertDialog를 쓴다. */
+/** 짧은 입력을 받는 창. 되돌릴 수 없는 동작을 확인만 하는 자리는 AlertDialog를 씀 */
 function DialogContent({
   className,
   children,
@@ -59,8 +59,8 @@ function DialogContent({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   /**
-   * 바깥을 눌렀을 때 닫을지. 기본은 닫지 않는다 — 입력을 받는 창이라
-   * 잘못 누른 한 번에 쓰던 내용이 사라지면 안 된다. Esc와 닫기 버튼은 그대로.
+   * 바깥을 눌렀을 때 닫을지. 기본은 닫지 않음 — 입력을 받는 창이라
+   * 잘못 누른 한 번에 쓰던 내용이 사라지면 안 됨. Esc와 닫기 버튼은 그대로
    */
   dismissOnOutsideClick?: boolean
 }) {

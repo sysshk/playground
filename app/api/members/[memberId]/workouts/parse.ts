@@ -1,5 +1,5 @@
 /*
-  API 공통 — 수업 기록의 종목·세트·수업 시각 검증 (추가·수정이 함께 쓴다)
+  API 공통 — 수업 기록의 종목·세트·수업 시각 검증 (추가·수정이 함께 씀)
 
   @date : 2026-09-12
 */
@@ -27,7 +27,7 @@ const NAME_MAX = 50;
 const REPS_MAX = 1000;
 const WEIGHT_MAX = 1000;
 
-/** 폼이 보낸 수업 시각. 안 보냈으면 value가 없다. */
+/** 폼이 보낸 수업 시각. 안 보냈으면 value가 없음 */
 export function parseCompletedAt(
   raw: unknown,
 ): { value?: Date } | { error: string } {
@@ -37,14 +37,14 @@ export function parseCompletedAt(
   if (Number.isNaN(picked.getTime())) {
     return { error: "수업 시각이 올바르지 않습니다." };
   }
-  // 시계 오차만큼은 봐준다.
+  // 시계 오차만큼은 봐줌
   if (picked.getTime() > Date.now() + 5 * 60 * 1000) {
     return { error: "수업 시각은 미래로 지정할 수 없습니다." };
   }
   return { value: picked };
 }
 
-/** 요청 본문의 exercises를 Prisma가 바로 받을 수 있는 형태로 바꾼다. */
+/** 요청 본문의 exercises를 Prisma가 바로 받을 수 있는 형태로 바꿈 */
 export function parseExercises(raw: unknown): ParseResult {
   if (!Array.isArray(raw) || raw.length === 0) {
     return { error: "종목을 하나 이상 추가해 주세요." };

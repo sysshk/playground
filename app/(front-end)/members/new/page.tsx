@@ -29,7 +29,7 @@ export default function NewMemberPage() {
         body: JSON.stringify(values),
       });
       toast(`${values.name} 회원을 등록했습니다.`);
-      // 등록하자마자 할 일은 대개 첫 기록이라 상세로 바로 보낸다.
+      // 등록하자마자 할 일은 대개 첫 기록이라 상세로 바로 보냄
       router.replace(`/members/${member.id}`);
     } catch (e) {
       setServerError(errorMessage(e, "회원 등록에 실패했습니다."));

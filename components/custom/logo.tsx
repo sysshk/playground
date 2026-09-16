@@ -1,11 +1,11 @@
 /*
   공통 — PT 매니저 로고
-  app/favicon.ico, public/icons/*.png도 같은 도형이다. 여기를 바꾸면 함께 바꾼다.
+  app/favicon.ico, public/icons/*.png도 같은 도형임. 여기를 바꾸면 함께 바꿈
 
   @date : 2026-09-12
 */
 
-/** 32×32 좌표계. 끝의 V6V26은 기둥을 되짚어 올라갔다 내려오는 것이라 한 획으로 그려진다. */
+/** 32×32 좌표계. 끝의 V6V26은 기둥을 되짚어 올라갔다 내려오는 것이라 한 획으로 그려짐 */
 export const LOGO_PATH = "M5.25 6H20.25A6.5 6.5 0 0 1 20.25 19H16.25V6V26";
 
 export function LogoMark({
@@ -20,11 +20,11 @@ export function LogoMark({
   className?: string;
   /**
    * 그라데이션 id. 기본값은 변형별 고정값이라 한 화면에 마크가 여러 개
-   * 나와도 보통은 문제가 없다 — 내용이 같으니 어느 것을 참조해도 같다.
+   * 나와도 보통은 문제가 없음 — 내용이 같으니 어느 것을 참조해도 같음
    */
   gradientId?: string;
 }) {
-  // useId()를 쓰면 서버와 클라이언트가 다른 값을 내 hydration이 깨진다.
+  // useId()를 쓰면 서버와 클라이언트가 다른 값을 내 hydration이 깨짐
   const id = gradientId ?? (onDark ? "pt-logo-gradient-dark" : "pt-logo-gradient");
 
   return (

@@ -59,7 +59,7 @@ function Button({
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
-    /** 요청 중에는 눌리지 않게 막고 스피너를 보여준다. */
+    /** 요청 중에는 눌리지 않게 막고 스피너를 보여줌 */
     loading?: boolean
   }) {
   const Comp = asChild ? Slot.Root : "button"

@@ -1,5 +1,5 @@
 /*
-  API — 초대 링크 화면: 회원이 링크로 들어와 자기 계정을 만든다 (로그인 없이 부름)
+  API — 초대 링크 화면: 회원이 링크로 들어와 자기 계정을 만듦 (로그인 없이 부름)
 
   @date : 2026-09-15
 */
@@ -17,8 +17,8 @@ const EXPIRED = {
 };
 
 /**
- * 계정 만들기 — 역할이 회원(client)인 계정을 만들고, 링크 주인 회원 기록에 잇고, 링크를 지운다.
- * 셋을 한 트랜잭션으로 묶어서 같은 링크로 두 번 가입되지 않게 한다.
+ * 계정 만들기 — 역할이 회원(client)인 계정을 만들고, 링크 주인 회원 기록에 잇고, 링크를 지움
+ * 셋을 한 트랜잭션으로 묶어서 같은 링크로 두 번 가입되지 않게 함
  */
 export async function POST(request: Request, { params }: Params) {
   const { token } = await params;
@@ -51,7 +51,7 @@ export async function POST(request: Request, { params }: Params) {
       const user = await tx.user.create({
         data: { email, password: hashed, name: member.name, role: "client" },
       });
-      // 동시에 같은 링크로 들어온 요청이 있으면 여기서 한쪽만 통과한다.
+      // 동시에 같은 링크로 들어온 요청이 있으면 여기서 한쪽만 통과함
       const { count } = await tx.member.updateMany({
         where: { id: member.id, inviteToken: token, userId: null },
         data: { userId: user.id, inviteToken: null, inviteExpiresAt: null },

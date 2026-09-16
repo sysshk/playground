@@ -1,6 +1,6 @@
 /*
   공통 — 확인 창 (삭제·로그아웃 등 되돌릴 수 없는 동작)
-  radix 부품을 이 앱 문구·모양으로 감싼 것까지 한 파일에 둔다.
+  radix 부품을 이 앱 문구·모양으로 감싼 것까지 한 파일에 둠
 
   @date : 2026-09-12
 */
@@ -13,8 +13,8 @@ import { AlertDialog as AlertDialogPrimitive } from "radix-ui";
 import { Button } from "@/components/ui/button";
 
 /**
- * 되돌릴 수 없는 동작만 확인한다. 입력은 전부 화면 안에서 한다.
- * 처리 중에는 닫히지 않게 막는다 — 요청이 끝난 뒤 부모가 open을 내린다.
+ * 되돌릴 수 없는 동작만 확인함. 입력은 전부 화면 안에서 함
+ * 처리 중에는 닫히지 않게 막음 — 요청이 끝난 뒤 부모가 open을 내림
  */
 export function ConfirmDialog({
   open,
@@ -71,7 +71,7 @@ export function ConfirmDialog({
               danger ? "bg-danger text-white hover:bg-danger-dark" : ""
             }`}
             onClick={(e) => {
-              // 기본 동작은 즉시 닫는 것이라, 요청이 끝날 때까지 열어 둔다.
+              // 기본 동작은 즉시 닫는 것이라, 요청이 끝날 때까지 열어 둠
               e.preventDefault();
               onConfirm();
             }}

@@ -18,10 +18,10 @@ import { parseCompletedAt } from "../workouts/parse";
 
 type Params = { params: Promise<{ memberId: string }> };
 
-/** 사유는 이력 목록에 한 줄로 보이는 값이라 길게 받지 않는다. */
+/** 사유는 이력 목록에 한 줄로 보이는 값이라 길게 받지 않음 */
 const REASON_MAX = 40;
 
-/** 수업 완료 처리 — 남은 수업 1회 차감 후 완료 내역을 남긴다. */
+/** 수업 완료 처리 — 남은 수업 1회 차감 후 완료 내역을 남김 */
 export async function POST(request: Request, { params }: Params) {
   const { memberId } = await params;
   const { scope, error } = await requireTrainerId();
@@ -46,8 +46,8 @@ export async function POST(request: Request, { params }: Params) {
 
   try {
     const result = await prisma.$transaction(async (tx) => {
-      // 동시에 두 번 눌러도 음수로 내려가지 않도록 조건부로 차감한다.
-      // scope도 조건에 넣어 소유권 확인을 겸한다.
+      // 동시에 두 번 눌러도 음수로 내려가지 않도록 조건부로 차감함
+      // scope도 조건에 넣어 소유권 확인을 겸함
       const decremented = await tx.member.updateMany({
         where: { id: memberId, ...scope, remainingSessions: { gt: 0 } },
         data: { remainingSessions: { decrement: 1 } },
@@ -63,7 +63,7 @@ export async function POST(request: Request, { params }: Params) {
     });
 
     if (!result) {
-      // 실패 경로에서만 남의 회원인지, 수업이 없는지 가린다.
+      // 실패 경로에서만 남의 회원인지, 수업이 없는지 가림
       const owned = await requireOwnedMember(memberId, scope);
       if (owned.error) return owned.error;
 

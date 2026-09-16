@@ -17,7 +17,7 @@ export async function DELETE(_request: Request, { params }: Params) {
   if (error) return error;
 
   try {
-    // 회원과 트레이너까지 조건에 넣어 소유권 확인과 삭제를 한 번에 한다.
+    // 회원과 트레이너까지 조건에 넣어 소유권 확인과 삭제를 한 번에 함
     const { count } = await prisma.weightRecord.deleteMany({
       where: { id: weightId, memberId, member: scope },
     });

@@ -14,7 +14,7 @@ import { SIGNUP_ENABLED } from "@/lib/config";
 /** 소개 본문 글자 */
 const BODY = "mt-5 max-w-[520px] text-md leading-[1.8] text-muted-foreground sm:text-lg";
 /** 주요 버튼 */
-/** 로그인하면 프록시가 회원 목록으로 보내 준다. */
+/** 로그인하면 프록시가 회원 목록으로 보내 줌 */
 const START_HREF = SIGNUP_ENABLED ? "/join" : "/login";
 const START_LABEL = SIGNUP_ENABLED ? "무료로 시작하기" : "로그인하고 시작하기";
 
@@ -248,7 +248,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* 사진 출처 표기 없음 — Unsplash 라이선스는 표기를 요구하지 않는다 */}
+          {/* 사진 출처 표기 없음 — Unsplash 라이선스는 표기를 요구하지 않음 */}
           <div className="mt-10 border-t border-line pt-6">
             <p className="text-xs text-subtle">
               © {new Date().getFullYear()} PT 매니저
@@ -275,7 +275,7 @@ const PREVIEW_EXERCISES = [
   { name: "풀업", sets: "3세트 × 8회", weight: "바디웨이트" },
 ];
 
-/** 히어로의 제품 미리보기 — 실제 회원 상세 화면을 축소해 담았다. */
+/** 히어로의 제품 미리보기 — 실제 회원 상세 화면을 축소해 담았음 */
 function AppPreview() {
   return (
     <div className="overflow-hidden rounded-[20px] border border-line bg-canvas shadow-[0_24px_60px_-18px_rgba(15,23,42,0.22)]">

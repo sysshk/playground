@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        // 글꼴은 바꾸지 않는다. 바꿀 일이 생기면 파일 이름을 바꿔야 새로 받는다.
+        // 글꼴은 바꾸지 않음. 바꿀 일이 생기면 파일 이름을 바꿔야 새로 받음
         source: "/fonts/:path*",
         headers: [
           { key: "Cache-Control", value: "public, max-age=31536000, immutable" },

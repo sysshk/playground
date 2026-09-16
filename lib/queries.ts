@@ -1,6 +1,6 @@
 /*
-  서버 공통 — 화면 데이터 읽기 (서버 화면과 달력 API가 부른다)
-  전부 prismaRead(HTTP)로 읽고 중첩 관계는 JOIN 한 번. 반환값은 Date → ISO 문자열로 맞춘다.
+  서버 공통 — 화면 데이터 읽기 (서버 화면과 달력 API가 부름)
+  전부 prismaRead(HTTP)로 읽고 중첩 관계는 JOIN 한 번. 반환값은 Date → ISO 문자열로 맞춤
 
   @date : 2026-09-14
 */
@@ -40,7 +40,7 @@ const WORKOUT_INCLUDE = {
 export async function getMemberList(
   scope: Prisma.MemberWhereInput,
 ): Promise<{ members: MemberSummary[]; stats: MemberStats }> {
-  // "이번 주"는 타임존에 따라 경계가 흔들린다. 최근 7일로 잡고 그대로 표기한다.
+  // "이번 주"는 타임존에 따라 경계가 흔들림. 최근 7일로 잡고 그대로 표기함
   const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const sinceDate = kstDay(new Date(Date.now() - 6 * 24 * 60 * 60 * 1000));
 
@@ -75,7 +75,7 @@ export async function getMemberList(
       total: summaries.length,
       recentCompletions,
       recentWorkouts,
-      // 3회 이하로 남은 회원은 재등록 안내가 필요하다.
+      // 3회 이하로 남은 회원은 재등록 안내가 필요함
       runningLow: summaries.filter(
         (m) => m.remainingSessions > 0 && m.remainingSessions <= 3,
       ).length,
@@ -139,10 +139,10 @@ export async function getMonthCalendar(
 
 // ── 회원 상세 ────────────────────────────────
 
-/** 수업 기록은 최근 것부터 이만큼씩 받는다. 기록이 쌓여도 화면 데이터가 커지지 않게. */
+/** 수업 기록은 최근 것부터 이만큼씩 받음. 기록이 쌓여도 화면 데이터가 커지지 않게 */
 export const LESSON_PAGE = 20;
 
-/** 주소의 ?lessons= 값을 받을 수업 기록 수로. LESSON_PAGE 단위로 맞춘다. */
+/** 주소의 ?lessons= 값을 받을 수업 기록 수로. LESSON_PAGE 단위로 맞춤 */
 export function lessonLimit(raw: string | string[] | undefined) {
   const n = Number(Array.isArray(raw) ? raw[0] : raw);
   if (!Number.isFinite(n) || n <= LESSON_PAGE) return LESSON_PAGE;
@@ -170,7 +170,7 @@ function detailInclude(lessons: number) {
   } satisfies Prisma.MemberInclude;
 }
 
-/** 초대 링크는 관리자만 본다. 화면으로 내려보내는 회원 데이터에서 뺀다. */
+/** 초대 링크는 관리자만 봄. 화면으로 내려보내는 회원 데이터에서 뺌 */
 const DETAIL_OMIT = { inviteToken: true, inviteExpiresAt: true } satisfies Prisma.MemberOmit;
 
 async function readDetail(
@@ -280,7 +280,7 @@ export async function getAccounts(): Promise<{
       phone: m.phone,
       trainerId: m.trainerId,
       account: m.user,
-      // 만료된 링크는 없는 것으로 보여 준다.
+      // 만료된 링크는 없는 것으로 보여 줌
       invite:
         m.inviteToken && m.inviteExpiresAt && m.inviteExpiresAt > now
           ? { token: m.inviteToken, expiresAt: m.inviteExpiresAt.toISOString() }
@@ -314,7 +314,7 @@ export interface NoteEditorData {
   note: CoachingNote | null;
 }
 
-/** 코칭 메모 작성·수정 화면. noteId가 없으면 메모는 읽지 않는다. */
+/** 코칭 메모 작성·수정 화면. noteId가 없으면 메모는 읽지 않음 */
 export async function getNoteEditor(
   memberId: string,
   scope: Prisma.MemberWhereInput,
@@ -355,7 +355,7 @@ export async function getWorkoutEditor(
   scope: Prisma.MemberWhereInput,
   workoutId?: string,
 ): Promise<WorkoutEditorData | null> {
-  // 직전 기록은 최근 기록에서만 찾는다. 전부 읽으면 기록이 쌓일수록 느려진다.
+  // 직전 기록은 최근 기록에서만 찾음. 전부 읽으면 기록이 쌓일수록 느려짐
   const [member, target] = await Promise.all([
     prismaRead.member.findFirst({
       relationLoadStrategy: "join",
@@ -397,7 +397,7 @@ export async function getWorkoutEditor(
 
 /**
  * 종목별 직전 기록. 무게를 정할 때 지난번 수치를 보러 나갔다 오지 않게
- * 종목 이름 옆에 띄운다. workouts는 최신순이라 처음 만난 것이 가장 최근이다.
+ * 종목 이름 옆에 띄움. workouts는 최신순이라 처음 만난 것이 가장 최근임
  */
 function lastSetsOf(workouts: Workout[], skipId?: string) {
   const map: Record<string, string> = {};

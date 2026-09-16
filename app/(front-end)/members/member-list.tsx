@@ -19,10 +19,10 @@ import { kstDay, kstHour } from "@/lib/kst";
 import type { MemberStats, MemberSummary, MonthCalendar } from "@/lib/types";
 import { LessonCalendar } from "./lesson-calendar";
 
-/** 수업이 이만큼 이하로 남으면 재등록 안내가 필요하다. */
+/** 수업이 이만큼 이하로 남으면 재등록 안내가 필요함 */
 const LOW_SESSION_THRESHOLD = 3;
 
-/** 데이터는 서버 컴포넌트(page.tsx)가 읽어 넘긴다. */
+/** 데이터는 서버 컴포넌트(page.tsx)가 읽어 넘김 */
 export function MemberList({
   members,
   stats,
@@ -45,7 +45,7 @@ export function MemberList({
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(() => new Date());
 
-  // 켜 둔 채 정각을 넘기면 인사 문구도 바뀐다. 분이 바뀌는 순간에 맞춰 확인한다.
+  // 켜 둔 채 정각을 넘기면 인사 문구도 바뀜. 분이 바뀌는 순간에 맞춰 확인함
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
     const tick = () => {
@@ -79,7 +79,7 @@ export function MemberList({
         body: JSON.stringify({ ids }),
       });
       toast(`회원 ${ids.length}명을 삭제했습니다.`);
-      // 창 닫기와 새 목록·지표가 한 번에 바뀌도록 같은 전환에 묶는다.
+      // 창 닫기와 새 목록·지표가 한 번에 바뀌도록 같은 전환에 묶음
       startRefresh(() => {
         setConfirming(false);
         setEditing(false);
@@ -101,14 +101,14 @@ export function MemberList({
     );
   }, [members, query]);
 
-  // 남은 수업이 0회면 종료한 회원이다. 검색은 양쪽 모두에 걸리도록 filtered를 나눈다.
+  // 남은 수업이 0회면 종료한 회원임. 검색은 양쪽 모두에 걸리도록 filtered를 나눔
   const active = filtered.filter((m) => m.remainingSessions > 0);
   const ended = filtered.filter((m) => m.remainingSessions === 0);
 
   const total = members.length;
   const activeTotal = members.filter((m) => m.remainingSessions > 0).length;
 
-  // "전체"는 종료한 회원까지 세어 실제로 관리 중인 인원과 어긋나서 진행 중만 센다.
+  // "전체"는 종료한 회원까지 세어 실제로 관리 중인 인원과 어긋나서 진행 중만 셈
   const kpis = [
     { label: "진행 중 회원", value: activeTotal, unit: "명", warn: false },
     { label: "최근 7일 수업", value: stats.recentCompletions, unit: "회", warn: false },
@@ -116,7 +116,7 @@ export function MemberList({
     { label: "최근 7일 기록", value: stats.recentWorkouts, unit: "건", warn: false },
   ];
 
-  /** 회원 한 줄. 진행 중과 종료 목록이 같이 쓴다. */
+  /** 회원 한 줄. 진행 중과 종료 목록이 같이 씀 */
   const memberRow = (member: MemberSummary) => {
     const left = member.remainingSessions;
     const totalSessions = left + member.completedSessions;
@@ -286,7 +286,7 @@ export function MemberList({
             description="다른 검색어로 다시 시도해 보세요."
           />
         ) : active.length === 0 ? (
-          // 검색 결과가 종료한 회원뿐일 때. 빈 자리만 두면 아래 종료 목록이 진행 중 목록처럼 보인다.
+          // 검색 결과가 종료한 회원뿐일 때. 빈 자리만 두면 아래 종료 목록이 진행 중 목록처럼 보임
           <p className="rounded-2xl border-[1.5px] border-edge bg-surface px-4 py-5 text-sm text-muted-foreground">
             수업이 남은 회원이 없습니다.
           </p>
@@ -333,11 +333,11 @@ export function MemberList({
 
 // ── 인사 문구 ─────────────────────────────
 
-// 시간대에 맞는 문구 묶음에서 한 시간마다 다른 문구를 고른다.
-// 무작위 대신 "한국 날짜+시"로 고르므로 서버와 브라우저가 같은 문구를 그린다.
+// 시간대에 맞는 문구 묶음에서 한 시간마다 다른 문구를 고름
+// 무작위 대신 "한국 날짜+시"로 고르므로 서버와 브라우저가 같은 문구를 그림
 type Line = (name: string) => string;
 
-/** [시작 시, 문구들] — 시작 시가 큰 것부터 맞춰 본다. */
+/** [시작 시, 문구들] — 시작 시가 큰 것부터 맞춰 봄 */
 const SLOTS: [number, Line[]][] = [
   [22, [
     (n) => `늦게까지 고생 많으셨어요, ${n} 님`,
@@ -391,7 +391,7 @@ const SLOTS: [number, Line[]][] = [
   ]],
 ];
 
-/** 요일에 맞는 문구 (0=일요일). 낮 시간(5~21시)에만 섞는다. */
+/** 요일에 맞는 문구 (0=일요일). 낮 시간(5~21시)에만 섞음 */
 const WEEKDAY_LINES: Partial<Record<number, Line[]>> = {
   0: [
     (n) => `일요일에도 나오셨네요, ${n} 님`,

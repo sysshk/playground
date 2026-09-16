@@ -11,7 +11,7 @@ import type {
   NutritionGoal,
 } from "./nutrition";
 
-/** 계정 역할 — 관리자는 모든 회원, 트레이너는 자기 회원, 회원(client)은 자기 기록만 읽는다. */
+/** 계정 역할 — 관리자는 모든 회원, 트레이너는 자기 회원, 회원(client)은 자기 기록만 읽음 */
 export type Role = "admin" | "trainer" | "client";
 
 export const ROLE_LABEL: Record<Role, string> = {
@@ -20,21 +20,21 @@ export const ROLE_LABEL: Record<Role, string> = {
   client: "회원",
 };
 
-/** 로그인하고 처음 가는 화면. 회원 목록(/members)은 트레이너·관리자 화면이다. */
+/** 로그인하고 처음 가는 화면. 회원 목록(/members)은 트레이너·관리자 화면임 */
 export const ROLE_HOME: Record<Role, string> = {
   admin: "/members",
   trainer: "/members",
   client: "/me",
 };
 
-/** 모르는 값은 가장 권한이 적은 회원으로 본다. */
+/** 모르는 값은 가장 권한이 적은 회원으로 봄 */
 export function toRole(value: unknown): Role {
   return value === "admin" || value === "trainer" ? value : "client";
 }
 
 export type WeightUnit = "kg" | "bodyweight";
 
-/** 한 세트 — 드롭세트·피라미드처럼 세트마다 수치가 달라질 수 있다. */
+/** 한 세트 — 드롭세트·피라미드처럼 세트마다 수치가 달라질 수 있음 */
 export interface ExerciseSet {
   id: string;
   order: number;
@@ -143,7 +143,7 @@ export interface CalendarSession {
   memberName: string;
 }
 
-/** 달력에 찍는 수업 예약. 기록한 예약은 완료 내역으로 보이므로 여기에 없다. */
+/** 달력에 찍는 수업 예약. 기록한 예약은 완료 내역으로 보이므로 여기에 없음 */
 export interface CalendarAppointment {
   id: string;
   startsAt: string;

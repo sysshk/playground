@@ -1,6 +1,6 @@
 /*
   영양 계산 공통 — 칼로리·영양 계산식
-  제지방량이 있으면 Katch-McArdle, 없으면 Mifflin-St Jeor. 결과는 코칭 참고용 추정치다.
+  제지방량이 있으면 Katch-McArdle, 없으면 Mifflin-St Jeor. 결과는 코칭 참고용 추정치임
 
   @date : 2026-09-12
 */
@@ -154,7 +154,7 @@ export function calculateNutrition(input: NutritionInput): NutritionResult {
   const proteinBase = goal === "gain" ? weight : (lbm ?? weight);
   const [minPerKg, maxPerKg] = PROTEIN_RANGE[goal];
 
-  // 골격근량 비율이 높을수록 권장 범위의 상단에 가깝게 잡는다.
+  // 골격근량 비율이 높을수록 권장 범위의 상단에 가깝게 잡음
   const smmRatio = skeletalMuscleMass ? skeletalMuscleMass / weight : undefined;
   const position =
     smmRatio === undefined ? 0.5 : clamp(0.5 + (smmRatio - 0.35) * 2, 0.35, 0.85);

@@ -14,14 +14,14 @@ const globalForPrisma = globalThis as unknown as {
 
 const connectionString = process.env.DATABASE_URL!
 
-/** 쓰기·트랜잭션용. WebSocket 풀이라 트랜잭션을 지원한다. */
+/** 쓰기·트랜잭션용. WebSocket 풀이라 트랜잭션을 지원함 */
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({ adapter: new PrismaNeon({ connectionString }) })
 
 /**
- * 읽기 전용. HTTP라 연결 핸드셰이크 없이 바로 쿼리한다.
- * 트랜잭션을 거부하므로 $transaction이나 쓰기에는 쓰지 않는다.
+ * 읽기 전용. HTTP라 연결 핸드셰이크 없이 바로 쿼리함
+ * 트랜잭션을 거부하므로 $transaction이나 쓰기에는 쓰지 않음
  */
 export const prismaRead =
   globalForPrisma.prismaRead ??

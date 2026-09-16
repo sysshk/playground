@@ -13,7 +13,7 @@ type Params = { params: Promise<{ appointmentId: string }> };
 
 const NOT_FOUND = { error: "예약을 찾을 수 없습니다." };
 
-/** 예약 수정. 이미 기록한 예약은 완료 내역으로 남아 있으므로 고치지 않는다. */
+/** 예약 수정. 이미 기록한 예약은 완료 내역으로 남아 있으므로 고치지 않음 */
 export async function PATCH(request: Request, { params }: Params) {
   const { appointmentId } = await params;
   const { scope, error } = await requireTrainerId();
@@ -35,7 +35,7 @@ export async function PATCH(request: Request, { params }: Params) {
   }
 }
 
-/** 예약 취소. 이미 기록한 예약은 지우지 않는다. */
+/** 예약 취소. 이미 기록한 예약은 지우지 않음 */
 export async function DELETE(_request: Request, { params }: Params) {
   const { appointmentId } = await params;
   const { scope, error } = await requireTrainerId();

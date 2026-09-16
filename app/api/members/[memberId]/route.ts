@@ -39,7 +39,7 @@ export async function PATCH(request: Request, { params }: Params) {
       return badRequest("남은 수업은 0 이상의 정수로 입력해 주세요.");
     }
 
-    // scope를 조건에 넣어 소유권 확인과 수정을 한 번에 한다.
+    // scope를 조건에 넣어 소유권 확인과 수정을 한 번에 함
     const member = await prisma.member.update({
       where: { id: memberId, ...scope },
       data: {
@@ -59,7 +59,7 @@ export async function PATCH(request: Request, { params }: Params) {
   }
 }
 
-/** 회원 삭제 — 연결된 기록도 함께 지워진다 (onDelete: Cascade). */
+/** 회원 삭제 — 연결된 기록도 함께 지워짐 (onDelete: Cascade). */
 export async function DELETE(_request: Request, { params }: Params) {
   const { memberId } = await params;
   const { scope, error } = await requireTrainerId();

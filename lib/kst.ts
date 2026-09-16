@@ -1,6 +1,6 @@
 /*
   공통 — 한국 시각 계산
-  서버(UTC)와 브라우저가 같은 날짜·시각을 보도록 여기서만 계산한다.
+  서버(UTC)와 브라우저가 같은 날짜·시각을 보도록 여기서만 계산함
 
   @date : 2026-09-14
 */
@@ -62,7 +62,7 @@ export function kstMonthRange(month: string) {
   };
 }
 
-/** YYYY-MM에 달을 더한다. */
+/** YYYY-MM에 달을 더함 */
 export function shiftMonth(month: string, delta: number) {
   const [y, m] = month.split("-").map(Number);
   return new Date(Date.UTC(y, m - 1 + delta, 1)).toISOString().slice(0, 7);

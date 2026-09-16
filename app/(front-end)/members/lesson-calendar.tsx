@@ -1,6 +1,6 @@
 /*
   회원 목록 화면 — 수업 달력 (날짜마다 수업한 회원과 시각, 수업 예약·수정 창)
-  날짜는 한국 시각으로 가른다. 보는 기기의 시간대에 따라 밤 수업이 다음 날로 넘어가지 않게 한다.
+  날짜는 한국 시각으로 가름. 보는 기기의 시간대에 따라 밤 수업이 다음 날로 넘어가지 않게 함
 
   @date : 2026-09-14
 */
@@ -39,7 +39,7 @@ const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 /** 예약끼리 비워 둘 간격 */
 const GAP = 60 * 60 * 1000;
 
-/** 예약은 30분 단위로 잡는다. 자정부터 분으로 센 칸들 (0, 30, … 1410) */
+/** 예약은 30분 단위로 잡음. 자정부터 분으로 센 칸들 (0, 30, … 1410) */
 const SLOTS = Array.from({ length: 48 }, (_, i) => i * 30);
 
 type MemberOption = Pick<MemberSummary, "id" | "name" | "remainingSessions">;
@@ -51,7 +51,7 @@ interface Entry {
   id: string;
   at: string;
   memberName: string;
-  /** 예약이면 원래 예약 — 누르면 수정 창에 채운다 */
+  /** 예약이면 원래 예약 — 누르면 수정 창에 채움 */
   appointment?: CalendarAppointment;
 }
 
@@ -84,7 +84,7 @@ const LEGEND: [Entry["kind"], string][] = [
   ["missed", "확인 필요"],
 ];
 
-/** 열려 있는 예약 창. appointment가 있으면 수정 창이다. */
+/** 열려 있는 예약 창. appointment가 있으면 수정 창임 */
 type BookingDialog = { day: string; appointment?: CalendarAppointment } | null;
 
 export function LessonCalendar({
@@ -92,7 +92,7 @@ export function LessonCalendar({
   initial,
   members,
 }: {
-  /** 이번 달 (서버가 한국 시각으로 정한다) */
+  /** 이번 달 (서버가 한국 시각으로 정함) */
   initialMonth: string;
   initial: MonthCalendar;
   /** 예약할 때 고르는 회원 */
@@ -107,7 +107,7 @@ export function LessonCalendar({
   const [loading, setLoading] = useState(false);
   const [dialog, setDialog] = useState<BookingDialog>(null);
 
-  // 이번 달은 서버가 새로 그릴 때마다 최신이다. 다른 달만 따로 받아 둔다.
+  // 이번 달은 서버가 새로 그릴 때마다 최신임. 다른 달만 따로 받아 둠
   const calendar = month === initialMonth ? initial : loaded[month];
 
   const entries = useMemo(
@@ -141,7 +141,7 @@ export function LessonCalendar({
     if (next !== initialMonth && !loaded[next]) void loadMonth(next);
   };
 
-  /** 그날(한국 날짜) 이미 잡힌 수업·예약. 받아 둔 달만 알 수 있다. */
+  /** 그날(한국 날짜) 이미 잡힌 수업·예약. 받아 둔 달만 알 수 있음 */
   const occupiedOn = (day: string) => {
     const target = day.slice(0, 7);
     const cal = target === initialMonth ? initial : loaded[target];
@@ -152,11 +152,11 @@ export function LessonCalendar({
     ].filter((x) => kstDay(x.at) === day);
   };
 
-  /** 예약을 저장·취소한 뒤 — 그날이 있는 달로 옮겨 가서 다시 받는다. */
+  /** 예약을 저장·취소한 뒤 — 그날이 있는 달로 옮겨 가서 다시 받음 */
   const afterSave = (day: string) => {
     setDialog(null);
     const target = day.slice(0, 7);
-    // 수정으로 달이 바뀌었을 수 있으니 받아 둔 다른 달도 버린다.
+    // 수정으로 달이 바뀌었을 수 있으니 받아 둔 다른 달도 버림
     setLoaded({});
     setMonth(target);
     startRefresh(() => router.refresh());
@@ -335,7 +335,7 @@ export function LessonCalendar({
   );
 }
 
-/** 수업 예약 입력 (창 안). appointment가 있으면 수정하고 취소할 수 있다. */
+/** 수업 예약 입력 (창 안). appointment가 있으면 수정하고 취소할 수 있음 */
 function BookingForm({
   initialDay,
   appointment,
@@ -401,7 +401,7 @@ function BookingForm({
   const hour = Math.floor(time / 60);
   const minute = time % 60;
 
-  // 시를 바꾸면 분은 그대로 두되, 막혀 있으면 같은 시의 다른 분으로 옮긴다.
+  // 시를 바꾸면 분은 그대로 두되, 막혀 있으면 같은 시의 다른 분으로 옮김
   const changeHour = (h: number) => {
     const same = h * 60 + minute;
     const other = h * 60 + (minute === 0 ? 30 : 0);
@@ -409,7 +409,7 @@ function BookingForm({
     setError(null);
   };
 
-  // 종료한 회원(남은 수업 0회)은 예약할 일이 없다. 수정 중인 예약의 회원은 남긴다.
+  // 종료한 회원(남은 수업 0회)은 예약할 일이 없음. 수정 중인 예약의 회원은 남김
   const options = members.filter(
     (m) => m.remainingSessions > 0 || m.id === appointment?.memberId,
   );

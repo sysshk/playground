@@ -1,6 +1,6 @@
 /*
   API — 계정 관리 화면: 회원 기록과 로그인 계정 연결·해제 (관리자 전용)
-  초대 링크 없이 먼저 가입한 계정도 "이 계정이 이 회원"이라고 관리자가 직접 잇는다.
+  초대 링크 없이 먼저 가입한 계정도 "이 계정이 이 회원"이라고 관리자가 직접 이음
 
   @date : 2026-09-15
 */
@@ -11,7 +11,7 @@ import { badRequest, requireAdminId, serverError, toTrimmed } from "@/lib/api";
 
 type Params = { params: Promise<{ memberId: string }> };
 
-/** 기존 회원 계정을 이 회원 기록에 연결한다. */
+/** 기존 회원 계정을 이 회원 기록에 연결함 */
 export async function PUT(request: Request, { params }: Params) {
   const { memberId } = await params;
   const { error } = await requireAdminId();
@@ -37,7 +37,7 @@ export async function PUT(request: Request, { params }: Params) {
       return badRequest(`이미 ${user.memberRecord.name} 회원에 연결된 계정입니다.`);
     }
 
-    // 연결하면 남아 있던 초대 링크는 필요 없어진다.
+    // 연결하면 남아 있던 초대 링크는 필요 없어짐
     await prisma.member.update({
       where: { id: memberId },
       data: { userId, inviteToken: null, inviteExpiresAt: null },
@@ -48,7 +48,7 @@ export async function PUT(request: Request, { params }: Params) {
   }
 }
 
-/** 연결 해제 — 계정은 남기고 연결만 끊는다. 다른 회원에 다시 이을 수 있다. */
+/** 연결 해제 — 계정은 남기고 연결만 끊음. 다른 회원에 다시 이을 수 있음 */
 export async function DELETE(_request: Request, { params }: Params) {
   const { memberId } = await params;
   const { error } = await requireAdminId();

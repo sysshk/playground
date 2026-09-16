@@ -34,7 +34,7 @@ export async function PATCH(request: Request, { params }: Params) {
     const completedAt = parseCompletedAt(body.completedAt);
     if ("error" in completedAt) return badRequest(completedAt.error);
 
-    // 회원과 트레이너까지 조건에 넣어 소유권 확인을 겸한다.
+    // 회원과 트레이너까지 조건에 넣어 소유권 확인을 겸함
     const existing = await prisma.workout.findFirst({
       where: { id: workoutId, memberId, member: scope },
       select: { id: true },
@@ -47,7 +47,7 @@ export async function PATCH(request: Request, { params }: Params) {
     }
 
     const workout = await prisma.$transaction(async (tx) => {
-      // Exercise를 지우면 ExerciseSet도 Cascade로 같이 지워진다.
+      // Exercise를 지우면 ExerciseSet도 Cascade로 같이 지워짐
       await tx.exercise.deleteMany({ where: { workoutId } });
 
       const workout = await tx.workout.update({
@@ -65,7 +65,7 @@ export async function PATCH(request: Request, { params }: Params) {
         },
       });
 
-      // 날짜나 시각을 고치면 연결된 수업의 시각도 따라간다.
+      // 날짜나 시각을 고치면 연결된 수업의 시각도 따라감
       if (completedAt.value) {
         await tx.sessionCompletion.updateMany({
           where: { workoutId },
@@ -82,7 +82,7 @@ export async function PATCH(request: Request, { params }: Params) {
   }
 }
 
-/** 수업 기록 1건 삭제. 차감한 수업이 붙어 있으면 함께 지우고 1회를 돌려준다. */
+/** 수업 기록 1건 삭제. 차감한 수업이 붙어 있으면 함께 지우고 1회를 돌려줌 */
 export async function DELETE(_request: Request, { params }: Params) {
   const { memberId, workoutId } = await params;
   const { scope, error } = await requireTrainerId();
@@ -90,7 +90,7 @@ export async function DELETE(_request: Request, { params }: Params) {
 
   try {
     const result = await prisma.$transaction(async (tx) => {
-      // 회원과 트레이너까지 조건에 넣어 남의 기록을 지우지 못하게 한다.
+      // 회원과 트레이너까지 조건에 넣어 남의 기록을 지우지 못하게 함
       const workout = await tx.workout.findFirst({
         where: { id: workoutId, memberId, member: scope },
         select: { completion: { select: { id: true } } },

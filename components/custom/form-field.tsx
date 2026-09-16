@@ -8,9 +8,9 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * 라벨 + 입력칸 + 도움말/오류를 한 묶음으로 둔다.
- * <label>로 감싸서 라벨 글자를 눌러도 입력칸에 포커스가 간다.
- * 버튼 여러 개(성별·목표 고르기)를 감쌀 때는 group을 켠다 — label이면 글자를 누를 때 첫 버튼이 눌린다.
+ * 라벨 + 입력칸 + 도움말/오류를 한 묶음으로 둠
+ * <label>로 감싸서 라벨 글자를 눌러도 입력칸에 포커스가 감
+ * 버튼 여러 개(성별·목표 고르기)를 감쌀 때는 group을 켬 — label이면 글자를 누를 때 첫 버튼이 눌림
  */
 export function Field({
   label,

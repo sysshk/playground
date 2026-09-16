@@ -7,7 +7,7 @@
 import type { ReactNode } from "react";
 import { Icon, type IconName } from "@/components/custom/icons";
 
-/** 목록이 비었을 때 보여주는 안내. 무엇을 하면 채워지는지까지 말해준다. */
+/** 목록이 비었을 때 보여주는 안내. 무엇을 하면 채워지는지까지 말해줌 */
 export function EmptyState({
   icon,
   title,

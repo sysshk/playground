@@ -16,7 +16,7 @@ export default function ErrorScreen({ reset }: { reset: () => void }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
-  // reset만 하면 실패한 서버 데이터를 다시 읽지 않는다. refresh를 함께 건다.
+  // reset만 하면 실패한 서버 데이터를 다시 읽지 않음. refresh를 함께 호출함
   const retry = () =>
     startTransition(() => {
       router.refresh();

@@ -39,7 +39,7 @@ export async function PATCH(request: Request, { params }: Params) {
       return badRequest("코칭 항목을 하나 이상 입력해 주세요.");
     }
 
-    // 회원과 트레이너까지 조건에 넣어 소유권 확인과 수정을 한 번에 한다.
+    // 회원과 트레이너까지 조건에 넣어 소유권 확인과 수정을 한 번에 함
     const note = await prisma.coachingNote.update({
       where: { id: noteId, memberId, member: scope },
       data: { date: body.date, pain, posture, movement, homework },

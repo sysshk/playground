@@ -1,5 +1,5 @@
 /*
-  초대 링크 화면 — 아이디·비밀번호 입력 폼. 만들고 나면 바로 로그인해 내 기록으로 간다.
+  초대 링크 화면 — 아이디·비밀번호 입력 폼. 만들고 나면 바로 로그인해 내 기록으로 감
 
   @date : 2026-09-15
 */
@@ -54,7 +54,7 @@ export function InviteForm({ token }: { token: string }) {
         redirect: false,
       });
       if (result?.error) {
-        // 계정은 만들어졌으니 로그인 화면에서 다시 시도하면 된다.
+        // 계정은 만들어졌으니 로그인 화면에서 다시 시도하면 됨
         router.push("/login");
         return;
       }

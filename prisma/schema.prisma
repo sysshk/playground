@@ -1,10 +1,10 @@
 // PT 매니저 — Prisma schema
-// 트레이너(User) 계정별로 회원/운동기록/체중/코칭메모/영양 데이터를 분리해 보관한다.
+// 트레이너(User) 계정별로 회원/운동기록/체중/코칭메모/영양 데이터를 분리해 보관함
 
 generator client {
   provider = "prisma-client-js"
   output   = "../app/generated/prisma"
-  // 중첩 include를 관계마다 따로 보내지 않고 JOIN 한 번으로 읽는다.
+  // 중첩 include를 관계마다 따로 보내지 않고 JOIN 한 번으로 읽음
   previewFeatures = ["relationJoins"]
 }
 
@@ -23,7 +23,7 @@ model User {
   emailVerified DateTime?
   password      String
   image         String?
-  /// 가입하면 회원(client)으로 시작하고, 관리자가 트레이너·관리자로 올린다.
+  /// 가입하면 회원(client)으로 시작하고, 관리자가 트레이너·관리자로 올림
   role          String    @default("client") // admin | trainer | client(회원 본인)
   accounts      Account[]
   sessions      Session[]
@@ -78,16 +78,16 @@ model Member {
   id                String   @id @default(cuid())
   trainerId         String
   trainer           User     @relation("TrainerMembers", fields: [trainerId], references: [id], onDelete: Cascade)
-  /// 회원 본인 로그인 계정. 초대 링크로 가입하면 채워진다.
+  /// 회원 본인 로그인 계정. 초대 링크로 가입하면 채워짐
   userId            String?  @unique
   user              User?    @relation("MemberAccount", fields: [userId], references: [id], onDelete: SetNull)
-  /// 아직 안 쓴 초대 링크. 쓰거나 취소하면 비운다.
+  /// 아직 안 쓴 초대 링크. 쓰거나 취소하면 비움
   inviteToken       String?  @unique
   inviteExpiresAt   DateTime?
   name              String
   phone             String
   goal              String? // 체중 감량, 근력 향상 등
-  targetWeight      Float? // 목표 체중 kg — 체중 그래프에서 고친다
+  targetWeight      Float? // 목표 체중 kg — 체중 그래프에서 고침
   remainingSessions Int      @default(0) // 남은 PT 세션
   memo              String? // 특이사항 (컨디션, 일정, 주의사항 등)
   createdAt         DateTime @default(now())
@@ -103,7 +103,7 @@ model Member {
   @@index([trainerId, createdAt])
 }
 
-/// 하루치 운동 기록 (종목 여러 개를 묶는다)
+/// 하루치 운동 기록 (종목 여러 개를 묶음)
 model Workout {
   id        String   @id @default(cuid())
   memberId  String
@@ -118,8 +118,8 @@ model Workout {
   @@index([memberId, date])
 }
 
-/// 운동 종목. 세트별 수치는 ExerciseSet이 따로 갖는다.
-/// 드롭세트·피라미드처럼 세트마다 횟수와 무게가 달라지는 경우가 흔하다.
+/// 운동 종목. 세트별 수치는 ExerciseSet이 따로 가짐
+/// 드롭세트·피라미드처럼 세트마다 횟수와 무게가 달라지는 경우가 흔함
 model Exercise {
   id        String  @id @default(cuid())
   workoutId String
@@ -175,8 +175,8 @@ model CoachingNote {
 }
 
 /// 수업 완료 내역 (완료 시 남은 수업 1회 차감)
-/// 운동 기록을 저장하면서 차감하면 그 기록과 연결된다.
-/// 기록을 지워도 차감 이력은 남는다 — 되돌리려면 이력에서 따로 취소한다.
+/// 운동 기록을 저장하면서 차감하면 그 기록과 연결됨
+/// 기록을 지워도 차감 이력은 남음 — 되돌리려면 이력에서 따로 취소함
 model SessionCompletion {
   id          String   @id @default(cuid())
   memberId    String
@@ -192,7 +192,7 @@ model SessionCompletion {
   @@index([memberId, completedAt])
 }
 
-/// 칼로리 및 영양 계산 결과 (회원당 1건, 다시 계산하면 덮어쓴다)
+/// 칼로리 및 영양 계산 결과 (회원당 1건, 다시 계산하면 덮어씀)
 model NutritionProfile {
   id       String @id @default(cuid())
   memberId String @unique
@@ -225,13 +225,13 @@ model NutritionProfile {
   updatedAt DateTime @updatedAt
 }
 
-/// 앞으로 할 수업 예약. 남은 수업은 차감하지 않는다.
-/// 기록하면 그때 만든 완료 내역과 이어지고, 달력에서는 완료 내역으로 보인다.
+/// 앞으로 할 수업 예약. 남은 수업은 차감하지 않음
+/// 기록하면 그때 만든 완료 내역과 이어지고, 달력에서는 완료 내역으로 보임
 model Appointment {
   id       String   @id @default(cuid())
   memberId String
   member   Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  /// 시작 시각. 30분 단위로 받는다.
+  /// 시작 시각. 30분 단위로 받음
   startsAt DateTime
   memo     String?
 

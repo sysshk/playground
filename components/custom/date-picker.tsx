@@ -1,6 +1,6 @@
 /*
   공통 — 날짜 선택기, 시각 선택기
-  값은 "YYYY-MM-DD" 문자열이다.
+  값은 "YYYY-MM-DD" 문자열임
 
   @date : 2026-09-12
 */
@@ -36,12 +36,12 @@ const TRIGGER = "h-10 gap-2 px-3 font-semibold";
 
 type DayCalendarProps = {
   value: string;
-  /** 이 날짜(YYYY-MM-DD) 이후는 고를 수 없다. */
+  /** 이 날짜(YYYY-MM-DD) 이후는 고를 수 없음 */
   max?: string;
   onSelect: (key: string) => void;
 };
 
-// 달력 라이브러리는 팝업을 처음 열 때 받는다.
+// 달력 라이브러리는 팝업을 처음 열 때 받음
 const DayCalendar = dynamic<DayCalendarProps>(
   async () => {
     const [{ Calendar }, { ko }] = await Promise.all([
@@ -125,7 +125,7 @@ export function DatePicker({
 
 const ALL_HOURS = Array.from({ length: 24 }, (_, i) => i);
 
-/** 오전·오후로 나눠 두 줄에 담는다. */
+/** 오전·오후로 나눠 두 줄에 담음 */
 const HOUR_GROUPS = [
   { label: "오전", hours: ALL_HOURS.filter((h) => h < 12) },
   { label: "오후", hours: ALL_HOURS.filter((h) => h >= 12) },

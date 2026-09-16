@@ -63,7 +63,7 @@ export default function JoinPage() {
   return (
     <div className="flex min-h-screen flex-col bg-canvas">
       <div className="flex items-center gap-3 px-5 py-4">
-        {/* 링크로 둔다. router.back()은 /join으로 바로 들어온 경우 사이트 밖으로 나간다. */}
+        {/* 링크로 둠. router.back()은 /join으로 바로 들어온 경우 사이트 밖으로 나감 */}
         <Link
           href="/"
           aria-label="홈으로"

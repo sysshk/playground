@@ -1,7 +1,7 @@
 /*
   화면 공통 — API 호출 헬퍼와 날짜·시각 표기
-  basePath(/pt-manager)가 fetch에는 자동으로 안 붙어서 API 호출은 항상 apiFetch를 거친다.
-  표기는 한국 시각 기준이라 서버(UTC)에서 그려도 브라우저와 같은 글자가 나온다.
+  basePath(/pt-manager)가 fetch에는 자동으로 안 붙어서 API 호출은 항상 apiFetch를 거침
+  표기는 한국 시각 기준이라 서버(UTC)에서 그려도 브라우저와 같은 글자가 나옴
 
   @date : 2026-09-12
 */
@@ -39,7 +39,7 @@ export async function apiFetch<T>(
   }
 
   if (!response.ok) {
-    // 서버가 JSON 오류를 못 준 경우(502 등)에도 문구는 보여준다.
+    // 서버가 JSON 오류를 못 준 경우(502 등)에도 문구는 보여줌
     const payload = await response.json().catch(() => null);
     throw new ApiError(
       payload?.error ?? "요청을 처리하지 못했습니다.",
@@ -51,12 +51,12 @@ export async function apiFetch<T>(
   return (await response.json()) as T;
 }
 
-/** public/ 자산 경로에 basePath를 붙인다. */
+/** public/ 자산 경로에 basePath를 붙임 */
 export function asset(path: string) {
   return `${BASE_PATH}${path}`;
 }
 
-/** API 오류에서 사용자에게 보여줄 문구를 뽑는다. */
+/** API 오류에서 사용자에게 보여줄 문구를 뽑음 */
 export function errorMessage(error: unknown, fallback = "오류가 발생했습니다.") {
   return error instanceof Error ? error.message : fallback;
 }
@@ -87,7 +87,7 @@ export function formatHourLabel(hour: number) {
 
 const WEEKDAY = ["일", "월", "화", "수", "목", "금", "토"];
 
-/** 목록에 쓰는 짧은 날짜 — "9월 11일 (목)". 올해가 아닐 때만 연도를 붙인다. */
+/** 목록에 쓰는 짧은 날짜 — "9월 11일 (목)". 올해가 아닐 때만 연도를 붙임 */
 function shortLabel(parsed: Date) {
   const year =
     String(parsed.getFullYear()) === kstDay().slice(0, 4)
@@ -112,7 +112,7 @@ export function formatHour(iso: string) {
   return isValidIso(iso) ? formatHourLabel(kstHour(iso)) : "";
 }
 
-/** 고른 한국 날짜(YYYY-MM-DD)와 시(0~23)를 수업 시각으로 바꾼다. 분·초는 0으로 둔다. */
+/** 고른 한국 날짜(YYYY-MM-DD)와 시(0~23)를 수업 시각으로 바꿈. 분·초는 0으로 둠 */
 export function completedAtFrom(date: string, hour: number) {
   return kstIso(date, hour);
 }

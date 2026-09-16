@@ -1,5 +1,5 @@
 /*
-  회원 목록 화면 (서버) — 회원 목록·지표·이번 달 수업 달력을 함께 읽는다
+  회원 목록 화면 (서버) — 회원 목록·지표·이번 달 수업 달력을 함께 읽음
 
   @date : 2026-09-12
 */
@@ -10,7 +10,7 @@ import { getMemberList, getMonthCalendar } from "@/lib/queries";
 import { requireTrainer } from "@/lib/auth";
 import { MemberList } from "./member-list";
 
-/** 회원 목록 — 서버에서 읽어 첫 화면에 바로 그린다. 읽는 동안은 뼈대를 보여 준다. */
+/** 회원 목록 — 서버에서 읽어 첫 화면에 바로 그림. 읽는 동안은 뼈대를 보여 줌 */
 export default function MembersPage() {
   return (
     <Suspense fallback={<MembersSkeleton />}>

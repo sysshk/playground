@@ -26,8 +26,8 @@ function denied(message: string, status: number): Guard {
 }
 
 /**
- * 트레이너·관리자만 통과시킨다. 회원 계정은 읽기만 하므로 수정 API에서 403.
- * scope는 이 사람이 다룰 수 있는 회원 조건이다 — where에 그대로 펼쳐 쓴다.
+ * 트레이너·관리자만 통과시킴. 회원 계정은 읽기만 하므로 수정 API에서 403.
+ * scope는 이 사람이 다룰 수 있는 회원 조건임 — where에 그대로 펼쳐 씀
  */
 export async function requireTrainerId(): Promise<Guard> {
   const session = await auth();
@@ -39,7 +39,7 @@ export async function requireTrainerId(): Promise<Guard> {
   return { trainerId: user.id, role: user.role, scope: memberScope(user), error: null };
 }
 
-/** 관리자만 통과시킨다. */
+/** 관리자만 통과시킴 */
 export async function requireAdminId(): Promise<Guard> {
   const guard = await requireTrainerId();
   if (guard.error) return guard;
@@ -48,8 +48,8 @@ export async function requireAdminId(): Promise<Guard> {
 }
 
 /**
- * 회원이 이 사람이 다룰 수 있는 회원인지 확인한다.
- * 남의 회원이면 존재 여부를 흘리지 않도록 404로 돌려준다.
+ * 회원이 이 사람이 다룰 수 있는 회원인지 확인함
+ * 남의 회원이면 존재 여부를 흘리지 않도록 404로 돌려줌
  */
 export async function requireOwnedMember(memberId: string, scope: MemberScope) {
   const member = await prisma.member.findFirst({
@@ -80,7 +80,7 @@ export function isRecordNotFound(error: unknown) {
   );
 }
 
-/** 기록한 수업을 같은 날(한국 시각) 그 회원의 아직 기록 안 한 예약에 잇는다. 여럿이면 이른 것부터. */
+/** 기록한 수업을 같은 날(한국 시각) 그 회원의 아직 기록 안 한 예약에 이음. 여럿이면 이른 것부터 */
 export async function linkSameDayAppointment(
   tx: Prisma.TransactionClient,
   memberId: string,
@@ -115,14 +115,14 @@ export function serverError(scope: string, error: unknown) {
   );
 }
 
-/** 값을 숫자로 바꾼다. 비어 있거나 숫자가 아니면 undefined. */
+/** 값을 숫자로 바꿈. 비어 있거나 숫자가 아니면 undefined. */
 export function toNumber(value: unknown): number | undefined {
   if (value === null || value === undefined || value === "") return undefined;
   const n = typeof value === "number" ? value : Number(value);
   return Number.isFinite(n) ? n : undefined;
 }
 
-/** 문자열을 다듬는다. 비면 null. */
+/** 문자열을 다듬음. 비면 null. */
 export function toTrimmed(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
@@ -132,12 +132,12 @@ export function toTrimmed(value: unknown): string | null {
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
 
-/** YYYY-MM 형식인지 확인한다. */
+/** YYYY-MM 형식인지 확인함 */
 export function isValidMonth(value: unknown): value is string {
   return typeof value === "string" && MONTH_PATTERN.test(value);
 }
 
-/** YYYY-MM-DD 형식인지 확인한다. */
+/** YYYY-MM-DD 형식인지 확인함 */
 export function isValidDate(value: unknown): value is string {
   if (typeof value !== "string" || !DATE_PATTERN.test(value)) return false;
   return !Number.isNaN(new Date(`${value}T00:00:00`).getTime());

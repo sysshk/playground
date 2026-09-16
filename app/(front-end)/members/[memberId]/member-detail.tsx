@@ -1,6 +1,6 @@
 /*
   회원 상세 화면 — 머리(회원 정보·수정), 수업 기록·코칭 메모·체중·영양 섹션 조립, 삭제 확인 창
-  데이터는 서버 화면(page.tsx)이 읽어 넘기고, 저장·삭제 뒤에는 router.refresh로 다시 받는다.
+  데이터는 서버 화면(page.tsx)이 읽어 넘기고, 저장·삭제 뒤에는 router.refresh로 다시 받음
 
   @date : 2026-09-12
 */
@@ -25,7 +25,7 @@ import {
   type WeightPayload,
 } from "./member-sections";
 
-/** 화면에 펼쳐져 있는 입력 폼. 한 번에 하나만 연다. */
+/** 화면에 펼쳐져 있는 입력 폼. 한 번에 하나만 열어 둠 */
 type OpenForm =
   | { kind: "member" }
   | { kind: "weight" }
@@ -41,7 +41,7 @@ export function MemberDetailView({ member }: { member: MemberDetail }) {
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  // 새 데이터가 도착할 때까지 버튼을 잠가 둔다.
+  // 새 데이터가 도착할 때까지 버튼을 잠가 둠
   const locked = busy || refreshing;
 
   const show = (form: OpenForm) => {
@@ -50,8 +50,8 @@ export function MemberDetailView({ member }: { member: MemberDetail }) {
   };
 
   /**
-   * 저장·삭제 공통 — 끝나면 서버에서 상세를 다시 그린다. 실패하면 오류 문구를 돌려준다.
-   * after(폼·창 닫기)는 새 데이터와 한 번에 반영되도록 같은 전환에 묶는다.
+   * 저장·삭제 공통 — 끝나면 서버에서 상세를 다시 그림. 실패하면 오류 문구를 돌려줌
+   * after(폼·창 닫기)는 새 데이터와 한 번에 반영되도록 같은 전환에 묶음
    */
   const run = async (
     url: string,
@@ -87,7 +87,7 @@ export function MemberDetailView({ member }: { member: MemberDetail }) {
     }
   };
 
-  // 입력 창 안에서 저장하는 것들 — 실패 문구는 창에 띄운다.
+  // 입력 창 안에서 저장하는 것들 — 실패 문구는 창에 띄움
   const save = async (url: string, init: RequestInit, ok: string, fail: string) => {
     const error = await run(url, init, ok, fail, () => setOpen(null));
     if (error) setFormError(error);
@@ -109,7 +109,7 @@ export function MemberDetailView({ member }: { member: MemberDetail }) {
       "체중 기록 저장에 실패했습니다.",
     );
 
-  // 그래프 위에서 바로 고치는 칸이라 오류를 띄울 폼이 없다. 실패는 토스트로 알린다.
+  // 그래프 위에서 바로 고치는 칸이라 오류를 띄울 폼이 없음. 실패는 토스트로 알림
   const handleSaveGoal = async (targetWeight: number | null) => {
     const error = await run(
       `/api/members/${memberId}/weights/target`,
@@ -120,7 +120,7 @@ export function MemberDetailView({ member }: { member: MemberDetail }) {
     if (error) toast(error);
   };
 
-  // 등록한 전체 횟수는 남은 것과 쓴 것을 더한 값이다.
+  // 등록한 전체 횟수는 남은 것과 쓴 것을 더한 값임
   const totalSessions = member.remainingSessions + member.completionTotal;
   const lastCompletedAt = member.completions[0]?.completedAt ?? null;
   const confirm = pending ? pendingCopy(pending, memberId) : null;
@@ -305,7 +305,7 @@ function MemberSummary({
 
 // ── 확인 창 ──────────────────────────────────
 
-/** 되돌릴 수 없는 동작만 확인 창을 띄운다. 입력은 전부 화면 안에서 한다. */
+/** 되돌릴 수 없는 동작만 확인 창을 띄움. 입력은 전부 화면 안에서 함 */
 type PendingAction =
   | { type: "deleteWorkout"; workout: Workout; refunds: boolean }
   | { type: "deleteWeight"; id: string; date: string }

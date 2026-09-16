@@ -10,7 +10,7 @@ import { badRequest, isRecordNotFound, requireAdminId, serverError, toTrimmed } 
 
 type Params = { params: Promise<{ memberId: string }> };
 
-/** 담당 트레이너를 바꾼다. 트레이너·관리자 계정만 맡을 수 있다. */
+/** 담당 트레이너를 바꿈. 트레이너·관리자 계정만 맡을 수 있음 */
 export async function PATCH(request: Request, { params }: Params) {
   const { memberId } = await params;
   const { error } = await requireAdminId();

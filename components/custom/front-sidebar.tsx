@@ -22,7 +22,7 @@ import {
 import { BASE_PATH } from "@/lib/client";
 import { ROLE_HOME, type Role } from "@/lib/types";
 
-/** 역할별 메뉴. 회원(client)은 자기 기록 하나만 본다. */
+/** 역할별 메뉴. 회원(client)은 자기 기록 하나만 봄 */
 const NAV: { href: string; label: string; icon: IconName; roles: Role[] }[] = [
   { href: "/members", label: "회원", icon: "users", roles: ["admin", "trainer"] },
   { href: "/accounts", label: "계정 관리", icon: "settings", roles: ["admin"] },
@@ -36,7 +36,7 @@ const INNER_WIDTH = OPEN_WIDTH - 24;
 const BACK =
   "flex min-w-0 items-center gap-1.5 rounded-lg px-2 py-1.5 text-base font-bold text-muted-foreground transition-colors hover:bg-raised hover:text-ink";
 
-/** 폰 상단 바 내용. 뒤로 가기는 한 단계 위로만 보낸다. */
+/** 폰 상단 바 내용. 뒤로 가기는 한 단계 위로만 보냄 */
 function topBar(pathname: string) {
   if (pathname === "/members") return { label: "회원" };
   if (pathname === "/accounts") return { label: "계정 관리" };
@@ -52,7 +52,7 @@ function topBar(pathname: string) {
   return { href: `/members/${seg[1]}`, label: "회원" };
 }
 
-/** 로그인한 사람이 쓰는 셸 — 사이드바·상단 바·본문 자리·푸터까지 함께 그린다. */
+/** 로그인한 사람이 쓰는 셸 — 사이드바·상단 바·본문 자리·푸터까지 함께 그림 */
 export default function FrontSidebar({ children }: { children: ReactNode }) {
   const { status } = useSession();
   const pathname = usePathname();
@@ -237,7 +237,7 @@ function Brand({
   gradientId,
 }: {
   onNavigate?: () => void;
-  /** 같은 마크가 둘이면 그라데이션 id가 겹친다. */
+  /** 같은 마크가 둘이면 그라데이션 id가 겹침 */
   gradientId?: string;
 }) {
   const { data: session } = useSession();
@@ -345,7 +345,7 @@ function Account() {
             <button
               type="button"
               onClick={() => {
-                // 팝오버와 확인 창이 겹치면 포커스를 서로 뺏는다.
+                // 팝오버와 확인 창이 겹치면 포커스를 서로 뺏음
                 setOpen(false);
                 setConfirming(true);
               }}
@@ -431,7 +431,7 @@ function useStoredFlag(key: string, fallback = false) {
         return fallback;
       }
     }, [key, fallback]),
-    // 서버에는 저장값이 없다. 붙고 나서 진짜 값으로 다시 그린다.
+    // 서버에는 저장값이 없음. 붙고 나서 진짜 값으로 다시 그림
     useCallback(() => fallback, [fallback]),
   );
 
@@ -440,7 +440,7 @@ function useStoredFlag(key: string, fallback = false) {
       try {
         localStorage.setItem(key, next ? "1" : "0");
       } catch {
-        // 저장이 막혀 있으면 이번 세션에만 적용된다.
+        // 저장이 막혀 있으면 이번 세션에만 적용됨
       }
       listeners.get(key)?.forEach((notify) => notify());
     },

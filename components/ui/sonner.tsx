@@ -10,7 +10,7 @@ import { Toaster as Sonner, type ToasterProps } from "sonner"
 import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  // 앱은 밝은 화면 하나라 테마를 따라가지 않는다.
+  // 앱은 밝은 화면 하나라 테마를 따라가지 않음
 
   return (
     <Sonner

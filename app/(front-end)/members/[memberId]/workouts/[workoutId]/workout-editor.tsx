@@ -22,7 +22,7 @@ import type { ExerciseRow, SetRow, WorkoutPayload } from "./types";
 /** 무게 −/+ 한 번에 움직이는 양. 원판 한 쌍(1.25kg × 2) 기준. */
 const WEIGHT_STEP = 2.5;
 
-/** 종목 없이 수업만 남길 때 고르는 사유. 폰에서 키보드를 올리지 않고 넣는다. */
+/** 종목 없이 수업만 남길 때 고르는 사유. 폰에서 키보드를 올리지 않고 넣음 */
 const QUICK_REASONS = ["상담", "체형 평가", "노쇼"];
 
 const emptySet = (from?: SetRow): SetRow => ({
@@ -31,7 +31,7 @@ const emptySet = (from?: SetRow): SetRow => ({
   bodyweight: from?.bodyweight ?? false,
 });
 
-/** 세트 한 줄이 제대로 찼는지. 덜 찼으면 보여 줄 문구를 돌려준다. */
+/** 세트 한 줄이 제대로 찼는지. 덜 찼으면 보여 줄 문구를 돌려줌 */
 function setProblem(set: SetRow, label: string) {
   const reps = Number(set.reps);
   if (set.reps.trim() === "" || !Number.isInteger(reps) || reps < 1) {
@@ -57,7 +57,7 @@ const emptyExercise = (): ExerciseRow => ({
   editing: true,
 });
 
-/** 저장된 기록을 폼 입력 상태(전부 문자열)로 되돌린다. */
+/** 저장된 기록을 폼 입력 상태(전부 문자열)로 되돌림 */
 function toRows(workout: Workout | null): ExerciseRow[] {
   if (!workout || workout.exercises.length === 0) return [emptyExercise()];
   return workout.exercises.map((e) => ({
@@ -67,12 +67,12 @@ function toRows(workout: Workout | null): ExerciseRow[] {
       weight: s.weight === null ? "" : String(s.weight),
       bodyweight: s.unit === "bodyweight",
     })),
-    // 저장해 둔 종목은 접은 채로 연다. 수정을 눌러야 펼쳐진다.
+    // 저장해 둔 종목은 접은 채로 열어 둠. 수정을 눌러야 펼쳐짐
     editing: false,
   }));
 }
 
-/** 소수점 한 자리까지만 남긴다 (2.5kg 단위 계산에서 생기는 부동소수 오차 제거). */
+/** 소수점 한 자리까지만 남김 (2.5kg 단위 계산에서 생기는 부동소수 오차 제거). */
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
 export function WorkoutEditor({
@@ -103,7 +103,7 @@ export function WorkoutEditor({
   const [reason, setReason] = useState("");
   const [removing, setRemoving] = useState<number | null>(null);
 
-  // 이름을 적은 종목만 저장한다. 하나도 없으면 수업만 남기는 날이다.
+  // 이름을 적은 종목만 저장함. 하나도 없으면 수업만 남기는 날임
   const named = rows.filter((r) => r.name.trim() !== "");
   const sessionOnly = named.length === 0;
 
@@ -123,7 +123,7 @@ export function WorkoutEditor({
     setError(null);
   };
 
-  /** 종목의 세트가 다 찼는지 본다. 덜 찼으면 문구를 띄운다. */
+  /** 종목의 세트가 다 찼는지 봄. 덜 찼으면 문구를 띄움 */
   const checkSets = (i: number) => {
     const row = rows[i];
     const name = row.name.trim() || `${i + 1}번째 종목`;
@@ -137,13 +137,13 @@ export function WorkoutEditor({
     return true;
   };
 
-  /** 종목을 펼치거나 접는다. 접을 때는 다 찼는지 보고 접는다. */
+  /** 종목을 펼치거나 접음. 접을 때는 다 찼는지 보고 접음 */
   const toggleExercise = (i: number) => {
     if (rows[i].editing && !checkSets(i)) return;
     patchExercise(i, { editing: !rows[i].editing });
   };
 
-  /** 세트를 더 넣는다. */
+  /** 세트를 더 넣음 */
   const addSet = (i: number) => {
     if (!checkSets(i)) return;
     const row = rows[i];
@@ -173,7 +173,7 @@ export function WorkoutEditor({
         }
 
         // 1세트는 바디웨이트로 하고 2세트부터 무게를 다는 식으로 한 종목
-        // 안에서 섞이므로 세트마다 따로 본다.
+        // 안에서 섞이므로 세트마다 따로 봄
         sets.push(
           set.bodyweight
             ? { reps: Number(set.reps), weight: null, unit: "bodyweight" }
@@ -195,7 +195,7 @@ export function WorkoutEditor({
     setError(null);
     try {
       if (sessionOnly) {
-        // 종목이 없으면 남길 운동이 없던 날이다. 수업 완료만 남긴다.
+        // 종목이 없으면 남길 운동이 없던 날임. 수업 완료만 남김
         await apiFetch(`/api/members/${memberId}/complete`, {
           method: "POST",
           body: JSON.stringify({
@@ -520,7 +520,7 @@ function BodyweightToggle({
   );
 }
 
-/** −/+ 버튼으로 숫자를 바꾸는 입력. 가운데 숫자를 누르면 직접 입력할 수 있다. */
+/** −/+ 버튼으로 숫자를 바꾸는 입력. 가운데 숫자를 누르면 직접 입력할 수 있음 */
 function Stepper({
   label,
   unit,

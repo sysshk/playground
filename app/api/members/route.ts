@@ -51,7 +51,7 @@ export async function POST(request: Request) {
   }
 }
 
-/** 회원 여러 명 삭제 — 연결된 기록도 함께 지워진다 (onDelete: Cascade). */
+/** 회원 여러 명 삭제 — 연결된 기록도 함께 지워짐 (onDelete: Cascade). */
 export async function DELETE(request: Request) {
   const { scope, error } = await requireTrainerId();
   if (error) return error;
@@ -67,8 +67,8 @@ export async function DELETE(request: Request) {
       return badRequest("삭제할 회원을 선택해 주세요.");
     }
 
-    // scope를 조건에 넣어 남의 회원은 지워지지 않게 한다.
-    // 연결된 앱 계정은 지우지 않는다(연결만 풀림). 계정 관리에서 다른 회원에 다시 이을 수 있다.
+    // scope를 조건에 넣어 남의 회원은 지워지지 않게 함
+    // 연결된 앱 계정은 지우지 않는다(연결만 풀림). 계정 관리에서 다른 회원에 다시 이을 수 있음
     const { count } = await prisma.member.deleteMany({
       where: { id: { in: ids }, ...scope },
     });

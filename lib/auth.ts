@@ -11,15 +11,15 @@ import type { Role } from "@/lib/types";
 
 export type Viewer = { id: string; name: string; role: Role };
 
-/** 회원 where에 펼쳐 쓰는 조건. 단건 update의 where에도 들어가도록 모양을 좁혀 둔다. */
+/** 회원 where에 펼쳐 쓰는 조건. 단건 update의 where에도 들어가도록 모양을 좁혀 둠 */
 export type MemberScope = { trainerId?: string };
 
-/** 관리자는 모든 회원, 트레이너는 자기가 등록한 회원만 본다. */
+/** 관리자는 모든 회원, 트레이너는 자기가 등록한 회원만 봄 */
 export function memberScope(viewer: { id: string; role: Role }): MemberScope {
   return viewer.role === "admin" ? {} : { trainerId: viewer.id };
 }
 
-/** 로그인한 사람. 없으면 null. 같은 요청에서 여러 번 불러도 한 번만 푼다. */
+/** 로그인한 사람. 없으면 null. 같은 요청에서 여러 번 불러도 한 번만 해석함 */
 export const getViewer = cache(async (): Promise<Viewer | null> => {
   const session = await auth();
   const user = session?.user;
@@ -32,7 +32,7 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
   };
 });
 
-/** 트레이너·관리자 화면 가드. 회원 계정은 내 기록으로 보낸다. */
+/** 트레이너·관리자 화면 가드. 회원 계정은 내 기록으로 보냄 */
 export const requireTrainer = cache(async () => {
   const viewer = await getViewer();
   if (!viewer) redirect("/login");
@@ -48,7 +48,7 @@ export const requireAdmin = cache(async () => {
   return trainer;
 });
 
-/** 회원 본인 화면 가드. 트레이너·관리자는 회원 목록으로 보낸다. */
+/** 회원 본인 화면 가드. 트레이너·관리자는 회원 목록으로 보냄 */
 export const requireClient = cache(async () => {
   const viewer = await getViewer();
   if (!viewer) redirect("/login");

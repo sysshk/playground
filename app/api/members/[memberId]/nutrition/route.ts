@@ -25,7 +25,7 @@ type Params = { params: Promise<{ memberId: string }> };
 
 const GOALS: NutritionGoal[] = ["loss", "maintain", "gain"];
 
-/** 칼로리·영양 계산 후 저장 (회원당 1건, 다시 계산하면 덮어쓴다) */
+/** 칼로리·영양 계산 후 저장 (회원당 1건, 다시 계산하면 덮어씀) */
 export async function PUT(request: Request, { params }: Params) {
   const { memberId } = await params;
   const { scope, error } = await requireTrainerId();

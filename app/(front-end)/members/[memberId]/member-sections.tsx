@@ -1,7 +1,7 @@
 /*
   회원 상세·내 기록 화면 — 기록 섹션 (섹션 틀, 수업 기록, 코칭 메모, 체중·그래프, 영양)
-  트레이너가 보는 회원 상세와 회원 본인이 보는 내 기록이 함께 쓴다.
-  회원 본인 화면은 readOnly로 넘겨 추가·수정·삭제 버튼을 숨긴다.
+  트레이너가 보는 회원 상세와 회원 본인이 보는 내 기록이 함께 씀
+  회원 본인 화면은 readOnly로 넘겨 추가·수정·삭제 버튼을 숨김
 
   @date : 2026-09-16
 */
@@ -41,7 +41,7 @@ import { isValidWeight, WEIGHT_RANGE_MESSAGE } from "@/lib/weight";
 
 // ── 섹션 틀 ───────────────────────────────
 
-/** 회원 상세의 한 덩어리(운동 기록, 체중, 코칭 메모 …). 제목 옆에 보조 동작을 둔다. */
+/** 회원 상세의 한 덩어리(운동 기록, 체중, 코칭 메모 …). 제목 옆에 보조 동작을 둠 */
 export function Section({
   id,
   title,
@@ -49,7 +49,7 @@ export function Section({
   action,
   children,
 }: {
-  /** 히어로의 버튼이 이 섹션으로 스크롤할 때 쓴다. */
+  /** 히어로의 버튼이 이 섹션으로 스크롤할 때 씀 */
   id?: string;
   title: string;
   subtitle?: string;
@@ -83,7 +83,7 @@ export function SectionAction({
   icon: IconName;
   label: string;
   onClick?: () => void;
-  /** 주면 링크로 그린다. 작성 화면이 페이지인 섹션이 쓴다. */
+  /** 주면 링크로 그림. 작성 화면이 페이지인 섹션이 씀 */
   href?: string;
   active?: boolean;
 }) {
@@ -126,7 +126,7 @@ export function IconButton({
   icon: IconName;
   label: string;
   onClick?: () => void;
-  /** 주면 링크로 그린다. */
+  /** 주면 링크로 그림 */
   href?: string;
   danger?: boolean;
   active?: boolean;
@@ -167,24 +167,24 @@ export function IconButton({
 /** 처음 펼쳐 두는 수 */
 const VISIBLE = 6;
 
-/** 더 보기 한 번에 늘리는 수 (lib/queries LESSON_PAGE와 같다) */
+/** 더 보기 한 번에 늘리는 수 (lib/queries LESSON_PAGE와 같음) */
 const PAGE = 20;
 
-/** 목록에 그리는 수업 한 건. 둘 중 하나는 반드시 있다. */
+/** 목록에 그리는 수업 한 건. 둘 중 하나는 반드시 있음 */
 interface SessionEntry {
   key: string;
   /** 정렬용 시각 */
   at: number;
   label: string;
-  /** 몇 번째 수업인지. 완료 내역이 붙은 것만 센다. */
+  /** 몇 번째 수업인지. 완료 내역이 붙은 것만 셈 */
   no?: number;
-  /** 완료 시각. 운동 기록만 있는 옛 자료에는 없다. */
+  /** 완료 시각. 운동 기록만 있는 옛 자료에는 없음 */
   hour?: string;
   completion?: SessionCompletion;
   workout?: Workout;
 }
 
-/** 완료 내역과 운동 기록을 시간순 한 줄기로 엮는다. */
+/** 완료 내역과 운동 기록을 시간순 한 줄기로 엮음 */
 function buildEntries(
   completions: SessionCompletion[],
   workouts: Workout[],
@@ -209,7 +209,7 @@ function buildEntries(
     };
   });
 
-  // 남은 수업이 없을 때 저장한 기록은 완료 내역 없이 홀로 남는다.
+  // 남은 수업이 없을 때 저장한 기록은 완료 내역 없이 홀로 남음
   for (const workout of workouts) {
     if (used.has(workout.id)) continue;
     entries.push({
@@ -221,10 +221,10 @@ function buildEntries(
   }
 
   entries.sort((a, b) => b.at - a.at);
-  // 두 목록을 각각 최근 limit건씩 받았으므로 합친 뒤 앞의 limit건만 정확하다.
+  // 두 목록을 각각 최근 limit건씩 받았으므로 합친 뒤 앞의 limit건만 정확함
   entries.splice(limit);
 
-  // 회차는 오래된 것부터 1번이다. 최신순 목록이라 전체 수에서 거꾸로 매긴다.
+  // 회차는 오래된 것부터 1번임. 최신순 목록이라 전체 수에서 거꾸로 매김
   let no = completionTotal;
   for (const entry of entries) {
     if (!entry.completion) continue;
@@ -257,7 +257,7 @@ export function LessonHistory({
   /** 서버에서 받아 온 수업 기록 수 */
   lessonLimit: number;
   busy?: boolean;
-  /** 회원 본인 화면 — 추가·수정·삭제 버튼을 숨긴다. */
+  /** 회원 본인 화면 — 추가·수정·삭제 버튼을 숨김 */
   readOnly?: boolean;
   onDeleteWorkout?: (workout: Workout, completionId?: string) => void;
   onDeleteCompletion?: (completion: SessionCompletion) => void;
@@ -274,7 +274,7 @@ export function LessonHistory({
   const showMore = () => {
     const next = shown + PAGE;
     setShown(next);
-    // 받아 온 것을 넘어서면 다음 묶음을 서버에서 받는다.
+    // 받아 온 것을 넘어서면 다음 묶음을 서버에서 받음
     if (next > entries.length && lessonTotal > entries.length) {
       startLoading(() =>
         router.replace(`${pathname}?lessons=${lessonLimit + PAGE}`, { scroll: false }),
@@ -561,7 +561,7 @@ const FIELDS = [
   ["숙제", "homework"],
 ] as const;
 
-/** 통증·자세·움직임·숙제를 남겨 다음 수업으로 이어간다. */
+/** 통증·자세·움직임·숙제를 남겨 다음 수업으로 이어감 */
 export function NoteSection({
   memberId,
   notes,
@@ -570,7 +570,7 @@ export function NoteSection({
 }: {
   memberId: string;
   notes: CoachingNote[];
-  /** 회원 본인 화면 — 작성·수정·삭제 버튼을 숨긴다. */
+  /** 회원 본인 화면 — 작성·수정·삭제 버튼을 숨김 */
   readOnly?: boolean;
   onDelete?: (note: CoachingNote) => void;
 }) {
@@ -649,7 +649,7 @@ export interface WeightPayload {
   memo: string | null;
 }
 
-/** 체중 기록. 맨 위가 최신이고, 그 값이 회원 요약의 최신 체중이 된다. */
+/** 체중 기록. 맨 위가 최신이고, 그 값이 회원 요약의 최신 체중이 됨 */
 export function WeightSection({
   weights,
   targetWeight,
@@ -665,7 +665,7 @@ export function WeightSection({
 }: {
   weights: WeightRecord[];
   targetWeight: number | null;
-  /** 회원 본인 화면 — 기록·삭제·목표 수정을 숨긴다. 이때 아래 핸들러는 넘기지 않는다. */
+  /** 회원 본인 화면 — 기록·삭제·목표 수정을 숨김. 이때 아래 핸들러는 넘기지 않음 */
   readOnly?: boolean;
   formOpen?: boolean;
   busy?: boolean;
@@ -845,7 +845,7 @@ function WeightForm({
 
 // ── 영양 ──────────────────────────────────
 
-/** 계산 결과를 읽는 자리. 계산 자체는 /members/:id/nutrition 화면에서 한다. */
+/** 계산 결과를 읽는 자리. 계산 자체는 /members/:id/nutrition 화면에서 함 */
 export function NutritionPanel({
   memberId,
   nutrition,
@@ -853,7 +853,7 @@ export function NutritionPanel({
 }: {
   memberId: string;
   nutrition: NutritionProfile | null;
-  /** 회원 본인 화면 — 다시 계산 버튼을 숨긴다. */
+  /** 회원 본인 화면 — 다시 계산 버튼을 숨김 */
   readOnly?: boolean;
 }) {
   const href = `/members/${memberId}/nutrition`;
@@ -1029,13 +1029,13 @@ function Chip({ children }: { children: React.ReactNode }) {
 
 // ── 체중 그래프 ─────────────────────────────
 
-// 캔버스는 브라우저에서만 그리고, 그래프 라이브러리는 화면이 뜬 뒤에 받는다.
+// 캔버스는 브라우저에서만 그리고, 그래프 라이브러리는 화면이 뜬 뒤에 받음
 const ChartCanvas = dynamic(() => import("./weight-chart-canvas"), {
   ssr: false,
   loading: () => <div className="h-48 w-full md:h-56" />,
 });
 
-/** 체중 기록이 있으면 보이는 박스. 기록은 최신순으로 받는다. */
+/** 체중 기록이 있으면 보이는 박스. 기록은 최신순으로 받음 */
 export function WeightChartCard({
   weights,
   targetWeight,
@@ -1045,7 +1045,7 @@ export function WeightChartCard({
   weights: WeightRecord[];
   targetWeight: number | null;
   busy?: boolean;
-  /** 없으면 목표를 보여 주기만 한다 (회원 본인 화면). */
+  /** 없으면 목표를 보여 주기만 함 (회원 본인 화면). */
   onSaveGoal?: (targetWeight: number | null) => void;
 }) {
   const stats = useMemo(() => getStats(weights, targetWeight), [weights, targetWeight]);
@@ -1091,13 +1091,13 @@ export function WeightChartCard({
         )}
       </div>
 
-      {/* 그래프 — 테마가 바뀌면 새로 만들어 CSS 변수 색을 다시 읽는다 */}
+      {/* 그래프 — 테마가 바뀌면 새로 만들어 CSS 변수 색을 다시 읽음 */}
       <ChartCanvas key={dark ? "dark" : "light"} stats={stats} />
     </div>
   );
 }
 
-/** 평소엔 "목표 78kg"로 보이고, 누르면 그 자리에서 숫자 칸과 저장 버튼이 된다. 모바일에서 주로 쓴다. */
+/** 평소엔 "목표 78kg"로 보이고, 누르면 그 자리에서 숫자 칸과 저장 버튼이 됨. 모바일에서 주로 씀 */
 function GoalControl({
   goal,
   busy,
@@ -1120,7 +1120,7 @@ function GoalControl({
     if (next !== (goal?.target ?? null)) onSave(next);
   };
 
-  // 폼으로 감싸서 모바일 키패드의 완료 키로도 저장된다.
+  // 폼으로 감싸서 모바일 키패드의 완료 키로도 저장됨
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     const parsed = Number(value.trim());
@@ -1259,7 +1259,7 @@ export function signed(value: number) {
   return `${value > 0 ? "+" : "−"}${Math.abs(value)}`;
 }
 
-/** 최신순 기록을 날짜순 점으로 바꾸고 요약 수치를 뽑는다. */
+/** 최신순 기록을 날짜순 점으로 바꾸고 요약 수치를 뽑음 */
 function getStats(weights: WeightRecord[], targetWeight: number | null): Stats {
   const sorted = weights
     .map((record) => ({
@@ -1291,7 +1291,7 @@ function getStats(weights: WeightRecord[], targetWeight: number | null): Stats {
         : {
             target: targetWeight,
             remaining: Math.abs(round1(last.weight - targetWeight)),
-            // 빼는 목표면 목표 이하, 찌우는 목표면 목표 이상에서 달성이다.
+            // 빼는 목표면 목표 이하, 찌우는 목표면 목표 이상에서 달성임
             reached:
               first.weight >= targetWeight
                 ? last.weight <= targetWeight

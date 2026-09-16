@@ -35,7 +35,7 @@ export default function LoginPage() {
       const result = await signIn("credentials", {
         email,
         password,
-        // 쿠키 만료는 app/api/auth/[...nextauth]/route.ts에서 이 값을 보고 정한다.
+        // 쿠키 만료는 app/api/auth/[...nextauth]/route.ts에서 이 값을 보고 정함
         remember: String(remember),
         redirect: false,
       });
@@ -43,7 +43,7 @@ export default function LoginPage() {
       if (result?.error) {
         setError("아이디 또는 비밀번호가 올바르지 않습니다.");
       } else {
-        // 역할에 맞는 첫 화면으로 바로 보낸다. 회원이 트레이너 화면을 거쳐 가지 않게.
+        // 역할에 맞는 첫 화면으로 바로 보냄. 회원이 트레이너 화면을 거쳐 가지 않게
         const session = await getSession();
         router.replace(ROLE_HOME[toRole(session?.user?.role)]);
         router.refresh();

@@ -2,7 +2,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* dark: 변형은 .dark 클래스가 있을 때만 켠다 (OS 다크 설정은 따르지 않는다) */
+/* dark: 변형은 .dark 클래스가 있을 때만 켬 (OS 다크 설정은 따르지 않음) */
 @custom-variant dark (&:is(.dark *));
 
 /* 라이트 색 (muted는 배경색, 회색 글자는 muted-foreground) */
@@ -29,7 +29,7 @@
   --ring: #1f6feb;
 }
 
-/* 다크 색 — html에 .dark가 붙으면 켜진다 */
+/* 다크 색 — html에 .dark가 붙으면 켜짐 */
 .dark {
   --background: #0e0f11;
   --foreground: #f1f2f4;
@@ -92,7 +92,7 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
 
-  /* 우리 이름 — 같은 색을 가리킨다 */
+  /* 우리 이름 — 같은 색을 가리킴 */
   --color-canvas: var(--background);
   --color-surface: var(--card);
   --color-ink: var(--foreground);
@@ -120,7 +120,7 @@
   /* 어두운 바탕 위 파랑 */
   --color-primary-bright: #6aa5ff;
 
-  /* 히어로 블록 (테마와 상관없이 어둡다) */
+  /* 히어로 블록 (테마와 상관없이 어두움) */
   --color-hero: #12120f;
   --color-hero-foreground: #f2f3f5;
 
@@ -182,7 +182,7 @@
   }
 }
 
-/* 리셋 — base 레이어 밖에 두면 Tailwind 유틸리티를 덮어쓴다 */
+/* 리셋 — base 레이어 밖에 두면 Tailwind 유틸리티를 덮어씀 */
 @layer base {
   * {
     @apply border-border outline-ring/50;

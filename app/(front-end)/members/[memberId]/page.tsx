@@ -1,5 +1,5 @@
 /*
-  회원 상세 화면 (서버) — 회원 데이터를 읽어 화면에 넘긴다
+  회원 상세 화면 (서버) — 회원 데이터를 읽어 화면에 넘김
 
   @date : 2026-09-12
 */
@@ -17,7 +17,7 @@ type Props = {
   searchParams: Promise<{ lessons?: string }>;
 };
 
-/** 회원 상세 — 서버에서 읽어 첫 화면에 바로 그린다. 읽는 동안은 뼈대를 보여 준다. */
+/** 회원 상세 — 서버에서 읽어 첫 화면에 바로 그림. 읽는 동안은 뼈대를 보여 줌 */
 export default function MemberDetailPage(props: Props) {
   return (
     <Suspense fallback={<MemberSkeleton />}>

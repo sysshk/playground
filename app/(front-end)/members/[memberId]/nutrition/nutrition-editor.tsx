@@ -90,7 +90,7 @@ export function NutritionEditor({
 }: {
   member: { id: string; name: string };
   nutrition: NutritionProfile | null;
-  /** 최신 체중 기록 — 처음 계산할 때 체중 칸을 미리 채워준다. */
+  /** 최신 체중 기록 — 처음 계산할 때 체중 칸을 미리 채워줌 */
   latestWeight: number | null;
 }) {
   const router = useRouter();

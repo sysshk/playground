@@ -14,7 +14,7 @@ type Params = { params: Promise<{ memberId: string }> };
 /** 링크 유효 기간 */
 const INVITE_DAYS = 7;
 
-/** 초대 링크 만들기. 이미 있으면 새로 만들어 이전 링크를 무효로 한다. */
+/** 초대 링크 만들기. 이미 있으면 새로 만들어 이전 링크를 무효로 함 */
 export async function POST(_request: Request, { params }: Params) {
   const { memberId } = await params;
   const { error } = await requireAdminId();
@@ -35,7 +35,7 @@ export async function POST(_request: Request, { params }: Params) {
       );
     }
 
-    // 추측할 수 없는 난수. URL에 그대로 넣을 수 있게 base64url로 만든다.
+    // 추측할 수 없는 난수. URL에 그대로 넣을 수 있게 base64url로 만듦
     const token = randomBytes(24).toString("base64url");
     const expiresAt = new Date(Date.now() + INVITE_DAYS * 24 * 60 * 60 * 1000);
 

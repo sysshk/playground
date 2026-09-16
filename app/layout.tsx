@@ -11,14 +11,14 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "PT 매니저",
   description: "개인 트레이너를 위한 회원 및 운동기록 관리 앱",
-  // basePath가 붙어 있어 manifest/아이콘 경로는 직접 지정한다.
+  // basePath가 붙어 있어 manifest/아이콘 경로는 직접 지정함
   manifest: "/pt-manager/manifest.json",
   appleWebApp: {
     capable: true,
     title: "PT 매니저",
     statusBarStyle: "default",
   },
-  // 파비콘은 브라우저가 오래 캐시한다. 로고를 바꾸면 v를 올려야 탭 아이콘이 바뀐다.
+  // 파비콘은 브라우저가 오래 캐시함. 로고를 바꾸면 v를 올려야 탭 아이콘이 바뀜
   icons: {
     icon: "/pt-manager/favicon.ico?v=2",
     apple: "/pt-manager/icons/apple-touch-icon.png?v=2",
@@ -42,10 +42,10 @@ export default function RootLayout({
   return (
     <html lang="ko" suppressHydrationWarning>
       <head>
-        {/* Pretendard를 직접 호스팅한다. 동적 서브셋이라 92개 파일로 쪼개져 있고, */}
+        {/* Pretendard를 직접 호스팅함. 동적 서브셋이라 92개 파일로 쪼개져 있고, */}
         {/* eslint-disable-next-line @next/next/no-css-tags -- 92개 서브셋 파일을 참조하는 */}
         <link rel="stylesheet" href="/pt-manager/fonts/pretendard.css" />
-        {/* 저장해 둔 테마를 첫 페인트 전에 입혀 화면이 번쩍이지 않게 한다. */}
+        {/* 저장해 둔 테마를 첫 페인트 전에 입혀 화면이 번쩍이지 않게 함 */}
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body>{children}</body>

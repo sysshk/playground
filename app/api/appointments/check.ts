@@ -1,5 +1,5 @@
 /*
-  API 공통 — 수업 예약 입력 검증과 겹침 확인 (등록·수정이 함께 쓴다)
+  API 공통 — 수업 예약 입력 검증과 겹침 확인 (등록·수정이 함께 씀)
 
   @date : 2026-09-15
 */
@@ -10,10 +10,10 @@ import type { MemberScope } from "@/lib/auth";
 import { kstTimeLabel } from "@/lib/kst";
 import { prisma } from "@/lib/prisma";
 
-/** 메모는 달력 한 줄에 보이는 값이라 길게 받지 않는다. */
+/** 메모는 달력 한 줄에 보이는 값이라 길게 받지 않음 */
 const MEMO_MAX = 40;
 
-/** 트레이너는 한 번에 한 수업만 한다. 예약끼리 이만큼은 벌어져야 한다. */
+/** 트레이너는 한 번에 한 수업만 함. 예약끼리 이만큼은 벌어져야 함 */
 const GAP = 60 * 60 * 1000;
 
 type Checked =
@@ -21,9 +21,9 @@ type Checked =
   | { data: null; error: NextResponse };
 
 /**
- * 예약 요청을 검증한다. 회원은 다룰 수 있는 범위(scope) 안이어야 하고,
- * 그 회원 담당 트레이너의 다른 수업·예약과 1시간 안으로 겹치면 거절한다.
- * 관리자가 대신 잡아도 기준은 담당 트레이너의 일정이다. 수정할 때는 selfId로 자기 자신을 뺀다.
+ * 예약 요청을 검증함. 회원은 다룰 수 있는 범위(scope) 안이어야 하고,
+ * 그 회원 담당 트레이너의 다른 수업·예약과 1시간 안으로 겹치면 거절함
+ * 관리자가 대신 잡아도 기준은 담당 트레이너의 일정임. 수정할 때는 selfId로 자기 자신을 뺌
  */
 export async function checkAppointment(
   body: unknown,
@@ -40,7 +40,7 @@ export async function checkAppointment(
   if (Number.isNaN(startsAt.getTime())) {
     return fail(badRequest("예약 시각이 올바르지 않습니다."));
   }
-  // 창을 열어 둔 사이 시각이 지나도 받도록 1시간은 봐준다.
+  // 창을 열어 둔 사이 시각이 지나도 받도록 1시간은 봐줌
   if (startsAt.getTime() < Date.now() - GAP) {
     return fail(badRequest("지난 시각에는 예약할 수 없습니다."));
   }

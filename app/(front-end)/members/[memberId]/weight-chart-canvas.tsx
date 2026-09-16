@@ -1,6 +1,6 @@
 /*
   회원 상세·내 기록 화면 — 체중 그래프 캔버스 (Chart.js 설정·점 숫자·목표선)
-  그래프 라이브러리가 커서 member-sections가 화면이 뜬 뒤에 이 파일을 따로 받는다.
+  그래프 라이브러리가 커서 member-sections가 화면이 뜬 뒤에 이 파일을 따로 받음
 
   @date : 2026-09-15
 */
@@ -24,7 +24,7 @@ import { signed, type Stats } from "./member-sections";
 
 ChartJS.register(LinearScale, PointElement, LineElement, Tooltip);
 
-/** 점 위 숫자는 이 개수까지만 모두 붙이고, 넘으면 최신 값만 붙인다. */
+/** 점 위 숫자는 이 개수까지만 모두 붙이고, 넘으면 최신 값만 붙임 */
 const LABEL_ALL_LIMIT = 8;
 
 export default function WeightChartCanvas({ stats }: { stats: Stats }) {
@@ -34,7 +34,7 @@ export default function WeightChartCanvas({ stats }: { stats: Stats }) {
     <div className="relative h-48 w-full md:h-56">
       {chart && (
         <Line
-          // 플러그인(점 숫자·목표선)은 차트를 만들 때만 들어가서, 값이 바뀌면 새로 만든다.
+          // 플러그인(점 숫자·목표선)은 차트를 만들 때만 들어가서, 값이 바뀌면 새로 만듦
           redraw
           data={chart.data}
           options={chart.options}
@@ -61,7 +61,7 @@ type Colors = {
   font: string;
 };
 
-/** 캔버스는 CSS 변수를 못 읽어서 지금 테마의 값을 꺼내 넘긴다. */
+/** 캔버스는 CSS 변수를 못 읽어서 지금 테마의 값을 꺼내 넘김 */
 function readColors(): Colors {
   const style = getComputedStyle(document.documentElement);
   const read = (name: string) => style.getPropertyValue(name).trim();
@@ -94,12 +94,12 @@ function buildChart(stats: Stats): {
   const colors = readColors();
   const { points, first, last, goal } = stats;
   const lastIndex = points.length - 1;
-  // 기록이 하루뿐이면 폭이 0이라 하루 폭을 준다.
+  // 기록이 하루뿐이면 폭이 0이라 하루 폭을 줌
   const span = Math.max(last.time - first.time, 86_400_000);
-  // 목표선이 보이도록 세로 범위에 목표도 넣는다.
+  // 목표선이 보이도록 세로 범위에 목표도 넣음
   const min = Math.min(stats.min, goal?.target ?? Infinity);
   const max = Math.max(stats.max, goal?.target ?? -Infinity);
-  // 눈금 간격을 범위에 맞춰 고르고, 위아래 끝도 그 간격에 맞춰 자른다.
+  // 눈금 간격을 범위에 맞춰 고르고, 위아래 끝도 그 간격에 맞춰 자름
   const range = max - min;
   const step = range <= 3 ? 0.5 : range <= 6 ? 1 : range <= 12 ? 2 : 5;
   const yMin = Math.floor((min - step * 0.5) / step) * step;
