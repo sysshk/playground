@@ -470,10 +470,11 @@ function SetGrid({ exercises }: { exercises: Exercise[] }) {
               <span className={`${body} ${pinNo} text-center text-xs font-semibold text-subtle`}>
                 {index + 1}
               </span>
+              {/* 폰에서는 이름과 배지를 두 줄로 쌓아 종목 칸 폭을 줄임 */}
               <span
-                className={`${body} ${pinName} flex items-center gap-2 px-3 text-sm font-semibold`}
+                className={`${body} ${pinName} flex max-w-36 flex-col items-start justify-center gap-1 px-3 text-sm font-semibold md:max-w-none md:flex-row md:items-center md:justify-start md:gap-2`}
               >
-                <span>{exercise.name}</span>
+                <span className="whitespace-normal break-keep md:whitespace-nowrap">{exercise.name}</span>
                 {bodyweightOnly && <BodyweightBadge />}
               </span>
 
