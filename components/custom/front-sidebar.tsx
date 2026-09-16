@@ -20,7 +20,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { BASE_PATH } from "@/lib/client";
-import type { Role } from "@/lib/types";
+import { ROLE_HOME, type Role } from "@/lib/types";
 
 /** 역할별 메뉴. 회원(client)은 자기 기록 하나만 본다. */
 const NAV: { href: string; label: string; icon: IconName; roles: Role[] }[] = [
@@ -240,9 +240,12 @@ function Brand({
   /** 같은 마크가 둘이면 그라데이션 id가 겹친다. */
   gradientId?: string;
 }) {
+  const { data: session } = useSession();
+  const role = session?.user.role;
+
   return (
     <Link
-      href="/members"
+      href={role ? ROLE_HOME[role] : "/"}
       onClick={onNavigate}
       className="flex min-w-0 items-center gap-2.5 px-1 py-1"
     >

@@ -6,7 +6,7 @@
 
 "use client";
 
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -15,6 +15,7 @@ import { LogoMark } from "@/components/custom/logo";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/custom/form-field";
 import { SIGNUP_ENABLED } from "@/lib/config";
+import { ROLE_HOME, toRole } from "@/lib/types";
 
 import { Input } from "@/components/ui/input";
 export default function LoginPage() {
@@ -42,7 +43,9 @@ export default function LoginPage() {
       if (result?.error) {
         setError("아이디 또는 비밀번호가 올바르지 않습니다.");
       } else {
-        router.push("/members");
+        // 역할에 맞는 첫 화면으로 바로 보낸다. 회원이 트레이너 화면을 거쳐 가지 않게.
+        const session = await getSession();
+        router.replace(ROLE_HOME[toRole(session?.user?.role)]);
         router.refresh();
       }
     } catch {

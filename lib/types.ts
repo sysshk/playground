@@ -20,6 +20,13 @@ export const ROLE_LABEL: Record<Role, string> = {
   client: "회원",
 };
 
+/** 로그인하고 처음 가는 화면. 회원 목록(/members)은 트레이너·관리자 화면이다. */
+export const ROLE_HOME: Record<Role, string> = {
+  admin: "/members",
+  trainer: "/members",
+  client: "/me",
+};
+
 /** 모르는 값은 가장 권한이 적은 회원으로 본다. */
 export function toRole(value: unknown): Role {
   return value === "admin" || value === "trainer" ? value : "client";
