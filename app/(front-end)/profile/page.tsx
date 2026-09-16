@@ -22,10 +22,14 @@ export default async function ProfilePage() {
       email: true,
       createdAt: true,
       phone: true,
+      accounts: { select: { provider: true } },
       memberRecord: { select: { phone: true } },
     },
   });
   if (!user) redirect("/login");
+
+  // 구글로 가입하면 Account에 google 기록이 생김. 없으면 이메일·비밀번호 계정
+  const google = user.accounts.some((a) => a.provider === "google");
 
   return (
     <div className="mx-auto flex w-full max-w-[560px] flex-col gap-6">
@@ -38,6 +42,8 @@ export default async function ProfilePage() {
       <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 rounded-2xl border border-edge bg-surface px-5 py-4 text-sm">
         <dt className="text-muted-foreground">이메일</dt>
         <dd className="min-w-0 truncate font-semibold">{user.email}</dd>
+        <dt className="text-muted-foreground">로그인</dt>
+        <dd className="font-semibold">{google ? "구글 계정으로 로그인" : "이메일·비밀번호"}</dd>
         <dt className="text-muted-foreground">권한</dt>
         <dd className="font-semibold">{ROLE_LABEL[viewer.role]}</dd>
         <dt className="text-muted-foreground">가입일</dt>
