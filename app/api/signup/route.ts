@@ -8,6 +8,8 @@ import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { SIGNUP_ENABLED } from "@/lib/config"
+import { isEmail, PASSWORD_MIN } from "@/lib/account"
+import { toTrimmed } from "@/lib/api"
 
 export async function POST(request: Request) {
   // 화면을 막는 것만으로는 부족함. API로 직접 호출해도 막혀야 함
@@ -19,22 +21,32 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { user_id, password, name } = await request.json()
+    const body = await request.json().catch(() => ({}))
+    const email = toTrimmed(body?.email)?.toLowerCase()
+    const password = typeof body?.password === "string" ? body.password : ""
+    const name = toTrimmed(body?.name)
 
-    if (!user_id || !password) {
+    if (!email || !isEmail(email)) {
       return NextResponse.json(
-        { error: "아이디와 비밀번호는 필수입니다." },
+        { error: "이메일 주소를 정확히 입력해 주세요." },
+        { status: 400 }
+      )
+    }
+    if (password.length < PASSWORD_MIN) {
+      return NextResponse.json(
+        { error: `비밀번호는 ${PASSWORD_MIN}자 이상으로 입력해 주세요.` },
         { status: 400 }
       )
     }
 
     const existingUser = await prisma.user.findUnique({
-      where: { email: user_id }, // DB에서는 email 컬럼 사용
+      where: { email },
+      select: { id: true },
     })
 
     if (existingUser) {
       return NextResponse.json(
-        { error: "이미 존재하는 아이디입니다." },
+        { error: "이미 가입된 이메일입니다." },
         { status: 400 }
       )
     }
@@ -43,7 +55,7 @@ export async function POST(request: Request) {
 
     const user = await prisma.user.create({
       data: {
-        email: user_id, // DB에서는 email 컬럼에 user_id 저장
+        email,
         password: hashedPassword,
         name,
         // 가입은 누구나 회원으로 시작함. 트레이너 권한은 관리자가 계정 관리에서 줌
@@ -54,7 +66,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         message: "회원가입이 완료되었습니다.",
-        user: { id: user.id, user_id: user.email, name: user.name }
+        user: { id: user.id, email: user.email, name: user.name }
       },
       { status: 201 }
     )

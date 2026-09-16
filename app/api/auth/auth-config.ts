@@ -64,9 +64,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null
         }
 
+        // 가입할 때 소문자로 저장하므로 찾을 때도 맞춤
         const user = await prisma.user.findUnique({
           where: {
-            email: credentials.email as string,
+            email: String(credentials.email).trim().toLowerCase(),
           },
         })
 

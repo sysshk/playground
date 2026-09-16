@@ -14,6 +14,7 @@ import { Field } from "@/components/custom/form-field";
 import { BASE_PATH } from "@/lib/client";
 
 import { Input } from "@/components/ui/input";
+import { isEmail, PASSWORD_MIN } from "@/lib/account";
 export default function JoinPage() {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -27,13 +28,18 @@ export default function JoinPage() {
     e.preventDefault();
     setError("");
 
+    if (!isEmail(email.trim())) {
+      setError("이메일 주소를 정확히 입력해 주세요.");
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError("비밀번호가 일치하지 않습니다.");
       return;
     }
 
-    if (password.length < 6) {
-      setError("비밀번호는 최소 6자 이상이어야 합니다.");
+    if (password.length < PASSWORD_MIN) {
+      setError(`비밀번호는 ${PASSWORD_MIN}자 이상으로 입력해 주세요.`);
       return;
     }
 
@@ -43,7 +49,7 @@ export default function JoinPage() {
       const response = await fetch(`${BASE_PATH}/api/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: email, password, name }),
+        body: JSON.stringify({ email: email.trim(), password, name }),
       });
 
       const data = await response.json();
@@ -111,13 +117,14 @@ export default function JoinPage() {
               />
             </Field>
 
-            <Field label="아이디" required>
+            <Field label="이메일" required hint="로그인할 때 이 이메일을 씁니다">
               <Input
-                type="text"
+                type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="trainer@example.com"
-                autoComplete="username"
+                placeholder="name@example.com"
+                autoComplete="email"
+                autoCapitalize="none"
                 required
               />
             </Field>
@@ -127,7 +134,7 @@ export default function JoinPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="6자 이상 입력하세요"
+                placeholder={`${PASSWORD_MIN}자 이상 입력하세요`}
                 autoComplete="new-password"
                 required
               />

@@ -1,5 +1,5 @@
 /*
-  초대 링크 화면 (서버) — 트레이너가 보낸 링크로 들어온 회원이 아이디를 만듦
+  초대 링크 화면 (서버) — 트레이너가 보낸 링크로 들어온 회원이 이메일로 계정을 만듦
 
   @date : 2026-09-15
 */
@@ -28,7 +28,7 @@ export default async function InvitePage({
                 {invite.memberName}님, 반가워요
               </h1>
               <p className="mt-2 text-base text-muted-foreground">
-                아이디를 만들면 수업 기록과 체중 변화를 언제든 볼 수 있어요.
+                이메일로 계정을 만들면 수업 기록과 체중 변화를 언제든 볼 수 있어요.
               </p>
             </>
           ) : (
@@ -50,7 +50,7 @@ export default async function InvitePage({
             href="/login"
             className="mt-8 flex h-10 items-center justify-center rounded-lg border border-edge text-sm font-bold transition-colors hover:bg-raised"
           >
-            이미 아이디가 있으면 로그인
+            이미 계정이 있으면 로그인
           </Link>
         )}
       </div>

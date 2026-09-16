@@ -1,5 +1,5 @@
 /*
-  초대 링크 화면 — 아이디·비밀번호 입력 폼. 만들고 나면 바로 로그인해 내 기록으로 감
+  초대 링크 화면 — 이메일·비밀번호 입력 폼. 만들고 나면 바로 로그인해 내 기록으로 감
 
   @date : 2026-09-15
 */
@@ -61,7 +61,7 @@ export function InviteForm({ token }: { token: string }) {
       router.push("/me");
       router.refresh();
     } catch (e) {
-      setError(errorMessage(e, "아이디를 만들지 못했습니다."));
+      setError(errorMessage(e, "계정을 만들지 못했습니다."));
     } finally {
       setLoading(false);
     }
@@ -69,7 +69,7 @@ export function InviteForm({ token }: { token: string }) {
 
   return (
     <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
-      <Field label="이메일" required hint="로그인 아이디로 씁니다">
+      <Field label="이메일" required hint="로그인할 때 이 이메일을 씁니다">
         <Input
           id="invite-email"
           type="email"

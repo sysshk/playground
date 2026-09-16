@@ -33,7 +33,7 @@ export default function LoginPage() {
 
     try {
       const result = await signIn("credentials", {
-        email,
+        email: email.trim().toLowerCase(),
         password,
         // 쿠키 만료는 app/api/auth/[...nextauth]/route.ts에서 이 값을 보고 정함
         remember: String(remember),
@@ -41,7 +41,7 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError("아이디 또는 비밀번호가 올바르지 않습니다.");
+        setError("이메일 또는 비밀번호가 올바르지 않습니다.");
       } else {
         // 역할에 맞는 첫 화면으로 바로 보냄. 회원이 트레이너 화면을 거쳐 가지 않게
         const session = await getSession();
@@ -79,18 +79,19 @@ export default function LoginPage() {
               PT 매니저에 로그인
             </h1>
             <p className="mt-2 text-base text-muted-foreground">
-              트레이너 또는 회원 아이디로 로그인하세요.
+              가입한 이메일로 로그인하세요.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
-            <Field label="아이디" required>
+            <Field label="이메일" required>
               <Input
-                type="text"
+                type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="trainer@example.com"
+                placeholder="name@example.com"
                 autoComplete="username"
+                autoCapitalize="none"
                 required
               />
             </Field>
