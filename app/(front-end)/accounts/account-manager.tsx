@@ -315,20 +315,22 @@ export function AccountManager({
                         <span className="text-xs text-subtle">연결할 가입 계정 없음</span>
                       )
                     ) : member.invite ? (
-                      <Line>
+                      <div className="flex flex-col items-center gap-0.5">
                         <span className="text-xs font-bold text-goal">
                           초대 중 · {formatDayShort(member.invite.expiresAt)}까지
                         </span>
-                        <TextButton
-                          tone="primary"
-                          onClick={() => copy(inviteUrl(member.invite!.token), "초대 링크를 복사했습니다.")}
-                        >
-                          링크 복사
-                        </TextButton>
-                        <TextButton tone="danger" disabled={locked} onClick={() => cancelInvite(member)}>
-                          취소
-                        </TextButton>
-                      </Line>
+                        <Line>
+                          <TextButton
+                            tone="primary"
+                            onClick={() => copy(inviteUrl(member.invite!.token), "초대 링크를 복사했습니다.")}
+                          >
+                            링크 복사
+                          </TextButton>
+                          <TextButton tone="danger" disabled={locked} onClick={() => cancelInvite(member)}>
+                            취소
+                          </TextButton>
+                        </Line>
+                      </div>
                     ) : (
                       <Line>
                         <span className="text-xs text-subtle">미연결</span>
