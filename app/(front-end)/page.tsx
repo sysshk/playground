@@ -10,14 +10,20 @@ import { Icon } from "@/components/custom/icons";
 import Logo from "@/components/custom/logo";
 import { asset } from "@/lib/client";
 import { ThemeToggle } from "@/components/custom/theme";
+import { getViewer } from "@/lib/auth";
 import { SIGNUP_ENABLED } from "@/lib/config";
+import { ROLE_HOME, type Role } from "@/lib/types";
 
 /** 소개 본문 글자 */
 const BODY = "mt-5 max-w-[520px] text-md leading-[1.8] text-muted-foreground sm:text-lg";
-/** 주요 버튼 */
-/** 로그인하면 프록시가 회원 목록으로 보내 줌 */
-const START_HREF = SIGNUP_ENABLED ? "/join" : "/login";
-const START_LABEL = SIGNUP_ENABLED ? "무료로 시작하기" : "로그인하고 시작하기";
+/** 시작 버튼 — 로그인했으면 역할에 맞는 첫 화면으로 */
+function startLink(role: Role | null) {
+  if (role === "client") return { href: ROLE_HOME.client, label: "내 기록 보기" };
+  if (role) return { href: ROLE_HOME[role], label: "회원 관리로 이동" };
+  return SIGNUP_ENABLED
+    ? { href: "/join", label: "무료로 시작하기" }
+    : { href: "/login", label: "로그인하고 시작하기" };
+}
 
 const CTA = "inline-flex h-12 items-center gap-2 rounded-xl px-6 text-md font-bold transition-colors";
 
@@ -51,7 +57,10 @@ const ROWS = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const viewer = await getViewer();
+  const start = startLink(viewer?.role ?? null);
+
   return (
     <div className="bg-surface">
       {/* ── 히어로 ───────────────────────────── */}
@@ -90,8 +99,8 @@ export default function HomePage() {
             </p>
 
             <div className="mt-9">
-              <Link href={START_HREF} className={`${CTA} bg-action text-action-foreground hover:bg-action-hover`}>
-                {START_LABEL}
+              <Link href={start.href} className={`${CTA} bg-action text-action-foreground hover:bg-action-hover`}>
+                {start.label}
                 <Icon name="arrowRight" size={17} />
               </Link>
             </div>
@@ -198,8 +207,8 @@ export default function HomePage() {
           <p className="max-w-[600px] text-md leading-[1.75] text-white/60 sm:text-lg">
             브라우저에서 바로 열립니다. 홈 화면에 추가하면 앱처럼 쓸 수 있습니다.
           </p>
-          <Link href={START_HREF} className={`mt-2 ${CTA} bg-white text-hero hover:bg-white/90`}>
-            {START_LABEL}
+          <Link href={start.href} className={`mt-2 ${CTA} bg-white text-hero hover:bg-white/90`}>
+            {start.label}
             <Icon name="arrowRight" size={17} />
           </Link>
         </div>
