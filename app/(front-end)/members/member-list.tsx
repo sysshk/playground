@@ -259,7 +259,7 @@ export function MemberList({
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="이름, 연락처, 목표로 검색"
                 aria-label="회원 검색"
-                className="h-11 w-full rounded-lg border-[1.5px] border-edge bg-surface pl-9 pr-3 text-sm outline-none transition-colors placeholder:text-subtle focus:border-primary"
+                className="h-11 w-full rounded-lg border-[1.5px] border-edge bg-field pl-9 pr-3 text-sm outline-none transition-colors placeholder:text-subtle focus:border-primary"
               />
             </div>
           )}

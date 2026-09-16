@@ -809,7 +809,7 @@ function WeightForm({
         />
         <div className="flex items-center gap-1.5">
           <input
-            className="w-24 rounded-xl border border-line bg-surface px-3 py-2 text-center text-md font-bold outline-none focus:border-primary"
+            className="w-24 rounded-xl border border-line bg-field px-3 py-2 text-center text-md font-bold outline-none focus:border-primary"
             value={weight}
             onChange={(e) => {
               setWeight(e.target.value);
@@ -1145,7 +1145,7 @@ function GoalControl({
             inputMode="decimal"
             enterKeyHint="done"
             autoFocus
-            className="h-10 w-20 rounded-lg border border-goal bg-surface px-2 text-right text-lg font-extrabold tabular-nums text-goal outline-none"
+            className="h-10 w-20 rounded-lg border border-goal bg-field px-2 text-right text-lg font-extrabold tabular-nums text-goal outline-none"
           />
           <span className="text-sm font-bold text-muted-foreground">kg</span>
         </div>

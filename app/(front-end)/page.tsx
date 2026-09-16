@@ -88,7 +88,7 @@ export default function HomePage() {
             </p>
 
             <div className="mt-9">
-              <Link href={START_HREF} className={`${CTA} bg-primary text-white hover:bg-primary-dark`}>
+              <Link href={START_HREF} className={`${CTA} bg-action text-action-foreground hover:bg-action-hover`}>
                 {START_LABEL}
                 <Icon name="arrowRight" size={17} />
               </Link>
@@ -354,7 +354,7 @@ function AppPreview() {
         </div>
 
         {/* 수업 완료 */}
-        <div className="flex items-center justify-center gap-1.5 rounded-xl bg-primary-dark py-3 text-xs font-bold text-white">
+        <div className="flex items-center justify-center gap-1.5 rounded-xl bg-action py-3 text-xs font-bold text-action-foreground">
           <Icon name="check" size={14} />
           운동 기록 저장 · 수업 1회 완료
         </div>

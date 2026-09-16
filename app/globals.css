@@ -32,6 +32,9 @@
   --action: #1f6feb;
   --action-foreground: #ffffff;
   --action-hover: #1857c4;
+
+  /* 입력칸 바탕 — 다크에서는 카드보다 한 단계 어둡게 */
+  --field: #ffffff;
 }
 
 /* 다크 색 — html에 .dark가 붙으면 켜짐 */
@@ -42,33 +45,34 @@
   --card-foreground: #ededf0;
   --popover: #15171a;
   --popover-foreground: #ededf0;
-  --primary: #5b8def;
-  --primary-foreground: #ffffff;
+  --primary: #6f9ef2;
+  --primary-foreground: #111316;
   --secondary: #212328;
   --secondary-foreground: #ededf0;
   --muted: #212328;
   --muted-foreground: #a4a9b1;
   --accent: #212328;
   --accent-foreground: #ededf0;
-  --destructive: #ef8f8f;
+  --destructive: #f87171;
   --border: #282b30;
   --input: #282b30;
-  --ring: #9dbcf2;
+  --ring: #6f9ef2;
 
-  --action: #e9ebee;
+  --action: #c9cdd3;
   --action-foreground: #111316;
-  --action-hover: #d2d5da;
+  --action-hover: #b5bac1;
+  --field: #0f1012;
 
   --color-edge: #33363c;
-  --color-primary-bright: #9dbcf2;
-  --color-primary-dark: #4a7fe0;
+  --color-primary-bright: #8db2f0;
+  --color-primary-dark: #8db2f0;
   --color-primary-light: #1b2130;
   --color-subtle: #80868f;
   --color-line-strong: #3a3e45;
   --color-inverse: #ededf0;
   --color-danger-dark: #fca5a5;
   --color-warning: #d9a441;
-  --color-goal: #f0894d;
+  --color-goal: #f07a3a;
 
   --color-hero: #1a1c20;
   --color-chip: #26292e;
@@ -97,6 +101,7 @@
   --color-action: var(--action);
   --color-action-foreground: var(--action-foreground);
   --color-action-hover: var(--action-hover);
+  --color-field: var(--field);
 
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);

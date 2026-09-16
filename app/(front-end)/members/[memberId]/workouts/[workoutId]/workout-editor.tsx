@@ -432,7 +432,7 @@ export function WorkoutEditor({
         {sessionOnly && !workout && (
           <div className="flex flex-col gap-2.5">
             <input
-              className="h-12 w-full rounded-xl border-[1.5px] border-edge bg-surface px-3.5 text-base outline-none transition-colors placeholder:text-subtle focus:border-primary"
+              className="h-12 w-full rounded-xl border-[1.5px] border-edge bg-field px-3.5 text-base outline-none transition-colors placeholder:text-subtle focus:border-primary"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="사유 — 상담, 체형 평가 등 (선택)"
@@ -455,7 +455,7 @@ export function WorkoutEditor({
         )}
 
         <textarea
-          className="h-24 w-full resize-none rounded-xl border-[1.5px] border-edge bg-surface px-3.5 py-3 text-base outline-none transition-colors placeholder:text-subtle focus:border-primary"
+          className="h-24 w-full resize-none rounded-xl border-[1.5px] border-edge bg-field px-3.5 py-3 text-base outline-none transition-colors placeholder:text-subtle focus:border-primary"
           value={memo}
           onChange={(e) => setMemo(e.target.value)}
           placeholder="메모 — 폼 체크, 컨디션 등"

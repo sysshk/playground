@@ -264,7 +264,7 @@ export function LessonCalendar({
                 <span
                   className={`grid size-6 shrink-0 place-items-center rounded-full text-xs font-semibold tabular-nums ${
                     day === today
-                      ? "bg-primary text-white"
+                      ? "bg-primary text-primary-foreground"
                       : i % 7 === 0 || holiday
                         ? "text-danger"
                         : "text-muted-foreground"
@@ -535,7 +535,7 @@ function BookingForm({
           onChange={(e) => setMemo(e.target.value)}
           placeholder="예: 하체 위주, 인바디 측정"
           maxLength={40}
-          className="h-11 w-full rounded-lg border-[1.5px] border-edge bg-surface px-3 text-sm outline-none transition-colors placeholder:text-subtle focus:border-primary"
+          className="h-11 w-full rounded-lg border-[1.5px] border-edge bg-field px-3 text-sm outline-none transition-colors placeholder:text-subtle focus:border-primary"
         />
       </Field>
 

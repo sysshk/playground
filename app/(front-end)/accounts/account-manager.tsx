@@ -714,7 +714,7 @@ function InviteBox({ name, url, onClose }: { name: string; url: string; onClose:
         </button>
       </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
-        <code className="min-w-0 flex-1 select-all break-all rounded-lg border border-line bg-surface px-3 py-2 font-mono dark:bg-canvas text-xs text-ink sm:text-sm">
+        <code className="min-w-0 flex-1 select-all break-all rounded-lg border border-line bg-field px-3 py-2 font-mono text-xs text-ink sm:text-sm">
           {url}
         </code>
         <button
