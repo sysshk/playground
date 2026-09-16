@@ -516,7 +516,7 @@ function SetChip({
       ) : (
         <>
           {set.unit === "bodyweight" ? (
-            <span className="mr-1 text-2xs font-semibold text-subtle">바디웨이트</span>
+            <span className="mr-1 text-xs font-bold text-ink">바디웨이트</span>
           ) : (
             <>
               <Num>{set.weight}</Num>
@@ -524,10 +524,8 @@ function SetChip({
               <span className="mx-0.5 text-2xs text-subtle">×</span>
             </>
           )}
-          <span className="text-xs font-semibold text-muted-foreground">
-            {set.reps}
-            <Unit>회</Unit>
-          </span>
+          <Num>{set.reps}</Num>
+          <Unit>회</Unit>
         </>
       )}
     </span>
