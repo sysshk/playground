@@ -9,8 +9,7 @@ import type { WeightUnit } from "@/lib/types";
 /** 세트 한 줄. 입력 중에는 전부 문자열로 들고 있다가 저장할 때 숫자로 바꿈 */
 export interface SetRow {
   reps: string; // 횟수
-  weight: string; // 무게 kg, 바디웨이트면 빈 값
-  bodyweight: boolean; // 켜면 무게 없이 한 세트
+  weight: string; // 무게 kg, 비워 두면 바디웨이트
 }
 
 /** 종목 한 덩어리 */
