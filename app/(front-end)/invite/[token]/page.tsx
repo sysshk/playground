@@ -1,13 +1,13 @@
 /*
-  초대 링크 화면 (서버) — 트레이너가 보낸 링크로 들어온 회원이 이메일로 계정을 만듦
+  초대 링크 화면 (서버) — 트레이너가 보낸 링크로 들어온 회원이 구글 계정으로 가입함
 
   @date : 2026-09-15
 */
 
 import Link from "next/link";
+import { GoogleButton } from "@/components/custom/google-button";
 import { LogoMark } from "@/components/custom/logo";
 import { getInvite } from "@/lib/queries";
-import { InviteForm } from "./invite-form";
 
 export default async function InvitePage({
   params,
@@ -28,7 +28,7 @@ export default async function InvitePage({
                 {invite.memberName}님, 반가워요
               </h1>
               <p className="mt-2 text-base text-muted-foreground">
-                이메일로 계정을 만들면 수업 기록과 체중 변화를 언제든 볼 수 있어요.
+                구글 계정으로 시작하면 수업 기록과 체중 변화를 언제든 볼 수 있어요.
               </p>
             </>
           ) : (
@@ -44,7 +44,9 @@ export default async function InvitePage({
         </div>
 
         {invite ? (
-          <InviteForm token={token} />
+          <div className="mt-8 flex flex-col">
+            <GoogleButton />
+          </div>
         ) : (
           <Link
             href="/login"
