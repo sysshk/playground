@@ -7,10 +7,12 @@
 import { EmptyState } from "@/components/custom/empty-state";
 import { requireClient } from "@/lib/auth";
 import { getMyRecord, lessonLimit } from "@/lib/queries";
-import { NoteSection } from "../members/[memberId]/_components/note-section";
-import NutritionPanel from "../members/[memberId]/_components/nutrition-panel";
-import { LessonHistory } from "../members/[memberId]/_components/lesson-history";
-import { WeightSection } from "../members/[memberId]/_components/weight-section";
+import {
+  LessonHistory,
+  NoteSection,
+  NutritionPanel,
+  WeightSection,
+} from "../members/[memberId]/member-sections";
 
 export default async function MyRecordPage({
   searchParams,

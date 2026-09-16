@@ -1,5 +1,5 @@
 /*
-  회원 화면 공통 — 데이터를 못 읽었을 때
+  공통 — 화면을 못 불러왔을 때 (회원·계정 관리·내 기록 등 모든 화면)
 
   @date : 2026-09-14
 */
@@ -11,8 +11,8 @@ import { useTransition } from "react";
 import { EmptyState } from "@/components/custom/empty-state";
 import { Button } from "@/components/ui/button";
 
-/** 회원 화면에서 데이터를 못 읽었을 때 */
-export default function MembersError({ reset }: { reset: () => void }) {
+/** 화면을 못 불러왔을 때 — 다시 시도 버튼 하나 */
+export default function ErrorScreen({ reset }: { reset: () => void }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 

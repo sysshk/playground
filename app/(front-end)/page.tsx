@@ -9,11 +9,15 @@ import Image from "next/image";
 import { Icon } from "@/components/custom/icons";
 import Logo from "@/components/custom/logo";
 import { asset } from "@/lib/client";
-import { StartLink } from "./start-link";
+import { SIGNUP_ENABLED } from "@/lib/config";
 
 /** 소개 본문 글자 */
 const BODY = "mt-5 max-w-[520px] text-md leading-[1.8] text-muted-foreground sm:text-lg";
 /** 주요 버튼 */
+/** 로그인하면 프록시가 회원 목록으로 보내 준다. */
+const START_HREF = SIGNUP_ENABLED ? "/join" : "/login";
+const START_LABEL = SIGNUP_ENABLED ? "무료로 시작하기" : "로그인하고 시작하기";
+
 const CTA = "inline-flex h-12 items-center gap-2 rounded-xl px-6 text-md font-bold transition-colors";
 
 const STATS = [
@@ -84,7 +88,10 @@ export default function HomePage() {
             </p>
 
             <div className="mt-9">
-              <StartLink className={`${CTA} bg-primary text-white hover:bg-primary-dark`} />
+              <Link href={START_HREF} className={`${CTA} bg-primary text-white hover:bg-primary-dark`}>
+                {START_LABEL}
+                <Icon name="arrowRight" size={17} />
+              </Link>
             </div>
           </div>
         </div>
@@ -189,7 +196,10 @@ export default function HomePage() {
           <p className="max-w-[600px] text-md leading-[1.75] text-white/60 sm:text-lg">
             브라우저에서 바로 열립니다. 홈 화면에 추가하면 앱처럼 쓸 수 있습니다.
           </p>
-          <StartLink className={`mt-2 ${CTA} bg-white text-hero hover:bg-white/90`} />
+          <Link href={START_HREF} className={`mt-2 ${CTA} bg-white text-hero hover:bg-white/90`}>
+            {START_LABEL}
+            <Icon name="arrowRight" size={17} />
+          </Link>
         </div>
       </section>
 

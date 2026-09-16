@@ -1,6 +1,6 @@
 /*
   회원 상세·내 기록 화면 — 체중 그래프 캔버스 (Chart.js 설정·점 숫자·목표선)
-  그래프 라이브러리가 커서 weight-chart가 화면이 뜬 뒤에 이 파일을 따로 받는다.
+  그래프 라이브러리가 커서 member-sections가 화면이 뜬 뒤에 이 파일을 따로 받는다.
 
   @date : 2026-09-15
 */
@@ -20,7 +20,7 @@ import {
 import { useMemo } from "react";
 import { Line } from "react-chartjs-2";
 import { formatDateShort } from "@/lib/client";
-import { signed, type Stats } from "./weight-chart";
+import { signed, type Stats } from "./member-sections";
 
 ChartJS.register(LinearScale, PointElement, LineElement, Tooltip);
 

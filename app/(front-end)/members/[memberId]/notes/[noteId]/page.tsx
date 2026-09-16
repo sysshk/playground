@@ -4,16 +4,30 @@
   @date : 2026-09-12
 */
 
+import { Suspense } from "react";
 import { requireTrainer } from "@/lib/auth";
 import { getNoteEditor } from "@/lib/queries";
-import { EditorMissing } from "../../_components/editor-frame";
-import { NoteEditor } from "../note-editor";
+import { EditorMissing } from "../../editor-frame";
+import { NoteEditor } from "./note-editor";
 
-export default async function NotePage({
-  params,
-}: {
-  params: Promise<{ memberId: string; noteId: string }>;
-}) {
+type Props = { params: Promise<{ memberId: string; noteId: string }>; };
+
+export default function NotePage(props: Props) {
+  return (
+    <Suspense fallback={<EditorSkeleton />}>
+      <Screen {...props} />
+    </Suspense>
+  );
+}
+
+/** 작성 화면을 읽는 동안 */
+function EditorSkeleton() {
+  return (
+    <div className="mx-auto h-[420px] w-full max-w-[720px] animate-pulse rounded-2xl border-[1.5px] border-edge bg-surface" />
+  );
+}
+
+async function Screen({ params }: Props) {
   const { memberId, noteId } = await params;
   const isNew = noteId === "new";
   const trainer = await requireTrainer();

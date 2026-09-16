@@ -1,10 +1,11 @@
 /*
-  작성 화면 공통 — 수업 기록·코칭 메모·영양 계산의 틀, 없는 대상 안내, 로딩 뼈대
+  작성 화면 틀 — 수업 기록·코칭 메모·영양 계산 화면이 함께 쓴다
 
   @date : 2026-09-12
 */
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { Icon } from "@/components/custom/icons";
 import { Button } from "@/components/ui/button";
 
@@ -22,8 +23,8 @@ export function EditorFrame({
   name?: string;
   subtitle?: string;
   /** 제목 오른쪽에 두는 보조 표시 */
-  aside?: React.ReactNode;
-  children: React.ReactNode;
+  aside?: ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div className="mx-auto flex w-full max-w-[720px] flex-col gap-4">
@@ -75,15 +76,6 @@ export function EditorMissing({
           <Link href={back}>회원으로 돌아가기</Link>
         </Button>
       </div>
-    </EditorFrame>
-  );
-}
-
-/** 작성 화면 데이터를 읽는 동안 */
-export function EditorSkeleton({ back, title }: { back: string; title: string }) {
-  return (
-    <EditorFrame back={back} title={title}>
-      <div className="h-[420px] animate-pulse rounded-2xl border-[1.5px] border-edge bg-surface" />
     </EditorFrame>
   );
 }

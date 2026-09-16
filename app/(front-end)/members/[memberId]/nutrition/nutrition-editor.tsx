@@ -29,7 +29,7 @@ import {
 } from "@/lib/nutrition";
 import { apiFetch, errorMessage } from "@/lib/client";
 import type { NutritionProfile } from "@/lib/types";
-import { EditorFrame } from "../_components/editor-frame";
+import { EditorFrame } from "../editor-frame";
 
 const ACTIVITY_LEVELS = Object.keys(ACTIVITY_MULTIPLIER) as ActivityLevel[];
 const GOALS: NutritionGoal[] = ["loss", "maintain", "gain"];

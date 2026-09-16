@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import MemberForm, { type MemberPayload } from "../_components/member-form";
+import MemberForm, { type MemberPayload } from "../member-form";
 import { Icon } from "@/components/custom/icons";
 import { apiFetch, errorMessage } from "@/lib/client";
 

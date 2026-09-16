@@ -15,12 +15,15 @@ import { ConfirmDialog } from "@/components/custom/confirm-dialog";
 import { Icon } from "@/components/custom/icons";
 import { apiFetch, errorMessage, formatDate, formatDayHour, formatDayShort } from "@/lib/client";
 import type { CoachingNote, MemberDetail, SessionCompletion, Workout } from "@/lib/types";
-import MemberForm, { type MemberPayload } from "../../_components/member-form";
-import { LessonHistory } from "./lesson-history";
-import { NoteSection } from "./note-section";
-import NutritionPanel from "./nutrition-panel";
-import { IconButton } from "./section";
-import { WeightSection, type WeightPayload } from "./weight-section";
+import MemberForm, { type MemberPayload } from "../member-form";
+import {
+  IconButton,
+  LessonHistory,
+  NoteSection,
+  NutritionPanel,
+  WeightSection,
+  type WeightPayload,
+} from "./member-sections";
 
 /** 화면에 펼쳐져 있는 입력 폼. 한 번에 하나만 연다. */
 type OpenForm =

@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { apiFetch, errorMessage, formatDate, today } from "@/lib/client";
 import type { CoachingNote } from "@/lib/types";
-import { EditorFrame } from "../_components/editor-frame";
+import { EditorFrame } from "../../editor-frame";
 
 const FIELDS = [
   { key: "pain", label: "통증", placeholder: "통증 부위, 강도, 발생 상황" },
