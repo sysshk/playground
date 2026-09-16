@@ -15,6 +15,7 @@ import { Icon } from "@/components/custom/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { apiFetch, errorMessage } from "@/lib/client";
+import { formatPhone, validatePhone, PHONE_ERROR } from "@/lib/phone";
 
 export function ProfileForm({
   name: savedName,
@@ -29,13 +30,13 @@ export function ProfileForm({
   const { update } = useSession();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(savedName);
-  const [phone, setPhone] = useState(savedPhone);
+  const [phone, setPhone] = useState(() => formatPhone(savedPhone));
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
   const startEdit = () => {
     setName(savedName);
-    setPhone(savedPhone);
+    setPhone(formatPhone(savedPhone));
     setError("");
     setEditing(true);
   };
@@ -50,6 +51,10 @@ export function ProfileForm({
     }
     if (phoneRequired && !phone.trim()) {
       setError("연락처를 입력해 주세요.");
+      return;
+    }
+    if (phone.trim() && !validatePhone(phone)) {
+      setError(PHONE_ERROR);
       return;
     }
 
@@ -111,8 +116,8 @@ export function ProfileForm({
               type="tel"
               inputMode="tel"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              maxLength={20}
+              onChange={(e) => setPhone(formatPhone(e.target.value))}
+              maxLength={13}
               placeholder="010-0000-0000"
               autoComplete="tel"
               required={phoneRequired}
@@ -142,7 +147,7 @@ export function ProfileForm({
           <dd className="min-w-0 truncate font-semibold">{savedName || "없음"}</dd>
           <dt className="text-muted-foreground">연락처</dt>
           <dd className={`font-semibold tabular-nums ${savedPhone ? "" : "text-subtle"}`}>
-            {savedPhone || "등록 안 됨"}
+            {savedPhone ? formatPhone(savedPhone) : "등록 안 됨"}
           </dd>
         </dl>
       )}

@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/custom/confirm-dialog";
 import { Icon } from "@/components/custom/icons";
 import { apiFetch, errorMessage, formatDate, formatDayHour, formatDayShort } from "@/lib/client";
+import { formatPhone } from "@/lib/phone";
 import type { CoachingNote, MemberDetail, SessionCompletion, Workout } from "@/lib/types";
 import MemberForm, { type MemberPayload } from "../member-form";
 import {
@@ -245,7 +246,7 @@ function MemberSummary({
               </span>
             )}
           </div>
-          <p className="text-sm font-medium text-ink">{member.phone}</p>
+          <p className="text-sm font-medium text-ink">{formatPhone(member.phone)}</p>
           <p className="flex flex-wrap items-baseline gap-x-1.5 text-sm text-muted-foreground">
             <span className="font-bold text-ink">남은 수업</span>
             <span

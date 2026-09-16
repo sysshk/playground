@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { apiFetch, BASE_PATH, errorMessage, formatDayShort } from "@/lib/client";
+import { formatPhone } from "@/lib/phone";
 import type { AccountMemberRow, AccountUserRow } from "@/lib/queries";
 import { ROLE_LABEL, type Role } from "@/lib/types";
 
@@ -288,7 +289,7 @@ export function AccountManager({
                     <Truncate>{member.name}</Truncate>
                   </td>
                   <td className={`${TD} hidden tabular-nums text-muted-foreground sm:table-cell`}>
-                    <Truncate>{member.phone}</Truncate>
+                    <Truncate>{formatPhone(member.phone)}</Truncate>
                   </td>
                   <td className={TD}>
                     <TrainerCell

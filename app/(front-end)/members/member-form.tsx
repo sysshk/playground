@@ -8,6 +8,7 @@
 
 import { FormEvent, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { formatPhone, validatePhone, PHONE_ERROR } from "@/lib/phone";
 import { Field } from "@/components/custom/form-field";
 import type { Member } from "@/lib/types";
 
@@ -34,7 +35,7 @@ export interface MemberPayload {
 function toFormValues(member?: Member): MemberFormValues {
   return {
     name: member?.name ?? "",
-    phone: member?.phone ?? "",
+    phone: formatPhone(member?.phone ?? ""),
     goal: member?.goal ?? "",
     remainingSessions: String(member?.remainingSessions ?? 0),
     memo: member?.memo ?? "",
@@ -76,6 +77,7 @@ export default function MemberForm({
     const nextErrors: typeof errors = {};
     if (!name) nextErrors.name = "이름을 입력해 주세요.";
     if (!phone) nextErrors.phone = "연락처를 입력해 주세요.";
+    else if (!validatePhone(phone)) nextErrors.phone = PHONE_ERROR;
     if (
       values.remainingSessions === "" ||
       !Number.isInteger(sessions) ||
@@ -112,7 +114,7 @@ export default function MemberForm({
       <Field label="연락처" required error={errors.phone}>
         <Input
           value={values.phone}
-          onChange={(e) => set("phone", e.target.value)}
+          onChange={(e) => set("phone", formatPhone(e.target.value))}
           placeholder="010-1234-5678"
           inputMode="tel"
         />

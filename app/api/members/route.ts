@@ -5,6 +5,7 @@
 */
 
 import { NextResponse } from "next/server";
+import { formatPhone, validatePhone, PHONE_ERROR } from "@/lib/phone"
 import { prisma } from "@/lib/prisma";
 import {
   badRequest,
@@ -25,8 +26,10 @@ export async function POST(request: Request) {
     const name = toTrimmed(body.name);
     if (!name) return badRequest("이름을 입력해 주세요.");
 
-    const phone = toTrimmed(body.phone);
-    if (!phone) return badRequest("연락처를 입력해 주세요.");
+    const rawPhone = toTrimmed(body.phone);
+    if (!rawPhone) return badRequest("연락처를 입력해 주세요.");
+    if (!validatePhone(rawPhone)) return badRequest(PHONE_ERROR);
+    const phone = formatPhone(rawPhone);
 
     const remainingSessions = toNumber(body.remainingSessions) ?? 0;
     if (remainingSessions < 0 || !Number.isInteger(remainingSessions)) {

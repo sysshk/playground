@@ -7,10 +7,10 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/app/api/auth/auth-config";
 import { badRequest, serverError, toTrimmed } from "@/lib/api";
+import { formatPhone, validatePhone, PHONE_ERROR } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 
 const NAME_MAX = 30;
-const PHONE_MAX = 20;
 
 /**
  * 이름·연락처를 바꿈. 연락처는 회원 기록이 연결된 계정만 필수
@@ -24,14 +24,15 @@ export async function PATCH(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
     const name = toTrimmed(body?.name);
-    const phone = toTrimmed(body?.phone);
+    const rawPhone = toTrimmed(body?.phone);
 
     if (!name) return badRequest("이름을 입력해 주세요.");
     // 인코딩이 깨진 채 들어온 글자(U+FFFD)는 그대로 저장하지 않음
     if (name.includes("�")) return badRequest("이름에 읽을 수 없는 글자가 있습니다.");
     if (name.length > NAME_MAX) return badRequest(`이름은 ${NAME_MAX}자 이하로 입력해 주세요.`);
 
-    if (phone && phone.length > PHONE_MAX) return badRequest(`연락처는 ${PHONE_MAX}자 이하로 입력해 주세요.`);
+    if (rawPhone && !validatePhone(rawPhone)) return badRequest(PHONE_ERROR);
+    const phone = rawPhone ? formatPhone(rawPhone) : null;
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
