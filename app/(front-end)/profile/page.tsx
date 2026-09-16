@@ -1,6 +1,6 @@
 /*
-  내 정보 화면 (서버) — 로그인한 누구나 자기 이름·비밀번호를 바꿈
-  회원 계정은 트레이너가 등록한 연락처도 직접 고침
+  내 정보 화면 (서버) — 로그인한 누구나 자기 이름·연락처를 바꿈
+  회원 계정은 트레이너가 등록한 회원 기록의 연락처를 보여 주고 같이 고침
 
   @date : 2026-09-16
 */
@@ -21,7 +21,7 @@ export default async function ProfilePage() {
       name: true,
       email: true,
       createdAt: true,
-      password: true,
+      phone: true,
       memberRecord: { select: { phone: true } },
     },
   });
@@ -46,11 +46,10 @@ export default async function ProfilePage() {
         </dd>
       </dl>
 
-      {/* 비밀번호 해시는 화면으로 넘기지 않고 있는지만 알려 줌 */}
       <ProfileForm
         name={user.name ?? ""}
-        phone={user.memberRecord?.phone ?? null}
-        hasPassword={Boolean(user.password)}
+        phone={user.memberRecord?.phone ?? user.phone ?? ""}
+        phoneRequired={Boolean(user.memberRecord)}
       />
     </div>
   );

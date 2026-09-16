@@ -1,13 +1,11 @@
 /*
-  API — 내 정보 화면: 이름·연락처·비밀번호 바꾸기 (로그인한 누구나, 자기 계정만)
+  API — 내 정보 화면: 이름·연락처 바꾸기 (로그인한 누구나, 자기 계정만)
 
   @date : 2026-09-16
 */
 
-import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/api/auth/auth-config";
-import { PASSWORD_MIN } from "@/lib/account";
 import { badRequest, serverError, toTrimmed } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 
@@ -15,7 +13,7 @@ const NAME_MAX = 30;
 const PHONE_MAX = 20;
 
 /**
- * 이름은 항상, 연락처는 회원 기록이 연결된 계정만, 비밀번호는 새 비밀번호가 있을 때만 바꿈
+ * 이름·연락처를 바꿈. 연락처는 회원 기록이 연결된 계정만 필수
  * 회원 계정은 트레이너가 보는 회원 기록의 이름·연락처도 같이 고침
  */
 export async function PATCH(request: Request) {
@@ -26,51 +24,37 @@ export async function PATCH(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
     const name = toTrimmed(body?.name);
-    const current = typeof body?.currentPassword === "string" ? body.currentPassword : "";
-    const next = typeof body?.newPassword === "string" ? body.newPassword : "";
-    const phone = body?.phone === undefined ? undefined : toTrimmed(body.phone);
+    const phone = toTrimmed(body?.phone);
 
     if (!name) return badRequest("이름을 입력해 주세요.");
     // 인코딩이 깨진 채 들어온 글자(U+FFFD)는 그대로 저장하지 않음
-    if (name.includes("\uFFFD")) return badRequest("이름에 읽을 수 없는 글자가 있습니다.");
+    if (name.includes("�")) return badRequest("이름에 읽을 수 없는 글자가 있습니다.");
     if (name.length > NAME_MAX) return badRequest(`이름은 ${NAME_MAX}자 이하로 입력해 주세요.`);
 
-    if (phone === null) return badRequest("연락처를 입력해 주세요.");
     if (phone && phone.length > PHONE_MAX) return badRequest(`연락처는 ${PHONE_MAX}자 이하로 입력해 주세요.`);
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { password: true, memberRecord: { select: { id: true } } },
+      select: { memberRecord: { select: { id: true } } },
     });
     if (!user) return NextResponse.json({ error: "계정을 찾을 수 없습니다." }, { status: 404 });
 
-    const data: { name: string; password?: string } = { name };
-
-    if (next) {
-      if (next.length < PASSWORD_MIN) {
-        return badRequest(`새 비밀번호는 ${PASSWORD_MIN}자 이상으로 입력해 주세요.`);
-      }
-      if (!user.password) return badRequest("구글로 로그인하는 계정은 비밀번호가 없습니다.");
-      if (!current || !(await bcrypt.compare(current, user.password))) {
-        return badRequest("지금 비밀번호가 맞지 않습니다.");
-      }
-      data.password = await bcrypt.hash(next, 10);
-    }
-
     const member = user.memberRecord;
+    if (member && !phone) return badRequest("연락처를 입력해 주세요.");
+
     await prisma.$transaction([
-      prisma.user.update({ where: { id: userId }, data, select: { id: true } }),
+      prisma.user.update({ where: { id: userId }, data: { name, phone }, select: { id: true } }),
       ...(member
         ? [
             prisma.member.update({
               where: { id: member.id },
-              data: phone ? { name, phone } : { name },
+              data: { name, phone: phone! },
               select: { id: true },
             }),
           ]
         : []),
     ]);
-    return NextResponse.json({ ok: true, passwordChanged: Boolean(data.password) });
+    return NextResponse.json({ ok: true });
   } catch (e) {
     return serverError("profile.PATCH", e);
   }
