@@ -5,12 +5,14 @@
 */
 
 import { toNumber, toTrimmed } from "@/lib/api";
+import type { WeightUnit } from "@/lib/types";
 
 interface SetInput {
   order: number;
   reps: number;
   weight: number | null;
-  unit: "kg" | "bodyweight";
+  weightRight: number | null;
+  unit: WeightUnit;
 }
 
 export interface ExerciseInput {
@@ -79,19 +81,25 @@ export function parseExercises(raw: unknown): ParseResult {
         return { error: `${label}: 횟수는 1~${REPS_MAX} 사이로 입력해 주세요.` };
       }
 
-      const unit: "kg" | "bodyweight" =
-        rawSet?.unit === "bodyweight" ? "bodyweight" : "kg";
+      const unit: WeightUnit =
+        rawSet?.unit === "bodyweight" || rawSet?.unit === "sides" ? rawSet.unit : "kg";
 
       let weight: number | null = null;
-      if (unit === "kg") {
-        const parsed = toNumber(rawSet?.weight);
-        if (parsed === undefined || parsed < 0 || parsed > WEIGHT_MAX) {
+      let weightRight: number | null = null;
+      if (unit !== "bodyweight") {
+        weight = toNumber(rawSet?.weight) ?? null;
+        if (weight === null || weight < 0 || weight > WEIGHT_MAX) {
           return { error: `${label}: 무게는 0~${WEIGHT_MAX}kg 사이로 입력해 주세요.` };
         }
-        weight = parsed;
+      }
+      if (unit === "sides") {
+        weightRight = toNumber(rawSet?.weightRight) ?? null;
+        if (weightRight === null || weightRight < 0 || weightRight > WEIGHT_MAX) {
+          return { error: `${label}: 오른쪽 무게는 0~${WEIGHT_MAX}kg 사이로 입력해 주세요.` };
+        }
       }
 
-      sets.push({ order: setIndex, reps, weight, unit });
+      sets.push({ order: setIndex, reps, weight, weightRight, unit });
     }
 
     exercises.push({ name, order: index, sets: { create: sets } });

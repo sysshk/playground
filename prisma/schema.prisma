@@ -136,13 +136,14 @@ model Exercise {
 
 /// 한 세트 (횟수 + 무게)
 model ExerciseSet {
-  id         String   @id @default(cuid())
-  exerciseId String
-  exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
-  order      Int // 1세트, 2세트 …
-  reps       Int
-  weight     Float? // 바디웨이트면 null
-  unit       String   @default("kg") // kg | bodyweight
+  id          String   @id @default(cuid())
+  exerciseId  String
+  exercise    Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  order       Int // 1세트, 2세트 …
+  reps        Int
+  weight      Float? // 바디웨이트면 null, 좌우면 왼쪽 무게
+  weightRight Float? // 좌우일 때만 오른쪽 무게
+  unit        String   @default("kg") // kg | bodyweight | sides
 
   @@index([exerciseId, order])
 }

@@ -452,7 +452,7 @@ function SetGrid({ exercises }: { exercises: Exercise[] }) {
         {/* 머리 */}
         <div className="contents">
           <span className={`${head} ${pinNo} text-center`}>No</span>
-          <span className={`${head} ${pinName} px-3`}>종목</span>
+          <span className={`${head} ${pinName} pl-3 pr-2`}>종목</span>
           {Array.from({ length: columns }, (_, i) => (
             <span key={i} className={`${head} ${divider(i)} px-2.5 text-center`}>
               {i + 1}세트
@@ -472,9 +472,9 @@ function SetGrid({ exercises }: { exercises: Exercise[] }) {
               </span>
               {/* 폰에서는 이름과 배지를 두 줄로 쌓아 종목 칸 폭을 줄임 */}
               <span
-                className={`${body} ${pinName} flex max-w-36 flex-col items-start justify-center gap-1 px-3 text-sm font-semibold md:max-w-none md:flex-row md:items-center md:justify-start md:gap-2`}
+                className={`${body} ${pinName} flex max-w-36 flex-col items-start justify-center gap-1 pl-3 pr-2 text-sm font-semibold md:max-w-none md:flex-row md:items-center md:justify-start md:gap-2`}
               >
-                <span className="whitespace-normal break-keep md:whitespace-nowrap">{exercise.name}</span>
+                <span className="whitespace-normal md:whitespace-nowrap">{exercise.name}</span>
                 {bodyweightOnly && <BodyweightBadge />}
               </span>
 
@@ -497,7 +497,7 @@ function SetGrid({ exercises }: { exercises: Exercise[] }) {
   );
 }
 
-/** 세트 하나 — "60kg × 12회", 바디웨이트면 "12회" */
+/** 세트 하나 — "60kg × 12회", 좌우면 "좌 10 우 12.5kg × 12회", 바디웨이트면 "12회" */
 function SetChip({
   set,
   bodyweightOnly,
@@ -516,6 +516,15 @@ function SetChip({
         <>
           {set.unit === "bodyweight" ? (
             <span className="mr-1 text-xs font-bold text-ink">바디웨이트</span>
+          ) : set.unit === "sides" ? (
+            <>
+              <Side>좌</Side>
+              <Num>{set.weight}</Num>
+              <Side className="ml-1">우</Side>
+              <Num>{set.weightRight}</Num>
+              <Unit>kg</Unit>
+              <span className="mx-0.5 text-2xs text-subtle">×</span>
+            </>
           ) : (
             <>
               <Num>{set.weight}</Num>
@@ -538,6 +547,12 @@ function Num({ children }: { children: React.ReactNode }) {
 function Unit({ children }: { children: React.ReactNode }) {
   return (
     <span className="ml-px text-2xs font-semibold text-subtle">{children}</span>
+  );
+}
+
+function Side({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <span className={`mr-0.5 text-2xs font-semibold text-subtle ${className}`}>{children}</span>
   );
 }
 

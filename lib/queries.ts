@@ -10,6 +10,7 @@ import { prismaRead } from "@/lib/prisma";
 import { kstDay, kstMonthRange } from "@/lib/kst";
 import type {
   CoachingNote,
+  ExerciseSet,
   MemberDetail,
   MemberStats,
   MemberSummary,
@@ -18,7 +19,7 @@ import type {
   Role,
   Workout,
 } from "@/lib/types";
-import { toRole } from "@/lib/types";
+import { formatSet, toRole } from "@/lib/types";
 
 function serialize<T>(value: unknown): T {
   return JSON.parse(JSON.stringify(value)) as T;
@@ -405,15 +406,10 @@ function lastSetsOf(workouts: Workout[], skipId?: string) {
     if (w.id === skipId) continue;
     for (const e of w.exercises) {
       if (e.name in map) continue;
-      const top = e.sets.reduce(
-        (best, s) => ((s.weight ?? 0) > (best.weight ?? 0) ? s : best),
-        e.sets[0],
-      );
+      const heaviest = (s: ExerciseSet) => Math.max(s.weight ?? 0, s.weightRight ?? 0);
+      const top = e.sets.reduce((best, s) => (heaviest(s) > heaviest(best) ? s : best), e.sets[0]);
       if (!top) continue;
-      map[e.name] =
-        top.unit === "bodyweight"
-          ? `바디웨이트 ${top.reps}회`
-          : `${top.weight}kg × ${top.reps}회`;
+      map[e.name] = formatSet(top);
     }
   }
   return map;

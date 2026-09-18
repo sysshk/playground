@@ -32,15 +32,24 @@ export function toRole(value: unknown): Role {
   return value === "admin" || value === "trainer" ? value : "client";
 }
 
-export type WeightUnit = "kg" | "bodyweight";
+/** 세트 입력 방식 — 무게 하나, 바디웨이트, 좌우 무게 따로 */
+export type WeightUnit = "kg" | "bodyweight" | "sides";
 
 /** 한 세트 — 드롭세트·피라미드처럼 세트마다 수치가 달라질 수 있음 */
 export interface ExerciseSet {
   id: string;
   order: number;
   reps: number;
-  weight: number | null;
+  weight: number | null; // 좌우면 왼쪽 무게
+  weightRight: number | null; // 좌우일 때만 오른쪽 무게
   unit: WeightUnit;
+}
+
+/** 세트 한 줄 글 — "60kg × 12회", "바디웨이트 12회", "좌 10 · 우 12.5kg × 12회" */
+export function formatSet(set: Pick<ExerciseSet, "reps" | "weight" | "weightRight" | "unit">) {
+  if (set.unit === "bodyweight") return `바디웨이트 ${set.reps}회`;
+  if (set.unit === "sides") return `좌 ${set.weight} · 우 ${set.weightRight}kg × ${set.reps}회`;
+  return `${set.weight}kg × ${set.reps}회`;
 }
 
 export interface Exercise {

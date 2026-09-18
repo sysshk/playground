@@ -8,8 +8,10 @@ import type { WeightUnit } from "@/lib/types";
 
 /** 세트 한 줄. 입력 중에는 전부 문자열로 들고 있다가 저장할 때 숫자로 바꿈 */
 export interface SetRow {
+  unit: WeightUnit; // 입력 방식 탭 — 무게, 바디웨이트, 좌우
   reps: string; // 횟수
-  weight: string; // 무게 kg, 비워 두면 바디웨이트
+  weight: string; // 무게 kg, 좌우면 왼쪽
+  weightRight: string; // 좌우일 때 오른쪽 무게 kg
 }
 
 /** 종목 한 덩어리 */
@@ -26,6 +28,6 @@ export interface WorkoutPayload {
   completedAt: string; // 수업 시각 — 수정하면 연결된 수업의 시각도 따라감
   exercises: {
     name: string;
-    sets: { reps: number; weight: number | null; unit: WeightUnit }[]; // 세트마다 무게가 다를 수 있음
+    sets: { reps: number; weight: number | null; weightRight: number | null; unit: WeightUnit }[]; // 세트마다 방식·무게가 다를 수 있음
   }[];
 }

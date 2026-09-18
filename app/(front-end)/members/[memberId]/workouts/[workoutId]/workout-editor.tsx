@@ -7,7 +7,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/custom/confirm-dialog";
 import { DatePicker, HourPicker } from "@/components/custom/date-picker";
@@ -15,7 +15,7 @@ import { Icon } from "@/components/custom/icons";
 import { Button } from "@/components/ui/button";
 import { apiFetch, completedAtFrom, errorMessage, formatDate, today } from "@/lib/client";
 import { kstHour } from "@/lib/kst";
-import type { Workout } from "@/lib/types";
+import { formatSet, type WeightUnit, type Workout } from "@/lib/types";
 import { EditorFrame } from "../../editor-frame";
 import type { ExerciseRow, SetRow, WorkoutPayload } from "./types";
 
@@ -25,13 +25,23 @@ const WEIGHT_STEP = 2.5;
 /** 날짜·운동·메모 영역 제목 */
 const SECTION_TITLE = "text-sm font-bold";
 
+/** 세트 입력 방식 탭 */
+const UNIT_TABS: [WeightUnit, string][] = [
+  ["bodyweight", "바디웨이트"],
+  ["kg", "무게"],
+  ["sides", "좌우 따로"],
+];
+
+/** 새 세트는 바로 위 세트의 방식·수치를 이어받음 */
 const emptySet = (from?: SetRow): SetRow => ({
+  unit: from?.unit ?? "kg",
   reps: from?.reps ?? "10",
   weight: from?.weight ?? "",
+  weightRight: from?.weightRight ?? "",
 });
 
-/** 무게 칸이 비었으면 바디웨이트 세트 */
-const isBodyweight = (set: SetRow) => set.weight.trim() === "";
+const validWeight = (value: string) =>
+  value.trim() !== "" && Number.isFinite(Number(value)) && Number(value) >= 0;
 
 /** 세트 한 줄이 제대로 찼는지. 덜 찼으면 보여 줄 문구를 돌려줌 */
 function setProblem(set: SetRow, label: string) {
@@ -39,19 +49,29 @@ function setProblem(set: SetRow, label: string) {
   if (set.reps.trim() === "" || !Number.isInteger(reps) || reps < 1) {
     return `${label}: 횟수는 1 이상 입력해 주세요.`;
   }
-  if (isBodyweight(set)) return null;
+  if (set.unit === "bodyweight") return null;
 
-  const weight = Number(set.weight.trim());
-  if (!Number.isFinite(weight) || weight < 0) {
-    return `${label}: 무게는 0 이상 숫자로 입력하거나 비워 두세요.`;
+  if (!validWeight(set.weight)) {
+    return set.unit === "sides"
+      ? `${label}: 왼쪽 무게를 0 이상 숫자로 입력해 주세요.`
+      : `${label}: 무게를 0 이상 숫자로 입력하거나 바디웨이트를 고르세요.`;
+  }
+  if (set.unit === "sides" && !validWeight(set.weightRight)) {
+    return `${label}: 오른쪽 무게를 0 이상 숫자로 입력해 주세요.`;
   }
   return null;
 }
 
-/** 접어 둔 세트에 적는 글 — "60kg × 12회", 바디웨이트면 "바디웨이트 12회" */
-function setLabel(set: SetRow) {
-  return isBodyweight(set) ? `바디웨이트 ${set.reps}회` : `${set.weight}kg × ${set.reps}회`;
-}
+/** 입력 칸 글자를 저장할 숫자로 바꿈. 고른 방식에서 안 쓰는 칸은 null */
+const toSet = (set: SetRow): WorkoutPayload["exercises"][number]["sets"][number] => ({
+  reps: Number(set.reps),
+  weight: set.unit === "bodyweight" ? null : Number(set.weight),
+  weightRight: set.unit === "sides" ? Number(set.weightRight) : null,
+  unit: set.unit,
+});
+
+/** 저장된 숫자를 입력 칸 글자로. 없으면 빈 칸 (weightRight가 생기기 전 기록은 값이 없음) */
+const text = (n: number | null | undefined) => (n == null ? "" : String(n));
 
 const emptyExercise = (): ExerciseRow => ({
   name: "",
@@ -65,8 +85,10 @@ function toRows(workout: Workout | null): ExerciseRow[] {
   return workout.exercises.map((e) => ({
     name: e.name,
     sets: e.sets.map((s) => ({
+      unit: s.unit,
       reps: String(s.reps),
-      weight: s.unit === "bodyweight" || s.weight === null ? "" : String(s.weight),
+      weight: text(s.weight),
+      weightRight: text(s.weightRight),
     })),
     // 저장해 둔 종목은 접은 채로 열어 둠. 수정을 눌러야 펼쳐짐
     editing: false,
@@ -102,6 +124,14 @@ export function WorkoutEditor({
 
   const [hour, setHour] = useState(() => kstHour(completedAt ?? new Date()));
   const [removing, setRemoving] = useState<number | null>(null);
+  // ✕를 한 번 누른 세트 "종목-세트". 3초 안에 한 번 더 눌러야 지워짐
+  const [armedSet, setArmedSet] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!armedSet) return;
+    const timer = setTimeout(() => setArmedSet(null), 3000);
+    return () => clearTimeout(timer);
+  }, [armedSet]);
 
   // 이름을 적은 종목만 저장함. 하나도 없으면 수업만 남기는 날이고 메모가 사유가 됨
   const named = rows.filter((r) => r.name.trim() !== "");
@@ -123,6 +153,15 @@ export function WorkoutEditor({
     setError(null);
   };
 
+  /** 입력 방식 탭을 바꿈. 좌우로 처음 바꾸면 오른쪽 무게를 왼쪽과 같게 채움 */
+  const selectUnit = (i: number, s: number, unit: WeightUnit) => {
+    const set = rows[i].sets[s];
+    patchSet(i, s, {
+      unit,
+      weightRight: unit === "sides" && set.weightRight === "" ? set.weight : set.weightRight,
+    });
+  };
+
   /** 종목의 세트가 다 찼는지 봄. 덜 찼으면 문구를 띄움 */
   const checkSets = (i: number) => {
     const row = rows[i];
@@ -141,6 +180,14 @@ export function WorkoutEditor({
   const toggleExercise = (i: number) => {
     if (rows[i].editing && !checkSets(i)) return;
     patchExercise(i, { editing: !rows[i].editing });
+  };
+
+  /** 세트 ✕ — 첫 번째는 [삭제]로 바꾸기만 하고 두 번째에 지움 */
+  const removeSet = (i: number, s: number) => {
+    const key = `${i}-${s}`;
+    if (armedSet !== key) return setArmedSet(key);
+    patchExercise(i, { sets: rows[i].sets.filter((_, m) => m !== s) });
+    setArmedSet(null);
   };
 
   /** 세트를 더 넣음 */
@@ -172,13 +219,7 @@ export function WorkoutEditor({
           return;
         }
 
-        // 1세트는 바디웨이트로 하고 2세트부터 무게를 다는 식으로 한 종목
-        // 안에서 섞이므로 세트마다 따로 봄
-        sets.push(
-          isBodyweight(set)
-            ? { reps: Number(set.reps), weight: null, unit: "bodyweight" }
-            : { reps: Number(set.reps), weight: Number(set.weight), unit: "kg" },
-        );
+        sets.push(toSet(set));
       }
 
       exercises.push({ name, sets });
@@ -330,65 +371,101 @@ export function WorkoutEditor({
                           {s + 1}세트
                         </span>
                         <span className="min-w-0 flex-1 text-md font-bold tabular-nums">
-                          {setLabel(set)}
+                          {formatSet(toSet(set))}
                         </span>
                       </li>
                     ) : (
-                      <li
-                        key={s}
-                        className="grid grid-cols-2 items-center gap-2 rounded-lg p-1 sm:flex sm:min-w-0 sm:gap-3"
-                      >
-                        <div className="col-span-2 flex items-center justify-between sm:w-14 sm:shrink-0">
-                          <span className="text-sm font-bold text-muted-foreground">{s + 1}세트</span>
+                      <li key={s} className="@container flex flex-col gap-2 rounded-lg p-1">
+                        {/* 세트 번호·입력 방식 탭 */}
+                        <div className="flex items-center gap-2">
+                          <span className="w-12 shrink-0 text-sm font-bold text-muted-foreground">
+                            {s + 1}세트
+                          </span>
+                          <div
+                            role="radiogroup"
+                            aria-label={`${s + 1}세트 입력 방식`}
+                            className="flex gap-0.5 rounded-lg bg-canvas p-0.5"
+                          >
+                            {UNIT_TABS.map(([unit, label]) => (
+                              <button
+                                key={unit}
+                                type="button"
+                                role="radio"
+                                aria-checked={set.unit === unit}
+                                onClick={() => selectUnit(i, s, unit)}
+                                className={`h-7 rounded-md px-2.5 text-xs font-bold transition-colors ${
+                                  set.unit === unit
+                                    ? "bg-primary-light text-primary-dark dark:text-primary-bright"
+                                    : "text-muted-foreground hover:text-ink"
+                                }`}
+                              >
+                                {label}
+                              </button>
+                            ))}
+                          </div>
                           {row.sets.length > 1 && (
                             <button
                               type="button"
-                              onClick={() =>
-                                patchExercise(i, { sets: row.sets.filter((_, m) => m !== s) })
-                              }
+                              onClick={() => removeSet(i, s)}
+                              onBlur={() => setArmedSet(null)}
                               aria-label={`${s + 1}세트 삭제`}
-                              className="grid h-9 w-9 place-items-center rounded-lg text-subtle transition-colors hover:bg-raised hover:text-danger sm:hidden"
+                              className={`ml-auto flex h-8 min-w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold transition-colors ${
+                                armedSet === `${i}-${s}`
+                                  ? "bg-danger/15 px-2.5 text-danger"
+                                  : "text-subtle hover:bg-raised hover:text-ink"
+                              }`}
                             >
-                              <Icon name="close" size={16} />
+                              {armedSet === `${i}-${s}` ? "삭제" : <Icon name="close" size={16} />}
                             </button>
                           )}
                         </div>
 
-                        <Stepper
-                          label={`${s + 1}세트 횟수`}
-                          unit="회"
-                          value={set.reps}
-                          step={1}
-                          min={1}
-                          inputMode="numeric"
-                          onChange={(reps) => patchSet(i, s, { reps })}
-                        />
-
-                        {/* 무게 칸 — 비워 두면 바디웨이트. 0kg에서 −를 한 번 더 누르면 비워짐 */}
-                        <Stepper
-                          label={`${s + 1}세트 무게`}
-                          unit="kg"
-                          value={set.weight}
-                          step={WEIGHT_STEP}
-                          min={0}
-                          inputMode="decimal"
-                          placeholder="바디웨이트"
-                          emptyBelowMin
-                          onChange={(weight) => patchSet(i, s, { weight })}
-                        />
-
-                        {row.sets.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              patchExercise(i, { sets: row.sets.filter((_, m) => m !== s) })
-                            }
-                            aria-label={`${s + 1}세트 삭제`}
-                            className="hidden h-11 w-11 shrink-0 place-items-center rounded-lg text-subtle transition-colors hover:bg-raised hover:text-danger sm:grid"
-                          >
-                            <Icon name="close" size={17} />
-                          </button>
-                        )}
+                        {/* 횟수·무게 — 전체 폭은 그대로, 좌우 따로면 셋으로 나눔 */}
+                        <div
+                          className={`grid gap-2 @md:max-w-124 ${set.unit === "sides" ? "grid-cols-3" : "grid-cols-2"}`}
+                        >
+                          <Stepper
+                            label={`${s + 1}세트 횟수`}
+                            unit="회"
+                            value={set.reps}
+                            step={1}
+                            min={1}
+                            inputMode="numeric"
+                            compact={set.unit === "sides"}
+                            onChange={(reps) => patchSet(i, s, { reps })}
+                          />
+                          {set.unit === "bodyweight" && (
+                            <span className="grid h-9 place-items-center rounded-lg border border-dashed border-line-strong text-xs font-bold text-subtle">
+                              바디웨이트
+                            </span>
+                          )}
+                          {set.unit !== "bodyweight" && (
+                            <Stepper
+                              label={`${s + 1}세트 ${set.unit === "sides" ? "왼쪽 " : ""}무게`}
+                              prefix={set.unit === "sides" ? "좌" : undefined}
+                              unit="kg"
+                              value={set.weight}
+                              step={WEIGHT_STEP}
+                              min={0}
+                              inputMode="decimal"
+                              compact={set.unit === "sides"}
+                              onChange={(weight) => patchSet(i, s, { weight })}
+                            />
+                          )}
+                          {set.unit === "sides" && (
+                            <Stepper
+                              label={`${s + 1}세트 오른쪽 무게`}
+                              prefix="우"
+                              unit="kg"
+                              value={set.weightRight}
+                              step={WEIGHT_STEP}
+                              min={0}
+                              inputMode="decimal"
+                              compact
+                              onChange={(weightRight) => patchSet(i, s, { weightRight })}
+                            />
+                          )}
+                        </div>
                       </li>
                     ),
                   )}
@@ -398,7 +475,7 @@ export function WorkoutEditor({
                   <button
                     type="button"
                     onClick={() => addSet(i)}
-                    className="flex h-11 items-center justify-center gap-1.5 rounded-lg bg-canvas text-sm font-bold text-ink transition-colors hover:bg-raised"
+                    className="flex h-9 items-center justify-center gap-1.5 rounded-lg bg-canvas text-sm font-bold text-ink transition-colors hover:bg-raised"
                   >
                     <Icon name="plus" size={16} />
                     세트 추가
@@ -461,73 +538,65 @@ export function WorkoutEditor({
 /** −/+ 버튼으로 숫자를 바꾸는 입력. 가운데 숫자를 누르면 직접 입력할 수 있음 */
 function Stepper({
   label,
+  prefix,
   unit,
   value,
   step,
   min,
   inputMode,
-  placeholder = "0",
-  emptyBelowMin = false,
+  compact = false,
   onChange,
 }: {
   label: string;
+  prefix?: string; // 칸 왼쪽 글 — 좌우 무게의 "좌"·"우"
   unit: string;
   value: string;
   step: number;
   min: number;
   inputMode: "numeric" | "decimal";
-  placeholder?: string;
-  emptyBelowMin?: boolean; // 최솟값에서 −를 누르면 빈 칸으로 (무게 칸의 바디웨이트)
+  compact?: boolean; // 한 칸 폭 — 좁으면 −/+를 숨기고 직접 입력
   onChange: (value: string) => void;
 }) {
   const current = Number(value) || 0;
-  const empty = value.trim() === "";
-  const bump = (delta: number) => {
-    if (emptyBelowMin && empty) return onChange(delta > 0 ? String(min) : "");
-    if (emptyBelowMin && delta < 0 && current <= min) return onChange("");
-    onChange(String(Math.max(min, round1(current + delta))));
-  };
-  const minusDisabled = emptyBelowMin ? empty : current <= min;
+  const bump = (delta: number) => onChange(String(Math.max(min, round1(current + delta))));
 
   return (
     <div
-      className="flex h-11 min-w-0 items-center overflow-hidden rounded-lg bg-canvas sm:flex-1"
+      className="flex h-9 min-w-0 items-center overflow-hidden rounded-lg bg-canvas"
     >
       <label className="flex min-w-0 flex-1 items-baseline justify-end gap-0.5 pl-2 sm:pl-3">
+        {prefix && (
+          <span className="shrink-0 text-xs font-bold text-muted-foreground">{prefix}</span>
+        )}
         <input
           value={value}
           onChange={(e) => onChange(e.target.value)}
           inputMode={inputMode}
-          placeholder={placeholder}
+          placeholder="0"
           aria-label={label}
-          className={`min-w-0 flex-1 bg-transparent text-right text-md font-bold tabular-nums outline-none ${
-            // 빈 무게 칸은 바디웨이트라는 값이라 진하게
-            emptyBelowMin ? "placeholder:text-xs placeholder:text-ink sm:placeholder:text-sm" : "placeholder:text-line-strong"
-          }`}
+          className="min-w-0 flex-1 bg-transparent text-right text-md font-bold tabular-nums outline-none placeholder:text-line-strong"
         />
-        {!(emptyBelowMin && empty) && (
-          <span className="shrink-0 text-xs font-semibold text-muted-foreground">{unit}</span>
-        )}
+        <span className="shrink-0 text-xs font-semibold text-muted-foreground">{unit}</span>
         <span className="w-2 shrink-0" />
       </label>
       {/* 엄지 한 번에 오가도록 −/+를 오른쪽에 붙여 둠 */}
-      <div className="flex h-full shrink-0 border-l border-line">
+      <div className={`flex h-full shrink-0 border-l border-line ${compact ? "@max-md:hidden" : ""}`}>
         <button
           type="button"
           onClick={() => bump(-step)}
-          disabled={minusDisabled}
+          disabled={current <= min}
           aria-label={`${label} 줄이기`}
-          className="grid h-full w-9 place-items-center text-muted-foreground transition-colors hover:bg-raised hover:text-ink disabled:opacity-30 sm:w-11"
+          className="grid h-full w-8 place-items-center text-muted-foreground transition-colors hover:bg-raised hover:text-ink disabled:opacity-30"
         >
-          <Icon name="minus" size={17} />
+          <Icon name="minus" size={15} />
         </button>
         <button
           type="button"
           onClick={() => bump(step)}
           aria-label={`${label} 늘리기`}
-          className="grid h-full w-9 place-items-center rounded-r-lg text-muted-foreground transition-colors hover:bg-raised hover:text-ink sm:w-11"
+          className="grid h-full w-8 place-items-center rounded-r-lg text-muted-foreground transition-colors hover:bg-raised hover:text-ink"
         >
-          <Icon name="plus" size={17} />
+          <Icon name="plus" size={15} />
         </button>
       </div>
     </div>
