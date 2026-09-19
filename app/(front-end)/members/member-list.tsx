@@ -1,5 +1,5 @@
 /*
-  회원 목록 화면 — 인사, 지표, 수업 달력, 진행 중·종료 회원 목록과 일괄 삭제
+  회원 목록 화면 — 인사, 지표, 수업 달력, 진행 중·종료 회원 칸(이름순)과 일괄 삭제
 
   @date : 2026-09-12
 */
@@ -14,13 +14,36 @@ import { ConfirmDialog } from "@/components/custom/confirm-dialog";
 import { EmptyState } from "@/components/custom/empty-state";
 import { Icon } from "@/components/custom/icons";
 import { Button } from "@/components/ui/button";
-import { apiFetch, errorMessage } from "@/lib/client";
+import { apiFetch, errorMessage, formatDayShort } from "@/lib/client";
 import { kstDay, kstHour } from "@/lib/kst";
 import type { MemberStats, MemberSummary, MonthCalendar } from "@/lib/types";
 import { LessonCalendar } from "./lesson-calendar";
 
 /** 수업이 이만큼 이하로 남으면 재등록 안내가 필요함 */
 const LOW_SESSION_THRESHOLD = 3;
+
+/** 종료 표의 칸 — 이름, 목표(폰에서는 숨김), 받은 수업, 마지막 수업 */
+const ENDED_COLUMNS =
+  "grid-cols-[minmax(0,1fr)_auto_auto] sm:grid-cols-[minmax(0,8rem)_minmax(0,1fr)_auto_auto]";
+
+/** 마지막 수업이 이만큼 지나면 연락이 필요한 회원으로 봄 */
+const STALE_DAYS = 14;
+
+/** 마지막 수업이 한국 날짜로 며칠 전인지. 수업 전이면 null */
+function daysSince(iso: string | null, today: string) {
+  if (!iso) return null;
+  const diff = Date.parse(`${today}T00:00:00Z`) - Date.parse(`${kstDay(iso)}T00:00:00Z`);
+  return Math.max(0, Math.round(diff / 86_400_000));
+}
+
+/** "오늘", "3일 전", "2주 전", "2달 전" */
+function lastLabel(days: number | null) {
+  if (days === null) return "수업 전";
+  if (days === 0) return "오늘";
+  if (days < 7) return `${days}일 전`;
+  if (days < 30) return `${Math.floor(days / 7)}주 전`;
+  return `${Math.floor(days / 30)}달 전`;
+}
 
 /** 데이터는 서버 컴포넌트(page.tsx)가 읽어 넘김 */
 export function MemberList({
@@ -44,6 +67,8 @@ export function MemberList({
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(() => new Date());
+  const [endedOpen, setEndedOpen] = useState(false);
+  const today = kstDay(now);
 
   // 켜 둔 채 정각을 넘기면 인사 문구도 바뀜. 분이 바뀌는 순간에 맞춰 확인함
   useEffect(() => {
@@ -102,8 +127,10 @@ export function MemberList({
   }, [members, query]);
 
   // 남은 수업이 0회면 종료한 회원임. 검색은 양쪽 모두에 걸리도록 filtered를 나눔
-  const active = filtered.filter((m) => m.remainingSessions > 0);
-  const ended = filtered.filter((m) => m.remainingSessions === 0);
+  // 회원을 찾아 들어가는 목록이라 이름순으로 둠
+  const byName = (a: MemberSummary, b: MemberSummary) => a.name.localeCompare(b.name, "ko");
+  const active = filtered.filter((m) => m.remainingSessions > 0).sort(byName);
+  const ended = filtered.filter((m) => m.remainingSessions === 0).sort(byName);
 
   const total = members.length;
   const activeTotal = members.filter((m) => m.remainingSessions > 0).length;
@@ -116,68 +143,104 @@ export function MemberList({
     { label: "최근 7일 기록", value: stats.recentWorkouts, unit: "건", warn: false },
   ];
 
-  /** 회원 한 줄. 진행 중과 종료 목록이 같이 씀 */
-  const memberRow = (member: MemberSummary) => {
+  /** 회원 칸. 진행 중과 종료 목록이 같이 씀 */
+  const memberCard = (member: MemberSummary) => {
     const left = member.remainingSessions;
-    const totalSessions = left + member.completedSessions;
-    const tone =
-      left === 0 ? "text-subtle" : left <= LOW_SESSION_THRESHOLD ? "text-danger" : "text-primary";
-    const rowClass = "group flex min-w-0 flex-1 items-center justify-between gap-3 py-3.5";
+    const low = left > 0 && left <= LOW_SESSION_THRESHOLD;
+    const days = daysSince(member.lastCompletedAt, today);
+    const stale = left > 0 && days !== null && days >= STALE_DAYS;
+    const selected = picked.has(member.id);
 
     const inner = (
       <>
-        <span className="flex min-w-0 flex-col gap-1">
-          <span className="flex min-w-0 flex-wrap items-center gap-2">
-            <span className="truncate text-base font-extrabold tracking-[-0.02em] group-hover:text-primary">
-              {member.name}
-            </span>
-            {member.goal && <span className="shrink-0 text-2xs text-subtle">{member.goal}</span>}
+        <span className="flex items-baseline justify-between gap-2">
+          <span className="truncate text-base font-extrabold tracking-[-0.02em] group-hover:text-primary">
+            {member.name}
           </span>
-          <span className="text-2xs text-subtle">
-            {totalSessions > 0
-              ? `등록 ${totalSessions}회 중 ${member.completedSessions}회 사용`
-              : "등록된 수업 없음"}
-            {member.latestWeight !== null && ` · ${member.latestWeight}kg`}
-            {` · 기록 ${member.workoutCount}건`}
-          </span>
-        </span>
-
-        <span className="flex shrink-0 items-center gap-2">
-          <span className="flex items-end gap-1">
-            <span className={`text-xl font-extrabold leading-none tracking-[-0.03em] ${tone}`}>
+          <span className="flex shrink-0 items-baseline gap-0.5">
+            <span
+              className={`text-lg font-extrabold leading-none tracking-[-0.03em] ${
+                left === 0 ? "text-subtle" : low ? "text-danger" : "text-primary"
+              }`}
+            >
               {left}
             </span>
             <span className="text-2xs font-bold text-muted-foreground">회</span>
           </span>
-          {!editing && (
-            <Icon
-              name="chevronRight"
-              size={16}
-              className="text-subtle transition-colors group-hover:text-ink"
-            />
-          )}
+        </span>
+
+        <span className="flex items-baseline justify-between gap-2 text-2xs">
+          <span className="truncate text-subtle">{member.goal ?? "목표 없음"}</span>
+          <span className={`shrink-0 ${stale ? "font-bold text-warning" : "text-subtle"}`}>
+            {lastLabel(days)}
+          </span>
         </span>
       </>
     );
 
+    const cardClass = `group flex min-w-0 flex-col gap-1.5 rounded-xl border-[1.5px] px-3 py-2.5 text-left transition-colors ${
+      selected
+        ? "border-primary bg-primary-light/40"
+        : low
+          ? "border-danger/50 hover:border-danger"
+          : "border-line hover:border-edge"
+    }`;
+
     return (
-      <li key={member.id} className="flex items-center gap-3 border-b border-line last:border-0">
+      <li key={member.id} className="min-w-0">
         {editing ? (
-          <>
-            <input
-              type="checkbox"
-              checked={picked.has(member.id)}
-              onChange={() => togglePick(member.id)}
-              aria-label={`${member.name} 선택`}
-              className="size-4 shrink-0 accent-primary"
-            />
-            <button type="button" onClick={() => togglePick(member.id)} className={`${rowClass} text-left`}>
-              {inner}
-            </button>
-          </>
+          <button
+            type="button"
+            onClick={() => togglePick(member.id)}
+            aria-pressed={selected}
+            aria-label={`${member.name} 선택`}
+            className={`${cardClass} w-full`}
+          >
+            {inner}
+          </button>
+        ) : (
+          <Link href={`/members/${member.id}`} className={cardClass}>
+            {inner}
+          </Link>
+        )}
+      </li>
+    );
+  };
+
+  const grid = "grid grid-cols-2 gap-2 sm:grid-cols-3";
+
+  /** 종료한 회원 한 줄. 계속 쌓이는 목록이라 표처럼 한 줄씩 */
+  const endedRow = (member: MemberSummary) => {
+    const selected = picked.has(member.id);
+    const cells = (
+      <>
+        <span className="truncate font-bold group-hover:text-primary">{member.name}</span>
+        <span className="hidden truncate text-subtle sm:block">{member.goal ?? "—"}</span>
+        <span className="text-right tabular-nums text-muted-foreground">{member.completedSessions}회</span>
+        <span className="text-right tabular-nums text-muted-foreground">
+          {member.lastCompletedAt ? formatDayShort(member.lastCompletedAt) : "—"}
+        </span>
+      </>
+    );
+    const rowClass = `group grid w-full ${ENDED_COLUMNS} items-center gap-3 px-2 py-2.5 text-left text-sm transition-colors ${
+      selected ? "bg-primary-light/40" : "hover:bg-raised"
+    }`;
+
+    return (
+      <li key={member.id} className="border-b border-line last:border-0">
+        {editing ? (
+          <button
+            type="button"
+            onClick={() => togglePick(member.id)}
+            aria-pressed={selected}
+            aria-label={`${member.name} 선택`}
+            className={rowClass}
+          >
+            {cells}
+          </button>
         ) : (
           <Link href={`/members/${member.id}`} className={rowClass}>
-            {inner}
+            {cells}
           </Link>
         )}
       </li>
@@ -244,7 +307,7 @@ export function MemberList({
                     : "text-primary hover:text-primary-dark"
                 }`}
               >
-                {editing ? "완료" : "편집"}
+                {editing ? "취소" : "편집"}
               </button>
             )}
           </div>
@@ -291,17 +354,41 @@ export function MemberList({
             수업이 남은 회원이 없습니다.
           </p>
         ) : (
-          <ul className="flex flex-col">{active.map(memberRow)}</ul>
+          <ul className={grid}>{active.map(memberCard)}</ul>
         )}
       </section>
 
       {/* ── 종료한 회원 ─────────────────────── */}
       {ended.length > 0 && (
         <section className="flex flex-col gap-3.5">
-          <h2 className="text-lg font-extrabold tracking-[-0.02em] text-muted-foreground">
+          <button
+            type="button"
+            aria-expanded={endedOpen || query.trim() !== ""}
+            onClick={() => setEndedOpen((open) => !open)}
+            className="flex w-fit items-center gap-1.5 text-lg font-extrabold tracking-[-0.02em] text-muted-foreground transition-colors hover:text-ink"
+          >
+            <Icon
+              name="chevronRight"
+              size={18}
+              className={`transition-transform ${endedOpen || query.trim() ? "rotate-90" : ""}`}
+            />
             종료 {ended.length}명
-          </h2>
-          <ul className="flex flex-col">{ended.map(memberRow)}</ul>
+          </button>
+          {/* 검색 중이면 종료한 회원도 펼쳐서 보여 줌 */}
+          {(endedOpen || query.trim() !== "") && (
+            <div className="flex flex-col">
+              {/* 표 머리 */}
+              <div
+                className={`grid ${ENDED_COLUMNS} gap-3 border-b border-line px-2 pb-1.5 text-2xs font-semibold text-subtle`}
+              >
+                <span>이름</span>
+                <span className="hidden sm:block">목표</span>
+                <span className="text-right">받은 수업</span>
+                <span className="text-right">마지막 수업</span>
+              </div>
+              <ul className="flex flex-col">{ended.map(endedRow)}</ul>
+            </div>
+          )}
         </section>
       )}
 
