@@ -20,10 +20,12 @@ import { Input } from "@/components/ui/input";
 import { formatDateShort, formatHourLabel, today } from "@/lib/client";
 import { kstHour } from "@/lib/kst";
 import { type Gender } from "@/lib/nutrition";
-import { BALANCE_LABEL, isInbody, type Balance, type WeightRecord } from "@/lib/types";
-import { isValidWeight, WEIGHT_RANGE_MESSAGE } from "@/lib/weight";
-import { inbodyStandard, SCALE, scalePosition, type InbodyScale } from "@/lib/inbody";
+import { BALANCE_LABEL, type Balance, type WeightPoint, type WeightRecord } from "@/types";
+
+/** 지울 체중 기록 — 목록 한 건이든 인바디 결과지든 id·날짜만 씀 */
+type WeightRef = Pick<WeightPoint, "id" | "date">;
 import { round1 } from "@/lib/utils";
+import { isValidWeight, WEIGHT_RANGE_MESSAGE } from "@/lib/validation";
 import { IconButton, Memo, Section, SectionAction, signed } from "./tab-ui";
 
 // ── 체중·인바디 ────────────────────────────
@@ -34,6 +36,7 @@ import { IconButton, Memo, Section, SectionAction, signed } from "./tab-ui";
  */
 export function WeightSection({
   weights,
+  inbody,
   targetWeight,
   defaults,
   readOnly = false,
@@ -46,7 +49,9 @@ export function WeightSection({
   onCancel,
   onDelete,
 }: {
-  weights: WeightRecord[];
+  weights: WeightPoint[];
+  /** 최근 인바디 2건 (최신순) — 결과지 카드와 입력 창 처음 값 */
+  inbody: WeightRecord[];
   targetWeight: number | null;
   /** 성별·나이·키 처음 값 — 지난 인바디가 없을 때 영양 정보에서 가져옴 */
   defaults?: { gender: Gender | null; age: number | null; height: number | null };
@@ -59,10 +64,9 @@ export function WeightSection({
   onSubmit?: (payload: InbodyPayload) => void;
   onSaveGoal?: (targetWeight: number | null) => void;
   onCancel?: () => void;
-  onDelete?: (record: WeightRecord) => void;
+  onDelete?: (record: WeightRef) => void;
 }) {
   // 체중만 잰 날도 같은 표에 두고 "체중만"으로 표시. 결과지 모양은 인바디 기록만
-  const inbody = weights.filter(isInbody);
   const last = inbody[0];
 
   return (
@@ -954,13 +958,13 @@ export function WeightChartCard({
   onSaveGoal,
   onDelete,
 }: {
-  weights: WeightRecord[];
+  weights: WeightPoint[];
   targetWeight: number | null;
   busy?: boolean;
   /** 없으면 목표를 보여 주기만 함 (회원 본인 화면). */
   onSaveGoal?: (targetWeight: number | null) => void;
   /** 점을 눌러 고른 기록 지우기. 없으면 보기만 함 */
-  onDelete?: (record: WeightRecord) => void;
+  onDelete?: (record: WeightRef) => void;
 }) {
   const stats = useMemo(
     () => getStats(weights, targetWeight),
@@ -1139,9 +1143,9 @@ function RecordsDialog({
   weights,
   onDelete,
 }: {
-  weights: WeightRecord[];
+  weights: WeightPoint[];
   /** 없으면 보기만 함 (회원 본인 화면) */
-  onDelete?: (record: WeightRecord) => void;
+  onDelete?: (record: WeightRef) => void;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -1164,8 +1168,8 @@ function RecordsDialog({
               <li key={record.id} className="flex h-11 items-center gap-3 border-b border-line text-sm last:border-0">
                 <span className="w-28 shrink-0 text-muted-foreground">{formatDateShort(record.date)}</span>
                 <span className="font-extrabold tabular-nums">{record.weight.toFixed(1)}kg</span>
-                <span className={`text-2xs font-bold ${isInbody(record) ? "text-primary" : "text-subtle"}`}>
-                  {isInbody(record) ? "인바디" : "체중만"}
+                <span className={`text-2xs font-bold ${record.inbody ? "text-primary" : "text-subtle"}`}>
+                  {record.inbody ? "인바디" : "체중만"}
                 </span>
                 {onDelete && (
                   <button
@@ -1223,7 +1227,7 @@ export type Stats = {
 };
 
 /** 최신순 기록을 날짜순 점으로 바꾸고 요약 수치를 뽑음 */
-function getStats(weights: WeightRecord[], targetWeight: number | null): Stats {
+function getStats(weights: WeightPoint[], targetWeight: number | null): Stats {
   const sorted = weights
     .map((record) => ({
       id: record.id,
@@ -1241,7 +1245,7 @@ function getStats(weights: WeightRecord[], targetWeight: number | null): Stats {
   const first = points[0];
   const last = points[points.length - 1];
   const values = points.map((point) => point.weight);
-  const series = (pick: (r: WeightRecord) => number | null) =>
+  const series = (pick: (r: WeightPoint) => number | null) =>
     weights
       .flatMap((r) => {
         const value = pick(r);
@@ -1280,4 +1284,89 @@ function getStats(weights: WeightRecord[], targetWeight: number | null): Stats {
                 : last.weight >= targetWeight,
           },
   };
+}
+
+// ── 표준 범위 ─────────────────────────────
+
+/*
+  인바디 결과지의 표준 범위와 막대 눈금
+  표준체중은 BMI 22(여성 21) × 키², 골격근량·체지방량 표준은 표준체중에 대한 비율
+*/
+
+/**
+ * 인바디 결과지의 표준 범위 — 키·성별로 계산함
+ * 표준체중은 BMI 22(여성 21) × 키², 골격근량·체지방량은 표준체중에 대한 비율
+ * 결과지(171cm 남성: 체중 54.7~73.9, 골격근량 27.5~33.5, 체지방량 7.7~15.4)와 맞춘 근사식
+ */
+function inbodyStandard(height: number, gender: Gender) {
+  const h = height / 100;
+  const weight = (gender === "male" ? 22 : 21) * h * h;
+  // 결과지와 같은 반올림 — 체중·골격근은 소수 한 자리로 맞춘 표준값, 체지방은 맞추기 전 값으로 곱함
+  const standardWeight = round1(weight);
+  return {
+    weight: standardWeight,
+    muscle: round1(standardWeight * (gender === "male" ? 0.474 : 0.41)),
+    fat: weight * (gender === "male" ? 0.15 : 0.23),
+  };
+}
+
+/** 결과지 막대의 눈금. 눈금 사이 간격은 같게 그림 (체지방량처럼 뒤로 갈수록 성긴 눈금) */
+type InbodyScale = { ticks: number[]; low: number; high: number };
+
+const SCALE = {
+  weight: {
+    ticks: [55, 70, 85, 100, 115, 130, 145, 160, 175, 190, 205],
+    low: 85,
+    high: 115,
+  },
+  muscle: {
+    ticks: [70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170],
+    low: 90,
+    high: 110,
+  },
+  fat: {
+    ticks: [40, 60, 80, 100, 160, 220, 280, 340, 400, 460, 520],
+    low: 80,
+    high: 160,
+  },
+  bodyFatMale: {
+    ticks: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
+    low: 10,
+    high: 20,
+  },
+  bodyFatFemale: {
+    ticks: [8, 13, 18, 23, 28, 33, 38, 43, 48, 53, 58],
+    low: 18,
+    high: 28,
+  },
+  lean: {
+    ticks: [70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170],
+    low: 90,
+    high: 110,
+  },
+  whrMale: {
+    ticks: [0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1, 1.05, 1.1, 1.15, 1.2],
+    low: 0.8,
+    high: 0.9,
+  },
+  whrFemale: {
+    ticks: [0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1, 1.05, 1.1, 1.15],
+    low: 0.75,
+    high: 0.85,
+  },
+} satisfies Record<string, InbodyScale>;
+
+/** 눈금 위의 위치 0~1 */
+function scalePosition(scale: InbodyScale, value: number) {
+  const { ticks } = scale;
+  if (value <= ticks[0]) return 0;
+  for (let i = 0; i < ticks.length - 1; i++) {
+    if (value <= ticks[i + 1]) {
+      return (
+        (i + (value - ticks[i]) / (ticks[i + 1] - ticks[i])) /
+        (ticks.length - 1)
+      );
+    }
+  }
+  return 1;
 }

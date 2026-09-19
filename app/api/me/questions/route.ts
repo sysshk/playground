@@ -6,8 +6,9 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { badRequest, readBody, requireClientMember, serverError, toTrimmed } from "@/lib/api";
-import { QUESTION_MAX } from "@/lib/types";
+import { badRequest, readBody, requireClientMember, serverError } from "@/lib/api";
+import { QUESTION_MAX } from "@/types";
+import { toTrimmed } from "@/lib/validation";
 
 /** 질문 올리기 */
 export async function POST(request: Request) {

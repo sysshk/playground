@@ -13,8 +13,8 @@ import {
   readBody,
   requireAdminId,
   serverError,
-  toTrimmed,
 } from "@/lib/api";
+import { toTrimmed } from "@/lib/validation";
 
 type Params = { params: Promise<{ memberId: string }> };
 

@@ -12,9 +12,9 @@ import {
   readBody,
   requireTrainerId,
   serverError,
-  toTrimmed,
 } from "@/lib/api";
-import { MEAL_COMMENT_MAX } from "@/lib/types";
+import { MEAL_COMMENT_MAX } from "@/types";
+import { toTrimmed } from "@/lib/validation";
 
 type Params = { params: Promise<{ memberId: string; mealId: string }> };
 

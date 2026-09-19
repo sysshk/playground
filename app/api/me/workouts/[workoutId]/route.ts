@@ -8,14 +8,13 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   badRequest,
-  isPastOrToday,
   notFound,
   readBody,
   requireClientMember,
   serverError,
-  toTrimmed,
 } from "@/lib/api";
 import { parseExercises } from "@/app/api/members/[memberId]/workouts/parse";
+import { isPastOrToday, toTrimmed } from "@/lib/validation";
 
 type Params = { params: Promise<{ workoutId: string }> };
 

@@ -8,15 +8,18 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   badRequest,
-  isValidDate,
   readBody,
   requireOwnedMember,
   requireTrainerId,
   serverError,
+} from "@/lib/api";
+import {
+  isValidDate,
+  isValidWeight,
   toNumber,
   toTrimmed,
-} from "@/lib/api";
-import { isValidWeight, WEIGHT_RANGE_MESSAGE } from "@/lib/weight";
+  WEIGHT_RANGE_MESSAGE,
+} from "@/lib/validation";
 
 type Params = { params: Promise<{ memberId: string }> };
 

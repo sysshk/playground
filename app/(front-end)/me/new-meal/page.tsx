@@ -9,7 +9,7 @@ import { Suspense } from "react";
 import { requireClient } from "@/lib/auth";
 import { toPastDay } from "@/lib/kst";
 import { getMyMealEditor } from "@/lib/queries";
-import { toMealSlot } from "@/lib/types";
+import { toMealSlot } from "@/types";
 import { EditorMissing } from "@/components/custom/editor-page";
 import { MealEditor } from "../../members/[memberId]/new-meal/meal-editor";
 

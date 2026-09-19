@@ -1,11 +1,10 @@
+import { formatPhone, PHONE_ERROR, toNumber, toTrimmed, validatePhone } from "@/lib/validation";
 /*
   API 공통 — 회원 정보 검증 (등록·수정이 함께 씀)
 
   @date : 2026-09-19
 */
 
-import { toNumber, toTrimmed } from "@/lib/api";
-import { formatPhone, PHONE_ERROR, validatePhone } from "@/lib/phone";
 
 interface MemberInput {
   name: string;

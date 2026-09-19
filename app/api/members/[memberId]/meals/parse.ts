@@ -5,8 +5,8 @@
   @date : 2026-09-19
 */
 
-import { isPastOrToday, toNumber, toTrimmed } from "@/lib/api";
-import { MEAL_MAX, MEAL_SLOTS, type MealSlot } from "@/lib/types";
+import { MEAL_MAX, MEAL_SLOTS, type MealSlot } from "@/types";
+import { isPastOrToday, toNumber, toTrimmed } from "@/lib/validation";
 
 interface MealInput {
   date: string;

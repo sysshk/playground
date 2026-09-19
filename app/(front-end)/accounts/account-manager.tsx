@@ -22,9 +22,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { apiFetch, BASE_PATH, errorMessage, formatDayShort } from "@/lib/client";
-import { formatPhone } from "@/lib/phone";
 import type { AccountMemberRow, AccountUserRow } from "@/lib/queries";
-import { ROLE_LABEL, type Role } from "@/lib/types";
+import { ROLE_LABEL, type Role } from "@/types";
+import { formatPhone } from "@/lib/validation";
 
 type Tab = "connect" | "accounts";
 type Editing = "connect" | "clients" | "staff" | null;

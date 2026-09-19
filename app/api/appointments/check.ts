@@ -5,10 +5,11 @@
 */
 
 import { NextResponse } from "next/server";
-import { badRequest, requireOwnedMember, toTrimmed } from "@/lib/api";
+import { badRequest, requireOwnedMember } from "@/lib/api";
 import type { MemberScope } from "@/lib/auth";
 import { kstTimeLabel } from "@/lib/kst";
 import { prisma } from "@/lib/prisma";
+import { toTrimmed } from "@/lib/validation";
 
 /** 메모는 달력 한 줄에 보이는 값이라 길게 받지 않음 */
 const MEMO_MAX = 40;

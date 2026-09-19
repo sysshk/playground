@@ -7,7 +7,8 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { badRequest, notFound, readBody, requireAdminId, serverError, toTrimmed } from "@/lib/api";
+import { badRequest, notFound, readBody, requireAdminId, serverError } from "@/lib/api";
+import { toTrimmed } from "@/lib/validation";
 
 type Params = { params: Promise<{ memberId: string }> };
 

@@ -4,8 +4,8 @@
   @date : 2026-09-12
 */
 
-import { toNumber, toTrimmed } from "@/lib/api";
-import type { WeightUnit } from "@/lib/types";
+import type { WeightUnit } from "@/types";
+import { toNumber, toTrimmed } from "@/lib/validation";
 
 interface SetInput {
   order: number;

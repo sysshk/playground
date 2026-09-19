@@ -28,7 +28,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { BASE_PATH } from "@/lib/client";
-import { ROLE_HOME, type Role } from "@/lib/types";
+import { ROLE_HOME, type Role } from "@/types";
 
 /** 역할별 메뉴. 회원(client)은 자기 기록 하나만 봄 */
 const NAV: { href: string; label: string; icon: IconName; roles: Role[] }[] = [

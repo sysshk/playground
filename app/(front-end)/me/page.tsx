@@ -8,8 +8,8 @@
 import { EmptyState } from "@/components/custom/empty-state";
 import { requireClient } from "@/lib/auth";
 import { toPastDay } from "@/lib/kst";
-import { getMyRecord, lessonLimit } from "@/lib/queries";
-import { toMemberTab } from "@/lib/types";
+import { getMyRecord, LESSON_PAGE, NOTE_PAGE, pageLimit } from "@/lib/queries";
+import { toMemberTab } from "@/types";
 import { DietSection, NutritionPanel } from "../members/[memberId]/tabs/diet-tab";
 import { WeightSection } from "../members/[memberId]/tabs/inbody-tab";
 import { PersonalWorkoutSection } from "../members/[memberId]/tabs/personal-tab";
@@ -20,11 +20,15 @@ import { MemberTabs } from "../members/[memberId]/tabs/tab-ui";
 export default async function MyRecordPage({
   searchParams,
 }: {
-  searchParams: Promise<{ lessons?: string; tab?: string; date?: string }>;
+  searchParams: Promise<{ lessons?: string; notes?: string; tab?: string; date?: string }>;
 }) {
-  const [viewer, { lessons, tab, date }] = await Promise.all([requireClient(), searchParams]);
+  const [viewer, { lessons, notes, tab, date }] = await Promise.all([requireClient(), searchParams]);
   const mealDate = toPastDay(date);
-  const member = await getMyRecord(viewer.id, lessonLimit(lessons), mealDate);
+  const member = await getMyRecord(viewer.id, {
+    lessons: pageLimit(lessons, LESSON_PAGE),
+    notes: pageLimit(notes, NOTE_PAGE),
+    mealDate,
+  });
 
   if (!member) {
     return (
@@ -74,12 +78,23 @@ export default async function MyRecordPage({
                 lessonTotal={member.lessonTotal}
                 lessonLimit={member.lessonLimit}
               />
-              <NoteSection readOnly memberId={member.id} notes={member.notes} />
+              <NoteSection
+                readOnly
+                memberId={member.id}
+                notes={member.notes}
+                noteTotal={member.noteTotal}
+                noteLimit={member.noteLimit}
+              />
             </>
           ),
           body: (
             <>
-              <WeightSection readOnly weights={member.weights} targetWeight={member.targetWeight} />
+              <WeightSection
+                readOnly
+                weights={member.weights}
+                inbody={member.inbody}
+                targetWeight={member.targetWeight}
+              />
             </>
           ),
           diet: (

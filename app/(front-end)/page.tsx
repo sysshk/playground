@@ -12,7 +12,7 @@ import { asset } from "@/lib/client";
 import { ThemeToggle } from "@/components/custom/theme";
 import { getViewer } from "@/lib/auth";
 import { SIGNUP_ENABLED } from "@/lib/config";
-import { ROLE_HOME, type Role } from "@/lib/types";
+import { ROLE_HOME, type Role } from "@/types";
 
 /** 소개 본문 글자 */
 const BODY = "mt-5 max-w-[520px] text-md leading-[1.8] text-muted-foreground tablet:text-lg";

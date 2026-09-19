@@ -13,9 +13,8 @@ import {
   readBody,
   requireTrainerId,
   serverError,
-  toNumber,
 } from "@/lib/api";
-import { isValidWeight, WEIGHT_RANGE_MESSAGE } from "@/lib/weight";
+import { isValidWeight, toNumber, WEIGHT_RANGE_MESSAGE } from "@/lib/validation";
 
 type Params = { params: Promise<{ memberId: string }> };
 

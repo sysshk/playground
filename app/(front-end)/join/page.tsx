@@ -15,7 +15,7 @@ import { BASE_PATH } from "@/lib/client";
 
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/custom/theme";
-import { isEmail, PASSWORD_MIN } from "@/lib/account";
+import { isEmail, PASSWORD_MIN } from "@/lib/validation";
 export default function JoinPage() {
   const router = useRouter();
   const [name, setName] = useState("");

@@ -7,7 +7,7 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { auth } from "@/app/api/auth/auth-config";
-import type { Role } from "@/lib/types";
+import type { Role } from "@/types";
 
 export type Viewer = { id: string; name: string; role: Role };
 

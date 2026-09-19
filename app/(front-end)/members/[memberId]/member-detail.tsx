@@ -15,14 +15,14 @@ import { ConfirmDialog } from "@/components/custom/confirm-dialog";
 import { Icon } from "@/components/custom/icons";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { apiFetch, errorMessage, formatDate, formatDayHour, formatDayShort } from "@/lib/client";
-import { formatPhone } from "@/lib/phone";
 import type {
   CoachingNote,
   MemberDetail,
   MemberTab,
   SessionCompletion,
   Workout,
-} from "@/lib/types";
+} from "@/types";
+import { formatPhone } from "@/lib/validation";
 import MemberForm, { type MemberPayload } from "../member-form";
 import { DietSection, NutritionPanel } from "./tabs/diet-tab";
 import { WeightSection, type InbodyPayload } from "./tabs/inbody-tab";
@@ -187,6 +187,8 @@ export function MemberDetailView({
               <NoteSection
                 memberId={member.id}
                 notes={member.notes}
+                noteTotal={member.noteTotal}
+                noteLimit={member.noteLimit}
                 onDelete={(note) => setPending({ type: "deleteNote", note })}
               />
             </>
@@ -195,6 +197,7 @@ export function MemberDetailView({
             <>
               <WeightSection
                 weights={member.weights}
+                inbody={member.inbody}
                 targetWeight={member.targetWeight}
                 defaults={{
                   gender: member.nutrition?.gender ?? null,

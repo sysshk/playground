@@ -6,7 +6,8 @@
 
 import { NextResponse } from "next/server";
 import { getMonthCalendar } from "@/lib/queries";
-import { badRequest, isValidMonth, requireTrainerId, serverError } from "@/lib/api";
+import { badRequest, requireTrainerId, serverError } from "@/lib/api";
+import { isValidMonth } from "@/lib/validation";
 
 /** 한 달치 수업과 예약 — 달력에서 다른 달로 넘길 때 */
 export async function GET(request: Request) {

@@ -8,15 +8,15 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { EmptyState } from "@/components/custom/empty-state";
 import { Button } from "@/components/ui/button";
-import { getMemberDetail, lessonLimit } from "@/lib/queries";
+import { getMemberDetail, LESSON_PAGE, NOTE_PAGE, pageLimit } from "@/lib/queries";
 import { requireTrainer } from "@/lib/auth";
 import { toPastDay } from "@/lib/kst";
-import { toMemberTab } from "@/lib/types";
+import { toMemberTab } from "@/types";
 import { MemberDetailView } from "./member-detail";
 
 type Props = {
   params: Promise<{ memberId: string }>;
-  searchParams: Promise<{ lessons?: string; tab?: string; date?: string }>;
+  searchParams: Promise<{ lessons?: string; notes?: string; tab?: string; date?: string }>;
 };
 
 /** 회원 상세 — 서버에서 읽어 첫 화면에 바로 그림. 읽는 동안은 뼈대를 보여 줌 */
@@ -29,10 +29,14 @@ export default function MemberDetailPage(props: Props) {
 }
 
 async function MemberScreen({ params, searchParams }: Props) {
-  const [{ memberId }, { lessons, tab, date }] = await Promise.all([params, searchParams]);
+  const [{ memberId }, { lessons, notes, tab, date }] = await Promise.all([params, searchParams]);
   const trainer = await requireTrainer();
   const mealDate = toPastDay(date);
-  const member = await getMemberDetail(memberId, trainer.scope, lessonLimit(lessons), mealDate);
+  const member = await getMemberDetail(memberId, trainer.scope, {
+    lessons: pageLimit(lessons, LESSON_PAGE),
+    notes: pageLimit(notes, NOTE_PAGE),
+    mealDate,
+  });
 
   if (!member) {
     return (

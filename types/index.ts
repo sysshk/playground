@@ -9,7 +9,7 @@ import type {
   Gender,
   LeanBodyMassSource,
   NutritionGoal,
-} from "./nutrition";
+} from "@/lib/nutrition";
 
 /** 계정 역할 — 관리자는 모든 회원, 트레이너는 자기 회원, 회원(client)은 자기 기록만 읽음 */
 export type Role = "admin" | "trainer" | "client";
@@ -129,18 +129,33 @@ export interface WeightRecord {
   leanLeftLegPct: number | null; // 왼다리 표준 대비 %
 }
 
-/** 인바디 칸이 하나라도 차 있는지. 칸이 없는 옛 응답(undefined)도 빈 칸으로 봄 */
-export const isInbody = (r: WeightRecord) =>
-  r.skeletalMuscle != null ||
-  r.bodyFatMass != null ||
-  r.bodyFatPercent != null ||
-  r.waistHipRatio != null ||
-  r.visceralFatLevel != null ||
-  r.visceralFatArea != null ||
-  r.balanceUpper != null ||
-  r.balanceLower != null ||
-  r.balanceUpperLower != null ||
-  r.leanTrunk != null;
+/** 이 중 하나라도 차 있으면 인바디 기록. 비었으면 체중만 잰 날 */
+export const INBODY_FIELDS = [
+  "skeletalMuscle",
+  "bodyFatMass",
+  "bodyFatPercent",
+  "waistHipRatio",
+  "visceralFatLevel",
+  "visceralFatArea",
+  "balanceUpper",
+  "balanceLower",
+  "balanceUpperLower",
+  "leanTrunk",
+] as const satisfies readonly (keyof WeightRecord)[];
+
+/** 인바디 칸이 하나라도 차 있는지 */
+export const isInbody = (r: Partial<Record<(typeof INBODY_FIELDS)[number], unknown>>) =>
+  INBODY_FIELDS.some((field) => r[field] != null);
+
+/** 체중 그래프·기록 목록의 한 건. 인바디 전체 칸은 최근 인바디 2건(MemberDetail.inbody)에만 */
+export interface WeightPoint {
+  id: string;
+  date: string;
+  weight: number;
+  skeletalMuscle: number | null; // 골격근량 kg
+  bodyFatMass: number | null; // 체지방량 kg
+  inbody: boolean; // 인바디 칸이 있는 기록
+}
 
 /** 끼니 — 아침, 점심, 저녁, 간식 */
 export const MEAL_SLOTS = ["breakfast", "lunch", "dinner", "snack"] as const;
@@ -302,8 +317,11 @@ export interface MemberDetail extends Member {
   targetWeight: number | null;
   /** 받아 온 수업 기록의 운동 기록 (최근 lessonLimit건 안) */
   workouts: Workout[];
-  weights: WeightRecord[];
-  notes: CoachingNote[];
+  weights: WeightPoint[]; // 전체 기록, 가벼운 칸만
+  inbody: WeightRecord[]; // 최근 인바디 2건, 전체 칸
+  notes: CoachingNote[]; // 최근 noteLimit건
+  noteTotal: number; // 코칭 메모 전체 수
+  noteLimit: number; // 이번에 받아 온 코칭 메모 수
   /** 받아 온 완료 내역 (최근 lessonLimit건) */
   completions: SessionCompletion[];
   /** 지금까지 차감한 수업 수 */

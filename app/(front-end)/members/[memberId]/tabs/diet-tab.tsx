@@ -18,7 +18,7 @@ import { formatDate, formatDateShort, today, WEEKDAYS } from "@/lib/client";
 import { holidayName } from "@/lib/holidays";
 import { kstDay, shiftDay, shiftMonth } from "@/lib/kst";
 import { ACTIVITY_HINT, GOAL_LABEL } from "@/lib/nutrition";
-import { MEAL_DAYS, MEAL_SLOT_LABEL, MEAL_SLOTS, type Meal, type NutritionProfile } from "@/lib/types";
+import { MEAL_DAYS, MEAL_SLOT_LABEL, MEAL_SLOTS, type Meal, type NutritionProfile } from "@/types";
 import { IconButton, Section, SectionAction } from "./tab-ui";
 
 // ── 식단 ──────────────────────────────────

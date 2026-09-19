@@ -8,12 +8,12 @@
 
 import { FormEvent, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { formatPhone, validatePhone, PHONE_ERROR } from "@/lib/phone";
 import { Field } from "@/components/custom/form-field";
-import type { Member } from "@/lib/types";
+import type { Member } from "@/types";
 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { formatPhone, PHONE_ERROR, validatePhone } from "@/lib/validation";
 /** 폼 입력 상태 (전부 문자열) */
 interface MemberFormValues {
   name: string;

@@ -32,7 +32,7 @@ import {
 import { apiFetch, errorMessage, WEEKDAYS } from "@/lib/client";
 import { holidayName } from "@/lib/holidays";
 import { kstDay, kstIso, kstMinuteOfDay, kstTimeLabel, shiftMonth } from "@/lib/kst";
-import type { CalendarAppointment, MemberSummary, MonthCalendar } from "@/lib/types";
+import type { CalendarAppointment, MemberSummary, MonthCalendar } from "@/types";
 
 /** 예약끼리 비워 둘 간격 */
 const GAP = 60 * 60 * 1000;

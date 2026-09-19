@@ -8,13 +8,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   badRequest,
-  isPastOrToday,
   readBody,
   requireClientMember,
   serverError,
-  toTrimmed,
 } from "@/lib/api";
 import { parseExercises } from "@/app/api/members/[memberId]/workouts/parse";
+import { isPastOrToday, toTrimmed } from "@/lib/validation";
 
 /** 개인 운동 추가 */
 export async function POST(request: Request) {

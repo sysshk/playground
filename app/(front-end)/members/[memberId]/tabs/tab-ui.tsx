@@ -13,7 +13,7 @@ import { useRef, useState, useTransition, type ReactNode } from "react";
 import { toast } from "sonner";
 import { Icon, type IconName } from "@/components/custom/icons";
 import { apiFetch, errorMessage } from "@/lib/client";
-import { MEMBER_TABS, type MemberTab } from "@/lib/types";
+import { MEMBER_TABS, type MemberTab } from "@/types";
 
 // ── 섹션 틀 ───────────────────────────────
 

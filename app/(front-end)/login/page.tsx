@@ -17,7 +17,7 @@ import { Field } from "@/components/custom/form-field";
 import { GoogleButton } from "@/components/custom/google-button";
 import { ThemeToggle } from "@/components/custom/theme";
 import { SIGNUP_ENABLED } from "@/lib/config";
-import { ROLE_HOME, toRole } from "@/lib/types";
+import { ROLE_HOME, toRole } from "@/types";
 
 import { Input } from "@/components/ui/input";
 export default function LoginPage() {

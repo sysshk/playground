@@ -8,16 +8,15 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   badRequest,
-  isValidDate,
   linkSameDayAppointment,
   readBody,
   requireOwnedMember,
   requireTrainerId,
   serverError,
   takeOneSession,
-  toTrimmed,
 } from "@/lib/api";
 import { kstDay } from "@/lib/kst";
+import { isValidDate, toTrimmed } from "@/lib/validation";
 import { parseCompletedAt, parseExercises } from "./parse";
 
 type Params = { params: Promise<{ memberId: string }> };

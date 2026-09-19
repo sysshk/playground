@@ -15,7 +15,7 @@ import { Icon } from "@/components/custom/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { apiFetch, errorMessage } from "@/lib/client";
-import { formatPhone, validatePhone, PHONE_ERROR } from "@/lib/phone";
+import { formatPhone, PHONE_ERROR, validatePhone } from "@/lib/validation";
 
 export function ProfileForm({
   name: savedName,

@@ -11,7 +11,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { EmptyState } from "@/components/custom/empty-state";
 import { formatDateShort, formatDayShort, formatHour } from "@/lib/client";
-import { formatRest, type CoachingNote, type Exercise, type ExerciseSet, type SessionCompletion, type Workout } from "@/lib/types";
+import { formatRest, type CoachingNote, type Exercise, type ExerciseSet, type SessionCompletion, type Workout } from "@/types";
 import { IconButton, Memo, Section, SectionAction } from "./tab-ui";
 
 // ── 수업 기록 ──────────────────────────────
@@ -19,8 +19,24 @@ import { IconButton, Memo, Section, SectionAction } from "./tab-ui";
 /** 처음 펼쳐 두는 수 */
 const VISIBLE = 6;
 
-/** 더 보기 한 번에 늘리는 수 (lib/queries LESSON_PAGE와 같음) */
+/** 더 보기 한 번에 늘리는 수 (lib/queries LESSON_PAGE·NOTE_PAGE와 같음) */
 const PAGE = 20;
+
+/**
+ * 서버에서 더 받아 오기 — 주소의 ?lessons=·?notes= 값만 늘리고 탭·날짜 같은 다른 값은 둠
+ * 서버 화면이 늘린 수만큼 다시 읽어 그림
+ */
+function useLoadMore() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [loading, startLoading] = useTransition();
+  const load = (key: "lessons" | "notes", count: number) => {
+    const query = new URLSearchParams(window.location.search);
+    query.set(key, String(count));
+    startLoading(() => router.replace(`${pathname}?${query}`, { scroll: false }));
+  };
+  return [loading, load] as const;
+}
 
 /** 목록에 그리는 수업 한 건. 둘 중 하나는 반드시 있음 */
 interface SessionEntry {
@@ -114,9 +130,7 @@ export function LessonHistory({
   onDeleteWorkout?: (workout: Workout, completionId?: string) => void;
   onDeleteCompletion?: (completion: SessionCompletion) => void;
 }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const [loading, startLoading] = useTransition();
+  const [loading, loadMore] = useLoadMore();
   const [shown, setShown] = useState(VISIBLE);
 
   const entries = buildEntries(
@@ -133,11 +147,7 @@ export function LessonHistory({
     setShown(next);
     // 받아 온 것을 넘어서면 다음 묶음을 서버에서 받음
     if (next > entries.length && lessonTotal > entries.length) {
-      startLoading(() =>
-        router.replace(`${pathname}?lessons=${lessonLimit + PAGE}`, {
-          scroll: false,
-        }),
-      );
+      loadMore("lessons", lessonLimit + PAGE);
     }
   };
 
@@ -442,23 +452,29 @@ const FIELDS = [
 export function NoteSection({
   memberId,
   notes,
+  noteTotal,
+  noteLimit,
   readOnly = false,
   onDelete,
 }: {
   memberId: string;
   notes: CoachingNote[];
+  noteTotal: number; // 코칭 메모 전체 수
+  noteLimit: number; // 서버에서 받아 온 수
   /** 회원 본인 화면 — 작성·수정·삭제 버튼을 숨김 */
   readOnly?: boolean;
   onDelete?: (note: CoachingNote) => void;
 }) {
   const base = `/members/${memberId}/notes`;
+  const [loading, loadMore] = useLoadMore();
+  const hidden = noteTotal - notes.length;
 
   return (
     <Section
       title="코칭 메모"
       subtitle={
         notes.length > 0
-          ? `총 ${notes.length}건 · 최신순`
+          ? `총 ${noteTotal}건 · 최신순`
           : "통증, 자세와 움직임 평가를 다음 수업에 활용하세요."
       }
       action={
@@ -518,6 +534,17 @@ export function NoteSection({
             </li>
           ))}
         </ul>
+      )}
+
+      {hidden > 0 && (
+        <button
+          type="button"
+          onClick={() => loadMore("notes", noteLimit + PAGE)}
+          disabled={loading}
+          className="mt-1 w-full rounded-lg py-2.5 text-xs font-bold text-muted-foreground transition-colors hover:bg-raised hover:text-ink disabled:opacity-50"
+        >
+          {loading ? "불러오는 중…" : `더 보기 (${hidden}건)`}
+        </button>
       )}
     </Section>
   );

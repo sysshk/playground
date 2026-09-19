@@ -10,7 +10,7 @@ import type { Prisma } from "@/app/generated/prisma";
 import { memberScope, type MemberScope } from "@/lib/auth";
 import { kstDay, kstIso } from "@/lib/kst";
 import { prisma } from "@/lib/prisma";
-import type { Role } from "@/lib/types";
+import type { Role } from "@/types";
 
 type Guard =
   | { trainerId: string; role: Role; scope: MemberScope; error: null }
@@ -178,37 +178,4 @@ export function serverError(scope: string, error: unknown) {
     { error: "요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요." },
     { status: 500 },
   );
-}
-
-/** 값을 숫자로 바꿈. 비어 있거나 숫자가 아니면 undefined. */
-export function toNumber(value: unknown): number | undefined {
-  if (value === null || value === undefined || value === "") return undefined;
-  const n = typeof value === "number" ? value : Number(value);
-  return Number.isFinite(n) ? n : undefined;
-}
-
-/** 문자열을 다듬음. 비면 null. */
-export function toTrimmed(value: unknown): string | null {
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  return trimmed === "" ? null : trimmed;
-}
-
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
-
-/** YYYY-MM 형식인지 확인함 */
-export function isValidMonth(value: unknown): value is string {
-  return typeof value === "string" && MONTH_PATTERN.test(value);
-}
-
-/** YYYY-MM-DD 형식인지 확인함 */
-export function isValidDate(value: unknown): value is string {
-  if (typeof value !== "string" || !DATE_PATTERN.test(value)) return false;
-  return !Number.isNaN(new Date(`${value}T00:00:00`).getTime());
-}
-
-/** YYYY-MM-DD이고 오늘(한국 날짜) 이후가 아님 */
-export function isPastOrToday(value: unknown): value is string {
-  return isValidDate(value) && value <= kstDay();
 }

@@ -11,7 +11,7 @@ import { useState } from "react";
 import { ConfirmDialog } from "@/components/custom/confirm-dialog";
 import { EmptyState } from "@/components/custom/empty-state";
 import { formatDate, formatDateShort } from "@/lib/client";
-import { type Workout } from "@/lib/types";
+import { type Workout } from "@/types";
 import { SetGrid } from "./pt-tab";
 import { IconButton, Memo, Section, SectionAction, useSave } from "./tab-ui";
 

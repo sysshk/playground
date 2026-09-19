@@ -14,7 +14,7 @@ import { Field } from "@/components/custom/form-field";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { apiFetch, errorMessage, formatDate, today } from "@/lib/client";
-import type { CoachingNote } from "@/lib/types";
+import type { CoachingNote } from "@/types";
 import { EditorPage } from "@/components/custom/editor-page";
 
 const FIELDS = [

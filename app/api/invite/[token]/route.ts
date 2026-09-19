@@ -8,8 +8,8 @@
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { isEmail, PASSWORD_MIN } from "@/lib/account";
-import { badRequest, readBody, serverError, toTrimmed } from "@/lib/api";
+import { badRequest, readBody, serverError } from "@/lib/api";
+import { isEmail, PASSWORD_MIN, toTrimmed } from "@/lib/validation";
 
 type Params = { params: Promise<{ token: string }> };
 

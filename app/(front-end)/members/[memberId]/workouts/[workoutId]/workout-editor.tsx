@@ -16,7 +16,7 @@ import { Icon } from "@/components/custom/icons";
 import { Button } from "@/components/ui/button";
 import { apiFetch, completedAtFrom, errorMessage, formatDate, today } from "@/lib/client";
 import { kstHour } from "@/lib/kst";
-import { formatRest, formatSet, type WeightUnit, type Workout } from "@/lib/types";
+import { formatRest, formatSet, type WeightUnit, type Workout } from "@/types";
 import { EditorPage } from "@/components/custom/editor-page";
 import { round1 } from "@/lib/utils";
 

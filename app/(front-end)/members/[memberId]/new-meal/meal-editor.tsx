@@ -15,7 +15,7 @@ import { Icon, type IconName } from "@/components/custom/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { apiFetch, errorMessage, formatDateShort } from "@/lib/client";
-import { MEAL_MAX, MEAL_SLOT_LABEL, type Meal, type MealSlot } from "@/lib/types";
+import { MEAL_MAX, MEAL_SLOT_LABEL, type Meal, type MealSlot } from "@/types";
 import { EditorPage } from "@/components/custom/editor-page";
 import { IconButton } from "../tabs/tab-ui";
 

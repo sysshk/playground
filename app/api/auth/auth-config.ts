@@ -9,7 +9,7 @@ import Credentials from "next-auth/providers/credentials"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma, prismaRead } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
-import { toRole } from "@/lib/types"
+import { toRole } from "@/types"
 
 /** 세션에 담은 역할을 DB와 다시 맞추는 간격 */
 const ROLE_REFRESH_MS = 5 * 60 * 1000 // 바꾸면 (front-end)/layout.tsx의 refetchInterval도 이보다 짧게

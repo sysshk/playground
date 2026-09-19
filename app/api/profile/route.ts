@@ -6,9 +6,9 @@
 
 import { NextResponse } from "next/server";
 import { auth } from "@/app/api/auth/auth-config";
-import { badRequest, notFound, readBody, serverError, toTrimmed } from "@/lib/api";
-import { formatPhone, validatePhone, PHONE_ERROR } from "@/lib/phone";
+import { badRequest, notFound, readBody, serverError } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
+import { formatPhone, PHONE_ERROR, toTrimmed, validatePhone } from "@/lib/validation";
 
 const NAME_MAX = 30;
 

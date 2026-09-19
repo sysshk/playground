@@ -14,8 +14,8 @@ import {
   requireTrainerId,
   serverError,
   takeOneSession,
-  toTrimmed,
 } from "@/lib/api";
+import { toTrimmed } from "@/lib/validation";
 import { parseCompletedAt } from "../workouts/parse";
 
 type Params = { params: Promise<{ memberId: string }> };

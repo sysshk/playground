@@ -12,7 +12,7 @@ import { ConfirmDialog } from "@/components/custom/confirm-dialog";
 import { EmptyState } from "@/components/custom/empty-state";
 import { Button } from "@/components/ui/button";
 import { formatDayShort } from "@/lib/client";
-import { ANSWER_MAX, QUESTION_MAX, type Question } from "@/lib/types";
+import { ANSWER_MAX, QUESTION_MAX, type Question } from "@/types";
 import { IconButton, Section, useSave } from "./tab-ui";
 
 // ── Q&A ─────────────────────────────────

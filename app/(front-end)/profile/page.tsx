@@ -8,7 +8,7 @@
 import { redirect } from "next/navigation";
 import { getViewer } from "@/lib/auth";
 import { prismaRead } from "@/lib/prisma";
-import { ROLE_LABEL } from "@/lib/types";
+import { ROLE_LABEL } from "@/types";
 import { ProfileForm } from "./profile-form";
 
 export default async function ProfilePage() {

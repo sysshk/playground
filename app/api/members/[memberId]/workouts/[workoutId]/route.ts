@@ -9,13 +9,12 @@ import { prisma } from "@/lib/prisma";
 import {
   badRequest,
   giveBackSession,
-  isValidDate,
   notFound,
   readBody,
   requireTrainerId,
   serverError,
-  toTrimmed,
 } from "@/lib/api";
+import { isValidDate, toTrimmed } from "@/lib/validation";
 import { parseCompletedAt, parseExercises } from "../parse";
 
 type Params = { params: Promise<{ memberId: string; workoutId: string }> };

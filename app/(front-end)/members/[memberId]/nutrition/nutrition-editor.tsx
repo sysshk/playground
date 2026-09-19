@@ -28,7 +28,7 @@ import {
   type NutritionGoal,
 } from "@/lib/nutrition";
 import { apiFetch, errorMessage } from "@/lib/client";
-import type { NutritionProfile } from "@/lib/types";
+import type { NutritionProfile } from "@/types";
 import { EditorPage } from "@/components/custom/editor-page";
 
 const ACTIVITY_LEVELS = Object.keys(ACTIVITY_MULTIPLIER) as ActivityLevel[];

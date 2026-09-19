@@ -16,7 +16,7 @@ import { Icon } from "@/components/custom/icons";
 import { Button } from "@/components/ui/button";
 import { apiFetch, errorMessage, formatDayShort } from "@/lib/client";
 import { kstDay, kstHour } from "@/lib/kst";
-import { LOW_SESSIONS, type MemberStats, type MemberSummary, type MonthCalendar } from "@/lib/types";
+import { LOW_SESSIONS, type MemberStats, type MemberSummary, type MonthCalendar } from "@/types";
 import { LessonCalendar } from "./lesson-calendar";
 
 /** 종료 표의 칸 — 이름, 목표(폰에서는 숨김), 받은 수업, 마지막 수업 */

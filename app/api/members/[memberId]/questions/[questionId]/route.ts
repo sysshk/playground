@@ -12,9 +12,9 @@ import {
   readBody,
   requireTrainerId,
   serverError,
-  toTrimmed,
 } from "@/lib/api";
-import { ANSWER_MAX } from "@/lib/types";
+import { ANSWER_MAX } from "@/types";
+import { toTrimmed } from "@/lib/validation";
 
 type Params = { params: Promise<{ memberId: string; questionId: string }> };
 

@@ -8,7 +8,7 @@ import { Suspense } from "react";
 import { requireTrainer } from "@/lib/auth";
 import { toPastDay } from "@/lib/kst";
 import { getMealEditor } from "@/lib/queries";
-import { toMealSlot } from "@/lib/types";
+import { toMealSlot } from "@/types";
 import { EditorMissing } from "@/components/custom/editor-page";
 import { MealEditor } from "./meal-editor";
 

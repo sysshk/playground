@@ -12,7 +12,6 @@ import {
   requireOwnedMember,
   requireTrainerId,
   serverError,
-  toNumber,
 } from "@/lib/api";
 import {
   ACTIVITY_MULTIPLIER,
@@ -21,6 +20,7 @@ import {
   type Gender,
   type NutritionGoal,
 } from "@/lib/nutrition";
+import { toNumber } from "@/lib/validation";
 
 type Params = { params: Promise<{ memberId: string }> };
 

@@ -1,10 +1,10 @@
+import { isValidDate, toTrimmed } from "@/lib/validation";
 /*
   API 공통 — 코칭 메모 검증 (작성·수정이 함께 씀)
 
   @date : 2026-09-19
 */
 
-import { isValidDate, toTrimmed } from "@/lib/api";
 
 interface NoteInput {
   date: string;

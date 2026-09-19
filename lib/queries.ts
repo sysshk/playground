@@ -18,8 +18,8 @@ import type {
   NutritionProfile,
   Role,
   Workout,
-} from "@/lib/types";
-import { LOW_SESSIONS, MEAL_DAYS, toRole } from "@/lib/types";
+} from "@/types";
+import { INBODY_FIELDS, isInbody, LOW_SESSIONS, MEAL_DAYS, toRole } from "@/types";
 
 function serialize<T>(value: unknown): T {
   return JSON.parse(JSON.stringify(value)) as T;
@@ -142,17 +142,33 @@ export async function getMonthCalendar(
 
 // ── 회원 상세 ────────────────────────────────
 
-/** 수업 기록은 최근 것부터 이만큼씩 받음. 기록이 쌓여도 화면 데이터가 커지지 않게 */
+/** 수업 기록·코칭 메모는 최근 것부터 이만큼씩 받음. 기록이 쌓여도 화면 데이터가 커지지 않게 */
 export const LESSON_PAGE = 20;
+export const NOTE_PAGE = 20;
 
-/** 주소의 ?lessons= 값을 받을 수업 기록 수로. LESSON_PAGE 단위로 맞춤 */
-export function lessonLimit(raw: string | string[] | undefined) {
+/** 주소의 ?lessons=·?notes= 값을 받을 개수로. page 단위로 맞춤 */
+export function pageLimit(raw: string | string[] | undefined, page: number) {
   const n = Number(Array.isArray(raw) ? raw[0] : raw);
-  if (!Number.isFinite(n) || n <= LESSON_PAGE) return LESSON_PAGE;
-  return Math.min(Math.ceil(n / LESSON_PAGE) * LESSON_PAGE, 2000);
+  if (!Number.isFinite(n) || n <= page) return page;
+  return Math.min(Math.ceil(n / page) * page, 2000);
 }
 
-function detailInclude(lessons: number, mealDate: string) {
+/** 그래프·기록 목록에 쓰는 체중 칸 + 인바디인지 가릴 칸 */
+const WEIGHT_POINT_SELECT = {
+  id: true,
+  date: true,
+  weight: true,
+  ...Object.fromEntries(INBODY_FIELDS.map((field) => [field, true])),
+} as { id: true; date: true; weight: true } & Record<(typeof INBODY_FIELDS)[number], true>;
+
+/** 회원 상세에서 받을 개수 */
+export interface DetailLimits {
+  lessons: number;
+  notes: number;
+  mealDate: string; // 식단 탭이 여는 날
+}
+
+function detailInclude({ lessons, notes, mealDate }: DetailLimits) {
   return {
     completions: {
       orderBy: { completedAt: "desc" },
@@ -166,8 +182,8 @@ function detailInclude(lessons: number, mealDate: string) {
       take: lessons,
       include: WORKOUT_INCLUDE,
     },
-    weights: { orderBy: [...NEWEST_FIRST] },
-    notes: { orderBy: [...NEWEST_FIRST] },
+    weights: { orderBy: [...NEWEST_FIRST], select: WEIGHT_POINT_SELECT },
+    notes: { orderBy: [...NEWEST_FIRST], take: notes },
     nutrition: true,
     questions: { orderBy: { createdAt: "desc" } },
     meals: {
@@ -175,7 +191,11 @@ function detailInclude(lessons: number, mealDate: string) {
       orderBy: [{ date: "desc" }, { createdAt: "asc" }],
     },
     _count: {
-      select: { completions: true, workouts: { where: { completion: null, byMember: false } } },
+      select: {
+        completions: true,
+        workouts: { where: { completion: null, byMember: false } },
+        notes: true,
+      },
     },
   } satisfies Prisma.MemberInclude;
 }
@@ -188,16 +208,15 @@ const DETAIL_OMIT = { inviteToken: true, inviteExpiresAt: true } satisfies Prism
 
 async function readDetail(
   where: Prisma.MemberWhereInput,
-  lessons: number,
-  mealDate: string,
+  limits: DetailLimits,
 ): Promise<MemberDetail | null> {
-  // 개인 운동도 workouts 관계라 include에 두 번 못 넣음. 따로 읽음
-  const [member, personalWorkouts] = await Promise.all([
+  // 개인 운동·최근 인바디도 workouts·weights 관계라 include에 두 번 못 넣음. 따로 읽음
+  const [member, personalWorkouts, inbody] = await Promise.all([
     prismaRead.member.findFirst({
       relationLoadStrategy: "join",
       where,
       omit: DETAIL_OMIT,
-      include: detailInclude(lessons, mealDate),
+      include: detailInclude(limits),
     }),
     prismaRead.workout.findMany({
       relationLoadStrategy: "join",
@@ -206,18 +225,35 @@ async function readDetail(
       take: PERSONAL_LIMIT,
       include: WORKOUT_INCLUDE,
     }),
+    // 결과지 카드는 최근 인바디와 그 앞 기록만 씀
+    prismaRead.weightRecord.findMany({
+      where: { member: where, OR: INBODY_FIELDS.map((field) => ({ [field]: { not: null } })) },
+      orderBy: [...NEWEST_FIRST],
+      take: 2,
+    }),
   ]);
   if (!member) return null;
 
-  const { completions, workouts, _count, ...rest } = member;
+  const { completions, workouts, weights, _count, ...rest } = member;
   return serialize<MemberDetail>({
     ...rest,
     personalWorkouts,
     completions: completions.map(({ workout: _workout, ...completion }) => completion),
     workouts: [...completions.flatMap((c) => (c.workout ? [c.workout] : [])), ...workouts],
+    weights: weights.map((w) => ({
+      id: w.id,
+      date: w.date,
+      weight: w.weight,
+      skeletalMuscle: w.skeletalMuscle,
+      bodyFatMass: w.bodyFatMass,
+      inbody: isInbody(w),
+    })),
+    inbody,
     completionTotal: _count.completions,
     lessonTotal: _count.completions + _count.workouts,
-    lessonLimit: lessons,
+    lessonLimit: limits.lessons,
+    noteTotal: _count.notes,
+    noteLimit: limits.notes,
   });
 }
 
@@ -225,19 +261,14 @@ async function readDetail(
 export async function getMemberDetail(
   memberId: string,
   scope: Prisma.MemberWhereInput,
-  lessons = LESSON_PAGE,
-  mealDate = kstDay(),
+  limits: DetailLimits,
 ): Promise<MemberDetail | null> {
-  return readDetail({ id: memberId, ...scope }, lessons, mealDate);
+  return readDetail({ id: memberId, ...scope }, limits);
 }
 
 /** 회원 본인 화면 — 이 계정에 연결된 회원 기록. 연결이 없으면 null. */
-export async function getMyRecord(
-  userId: string,
-  lessons = LESSON_PAGE,
-  mealDate = kstDay(),
-): Promise<MemberDetail | null> {
-  return readDetail({ userId }, lessons, mealDate);
+export async function getMyRecord(userId: string, limits: DetailLimits): Promise<MemberDetail | null> {
+  return readDetail({ userId }, limits);
 }
 
 // ── 계정 관리 ────────────────────────────────

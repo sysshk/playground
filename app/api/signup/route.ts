@@ -8,8 +8,8 @@ import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { SIGNUP_ENABLED } from "@/lib/config"
-import { isEmail, PASSWORD_MIN } from "@/lib/account"
-import { readBody, toTrimmed } from "@/lib/api"
+import { readBody } from "@/lib/api"
+import { isEmail, PASSWORD_MIN, toTrimmed } from "@/lib/validation"
 
 export async function POST(request: Request) {
   // 화면을 막는 것만으로는 부족함. API로 직접 호출해도 막혀야 함
