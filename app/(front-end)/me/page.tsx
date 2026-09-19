@@ -10,16 +10,12 @@ import { requireClient } from "@/lib/auth";
 import { toPastDay } from "@/lib/kst";
 import { getMyRecord, lessonLimit } from "@/lib/queries";
 import { toMemberTab } from "@/lib/types";
-import {
-  DietSection,
-  LessonHistory,
-  MemberTabs,
-  NoteSection,
-  NutritionPanel,
-  PersonalWorkoutSection,
-  QuestionSection,
-  WeightSection,
-} from "../members/[memberId]/member-sections";
+import { DietSection, NutritionPanel } from "../members/[memberId]/tabs/diet-tab";
+import { WeightSection } from "../members/[memberId]/tabs/inbody-tab";
+import { PersonalWorkoutSection } from "../members/[memberId]/tabs/personal-tab";
+import { LessonHistory, NoteSection } from "../members/[memberId]/tabs/pt-tab";
+import { QuestionSection } from "../members/[memberId]/tabs/qna-tab";
+import { MemberTabs } from "../members/[memberId]/tabs/tab-ui";
 
 export default async function MyRecordPage({
   searchParams,
@@ -45,12 +41,12 @@ export default async function MyRecordPage({
   return (
     <div className="mx-auto flex w-full max-w-[760px] flex-col gap-7">
       {/* 요약 */}
-      <section className="flex flex-col gap-4 rounded-2xl bg-hero px-5 py-5 text-hero-foreground sm:px-6 sm:py-6">
+      <section className="flex flex-col gap-4 rounded-2xl border border-line bg-surface px-5 py-5 text-ink sm:px-6 sm:py-6">
         <div>
-          <p className="text-sm font-semibold opacity-70">{member.name}님의 PT 기록</p>
+          <p className="text-sm font-semibold text-muted-foreground">{member.name}님의 PT 기록</p>
           <p className="mt-1 text-3xl font-extrabold tracking-[-0.03em]">
             남은 수업{" "}
-            <span className="tabular-nums text-primary-bright">{member.remainingSessions}</span>
+            <span className="tabular-nums text-primary">{member.remainingSessions}</span>
             <span className="ml-0.5 text-lg">회</span>
           </p>
         </div>

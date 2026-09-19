@@ -7,7 +7,7 @@
 import { getNutritionEditor } from "@/lib/queries";
 import { Suspense } from "react";
 import { requireTrainer } from "@/lib/auth";
-import { EditorMissing } from "../editor-frame";
+import { EditorMissing } from "@/components/custom/editor-page";
 import { NutritionEditor } from "./nutrition-editor";
 
 /** 칼로리 및 영양 계산 */

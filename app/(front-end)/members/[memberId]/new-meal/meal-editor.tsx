@@ -16,8 +16,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { apiFetch, errorMessage, formatDateShort } from "@/lib/client";
 import { MEAL_MAX, MEAL_SLOT_LABEL, type Meal, type MealSlot } from "@/lib/types";
-import { EditorFrame } from "../editor-frame";
-import { IconButton } from "../member-sections";
+import { EditorPage } from "@/components/custom/editor-page";
+import { IconButton } from "../tabs/tab-ui";
 
 type Mode = "ai" | "direct";
 type Macro = "carbs" | "fat" | "protein";
@@ -106,7 +106,7 @@ export function MealEditor({
   };
 
   return (
-    <EditorFrame back={back} title={`${label} 기록`} name={name} subtitle={formatDateShort(date)}>
+    <EditorPage back={back} title={`${label} 기록`} name={name} subtitle={formatDateShort(date)}>
       {/* 이미 적은 것 */}
       {meals.length > 0 && (
         <div className="flex flex-col gap-1.5">
@@ -227,6 +227,6 @@ export function MealEditor({
           </Button>
         </div>
       </form>
-    </EditorFrame>
+    </EditorPage>
   );
 }

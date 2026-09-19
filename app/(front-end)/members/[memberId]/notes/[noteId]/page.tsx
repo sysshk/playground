@@ -7,7 +7,7 @@
 import { Suspense } from "react";
 import { requireTrainer } from "@/lib/auth";
 import { getNoteEditor } from "@/lib/queries";
-import { EditorMissing } from "../../editor-frame";
+import { EditorMissing } from "@/components/custom/editor-page";
 import { NoteEditor } from "./note-editor";
 
 type Props = { params: Promise<{ memberId: string; noteId: string }>; };

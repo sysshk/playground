@@ -1,7 +1,7 @@
 /*
   회원 상세·내 기록 화면 — 체중·인바디 그래프 캔버스
   체중은 굵은 선과 채움(왼쪽 축), 골격근량·체지방량은 가는 선(오른쪽 축). 목표선·끝 값·세로 안내선
-  그래프 라이브러리가 커서 member-sections가 화면이 뜬 뒤에 이 파일을 따로 받음
+  그래프 라이브러리가 커서 inbody-tab이 화면이 뜬 뒤에 이 파일을 따로 받음
 
   @date : 2026-09-15
 */
@@ -23,7 +23,8 @@ import {
 import { useMemo } from "react";
 import { Chart } from "react-chartjs-2";
 import { formatDateShort } from "@/lib/client";
-import { signed, type Stats } from "./member-sections";
+import { type Stats } from "./inbody-tab";
+import { signed } from "./tab-ui";
 
 ChartJS.register(LinearScale, LineController, LineElement, PointElement, Tooltip, Filler);
 

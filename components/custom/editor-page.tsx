@@ -1,5 +1,6 @@
 /*
-  작성 화면 틀 — 수업 기록·코칭 메모·영양 계산 화면이 함께 씀
+  공통 — 작성 화면 틀 (경로 표시·제목·설명·보조 표시 + 본문, 못 찾았을 때 화면)
+  수업 기록·개인 운동·코칭 메모·영양 계산·식단 기록 화면이 함께 씀
 
   @date : 2026-09-12
 */
@@ -9,8 +10,8 @@ import type { ReactNode } from "react";
 import { Breadcrumbs } from "@/components/custom/breadcrumbs";
 import { Button } from "@/components/ui/button";
 
-/** 회원 아래 작성 화면(운동 기록·코칭 메모·영양 계산)이 함께 쓰는 껍데기. */
-export function EditorFrame({
+/** 작성 화면의 틀 — 위에 경로·제목, 아래에 본문 */
+export function EditorPage({
   back,
   title,
   name,
@@ -74,13 +75,13 @@ export function EditorMissing({
   message: string;
 }) {
   return (
-    <EditorFrame back={back} title={title} name={name}>
+    <EditorPage back={back} title={title} name={name}>
       <div className="rounded-2xl border-[1.5px] border-edge bg-surface p-6 text-center">
         <p className="text-base font-bold">{message}</p>
         <Button asChild variant="outline" className="mt-4">
           <Link href={back}>회원으로 돌아가기</Link>
         </Button>
       </div>
-    </EditorFrame>
+    </EditorPage>
   );
 }

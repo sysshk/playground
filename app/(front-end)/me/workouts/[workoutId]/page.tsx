@@ -8,7 +8,7 @@
 import { Suspense } from "react";
 import { requireClient } from "@/lib/auth";
 import { getMyWorkoutEditor } from "@/lib/queries";
-import { EditorMissing } from "../../../members/[memberId]/editor-frame";
+import { EditorMissing } from "@/components/custom/editor-page";
 import { WorkoutEditor } from "../../../members/[memberId]/workouts/[workoutId]/workout-editor";
 
 type Props = { params: Promise<{ workoutId: string }> };

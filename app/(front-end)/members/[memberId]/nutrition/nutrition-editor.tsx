@@ -29,7 +29,7 @@ import {
 } from "@/lib/nutrition";
 import { apiFetch, errorMessage } from "@/lib/client";
 import type { NutritionProfile } from "@/lib/types";
-import { EditorFrame } from "../editor-frame";
+import { EditorPage } from "@/components/custom/editor-page";
 
 const ACTIVITY_LEVELS = Object.keys(ACTIVITY_MULTIPLIER) as ActivityLevel[];
 const GOALS: NutritionGoal[] = ["loss", "maintain", "gain"];
@@ -196,7 +196,7 @@ export function NutritionEditor({
       : null;
 
   return (
-    <EditorFrame
+    <EditorPage
       back={back}
       title="영양 계산"
       name={member.name}
@@ -348,6 +348,6 @@ export function NutritionEditor({
           </Button>
         </div>
       </form>
-    </EditorFrame>
+    </EditorPage>
   );
 }

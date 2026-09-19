@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { apiFetch, errorMessage, formatDate, today } from "@/lib/client";
 import type { CoachingNote } from "@/lib/types";
-import { EditorFrame } from "../../editor-frame";
+import { EditorPage } from "@/components/custom/editor-page";
 
 const FIELDS = [
   { key: "pain", label: "통증", placeholder: "통증 부위, 강도, 발생 상황" },
@@ -82,7 +82,7 @@ export function NoteEditor({
   };
 
   return (
-    <EditorFrame
+    <EditorPage
       back={back}
       title={note ? "코칭 메모 수정" : "코칭 메모"}
       name={member.name}
@@ -128,6 +128,6 @@ export function NoteEditor({
           </Button>
         </div>
       </form>
-    </EditorFrame>
+    </EditorPage>
   );
 }

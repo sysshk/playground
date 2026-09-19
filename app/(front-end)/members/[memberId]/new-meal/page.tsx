@@ -9,8 +9,8 @@ import { requireTrainer } from "@/lib/auth";
 import { toPastDay } from "@/lib/kst";
 import { getMealEditor } from "@/lib/queries";
 import { toMealSlot } from "@/lib/types";
-import { EditorMissing } from "../../editor-frame";
-import { MealEditor } from "../meal-editor";
+import { EditorMissing } from "@/components/custom/editor-page";
+import { MealEditor } from "./meal-editor";
 
 type Props = {
   params: Promise<{ memberId: string }>;

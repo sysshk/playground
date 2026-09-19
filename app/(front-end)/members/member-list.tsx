@@ -263,7 +263,7 @@ export function MemberList({
           </p>
         </div>
         <Button asChild>
-          <Link href="/members/new">
+          <Link href="/members/new-member">
             <Icon name="plus" size={16} />
             회원 등록
           </Link>
@@ -335,7 +335,7 @@ export function MemberList({
             description="회원 등록 버튼을 눌러 첫 번째 회원을 추가해 보세요."
             action={
               <Button asChild>
-                <Link href="/members/new">
+                <Link href="/members/new-member">
                   <Icon name="plus" size={16} />
                   회원 등록하기
                 </Link>

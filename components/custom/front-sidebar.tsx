@@ -37,7 +37,7 @@ const INNER_WIDTH = OPEN_WIDTH - 24;
 /** 작성 화면 → [이름, 돌아갈 탭]. 탭이 없으면 PT 탭 */
 const SUB_PAGES: Record<string, [string, string?]> = {
   nutrition: ["영양 계산", "diet"],
-  meals: ["식단 기록", "diet"],
+  "new-meal": ["식단 기록", "diet"],
   workouts: ["수업 기록"],
   notes: ["코칭 메모"],
 };
@@ -56,7 +56,7 @@ function crumbs(pathname: string, date: string | null): Crumb[] {
   const day = date ? `&date=${date}` : "";
 
   if (seg[0] === "me") {
-    if (seg[1] === "meals") {
+    if (seg[1] === "new-meal") {
       return [{ label: "내 기록", href: `/me?tab=diet${day}` }, { label: "식단 기록" }];
     }
     return [{ label: "내 기록", href: "/me?tab=personal" }, { label: "개인 운동" }];
@@ -64,11 +64,11 @@ function crumbs(pathname: string, date: string | null): Crumb[] {
   if (seg[0] !== "members") return [{ label: "PT 매니저" }];
 
   const list = { label: "회원", href: "/members" };
-  if (seg[1] === "new") return [list, { label: "새 회원" }];
+  if (seg[1] === "new-member") return [list, { label: "새 회원" }];
   if (seg.length === 2) return [list, { label: "회원 상세" }];
 
   const [label, tab] = SUB_PAGES[seg[2]] ?? ["작성"];
-  const query = tab ? `?tab=${tab}${seg[2] === "meals" ? day : ""}` : "";
+  const query = tab ? `?tab=${tab}${seg[2] === "new-meal" ? day : ""}` : "";
   return [list, { label: "회원 상세", href: `/members/${seg[1]}${query}` }, { label }];
 }
 

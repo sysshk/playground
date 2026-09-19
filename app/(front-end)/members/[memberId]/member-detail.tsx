@@ -24,18 +24,12 @@ import type {
   Workout,
 } from "@/lib/types";
 import MemberForm, { type MemberPayload } from "../member-form";
-import {
-  DietSection,
-  IconButton,
-  LessonHistory,
-  MemberTabs,
-  NoteSection,
-  NutritionPanel,
-  PersonalWorkoutSection,
-  QuestionSection,
-  WeightSection,
-  type InbodyPayload,
-} from "./member-sections";
+import { DietSection, NutritionPanel } from "./tabs/diet-tab";
+import { WeightSection, type InbodyPayload } from "./tabs/inbody-tab";
+import { PersonalWorkoutSection } from "./tabs/personal-tab";
+import { LessonHistory, NoteSection } from "./tabs/pt-tab";
+import { QuestionSection } from "./tabs/qna-tab";
+import { IconButton, MemberTabs } from "./tabs/tab-ui";
 
 /** 화면에 펼쳐져 있는 입력 폼. 한 번에 하나만 열어 둠 */
 type OpenForm =
