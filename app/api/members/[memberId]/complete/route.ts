@@ -9,9 +9,11 @@ import { prisma } from "@/lib/prisma";
 import {
   badRequest,
   linkSameDayAppointment,
+  readBody,
   requireOwnedMember,
   requireTrainerId,
   serverError,
+  takeOneSession,
   toTrimmed,
 } from "@/lib/api";
 import { parseCompletedAt } from "../workouts/parse";
@@ -30,14 +32,14 @@ export async function POST(request: Request, { params }: Params) {
   let completedAt: Date | undefined;
   let reason: string | null = null;
   try {
-    const body = await request.json().catch(() => ({}));
+    const body = await readBody(request);
 
-    reason = toTrimmed(body?.reason);
+    reason = toTrimmed(body.reason);
     if (reason && reason.length > REASON_MAX) {
       return badRequest(`사유는 ${REASON_MAX}자 이내로 입력해 주세요.`);
     }
 
-    const picked = parseCompletedAt(body?.completedAt);
+    const picked = parseCompletedAt(body.completedAt);
     if ("error" in picked) return badRequest(picked.error);
     completedAt = picked.value;
   } catch {
@@ -46,14 +48,7 @@ export async function POST(request: Request, { params }: Params) {
 
   try {
     const result = await prisma.$transaction(async (tx) => {
-      // 동시에 두 번 눌러도 음수로 내려가지 않도록 조건부로 차감함
-      // scope도 조건에 넣어 소유권 확인을 겸함
-      const decremented = await tx.member.updateMany({
-        where: { id: memberId, ...scope, remainingSessions: { gt: 0 } },
-        data: { remainingSessions: { decrement: 1 } },
-      });
-
-      if (decremented.count === 0) return null;
+      if (!(await takeOneSession(tx, memberId, scope))) return null;
 
       const completion = await tx.sessionCompletion.create({
         data: { memberId, reason, ...(completedAt ? { completedAt } : {}) },

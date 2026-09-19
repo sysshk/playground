@@ -6,7 +6,7 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { badRequest, requireClientMember, serverError, toTrimmed } from "@/lib/api";
+import { badRequest, readBody, requireClientMember, serverError, toTrimmed } from "@/lib/api";
 import { QUESTION_MAX } from "@/lib/types";
 
 /** 질문 올리기 */
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   if (error) return error;
 
   try {
-    const body = await request.json();
+    const body = await readBody(request);
     const text = toTrimmed(body.body);
 
     if (!text) return badRequest("질문을 입력해 주세요.");

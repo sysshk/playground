@@ -7,7 +7,7 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdminId, serverError } from "@/lib/api";
+import { notFound, requireAdminId, serverError } from "@/lib/api";
 
 type Params = { params: Promise<{ memberId: string }> };
 
@@ -26,7 +26,7 @@ export async function POST(_request: Request, { params }: Params) {
       select: { userId: true },
     });
     if (!member) {
-      return NextResponse.json({ error: "회원을 찾을 수 없습니다." }, { status: 404 });
+      return notFound("회원을 찾을 수 없습니다.");
     }
     if (member.userId) {
       return NextResponse.json(

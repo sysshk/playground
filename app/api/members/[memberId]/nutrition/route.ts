@@ -8,6 +8,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   badRequest,
+  readBody,
   requireOwnedMember,
   requireTrainerId,
   serverError,
@@ -35,7 +36,7 @@ export async function PUT(request: Request, { params }: Params) {
     const owned = await requireOwnedMember(memberId, scope);
     if (owned.error) return owned.error;
 
-    const body = await request.json();
+    const body = await readBody(request);
 
     const gender: Gender = body.gender === "female" ? "female" : "male";
 

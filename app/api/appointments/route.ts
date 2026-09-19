@@ -5,7 +5,7 @@
 */
 
 import { NextResponse } from "next/server";
-import { requireTrainerId, serverError } from "@/lib/api";
+import { readBody, requireTrainerId, serverError } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 import { checkAppointment } from "./check";
 
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   if (error) return error;
 
   try {
-    const checked = await checkAppointment(await request.json(), scope);
+    const checked = await checkAppointment(await readBody(request), scope);
     if (checked.error) return checked.error;
 
     const appointment = await prisma.appointment.create({ data: checked.data });

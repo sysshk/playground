@@ -18,6 +18,7 @@ import { apiFetch, completedAtFrom, errorMessage, formatDate, today } from "@/li
 import { kstHour } from "@/lib/kst";
 import { formatRest, formatSet, type WeightUnit, type Workout } from "@/lib/types";
 import { EditorPage } from "@/components/custom/editor-page";
+import { round1 } from "@/lib/utils";
 
 /** 세트 한 줄. 입력 중에는 전부 문자열로 들고 있다가 저장할 때 숫자로 바꿈 */
 interface SetRow {
@@ -140,8 +141,6 @@ function toRows(workout: Workout | null): ExerciseRow[] {
 }
 
 /** 소수점 한 자리까지만 남김 (2.5kg 단위 계산에서 생기는 부동소수 오차 제거). */
-const round1 = (n: number) => Math.round(n * 10) / 10;
-
 export function WorkoutEditor({
   member,
   workout,

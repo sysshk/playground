@@ -29,12 +29,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { apiFetch, errorMessage } from "@/lib/client";
+import { apiFetch, errorMessage, WEEKDAYS } from "@/lib/client";
 import { holidayName } from "@/lib/holidays";
 import { kstDay, kstIso, kstMinuteOfDay, kstTimeLabel, shiftMonth } from "@/lib/kst";
 import type { CalendarAppointment, MemberSummary, MonthCalendar } from "@/lib/types";
-
-const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
 /** 예약끼리 비워 둘 간격 */
 const GAP = 60 * 60 * 1000;

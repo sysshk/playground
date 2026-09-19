@@ -14,7 +14,7 @@ import { EmptyState } from "@/components/custom/empty-state";
 import { Icon } from "@/components/custom/icons";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { formatDate, formatDateShort, today } from "@/lib/client";
+import { formatDate, formatDateShort, today, WEEKDAYS } from "@/lib/client";
 import { holidayName } from "@/lib/holidays";
 import { kstDay, shiftDay, shiftMonth } from "@/lib/kst";
 import { ACTIVITY_HINT, GOAL_LABEL } from "@/lib/nutrition";
@@ -549,8 +549,6 @@ function Chip({ children }: { children: React.ReactNode }) {
 
 // ── 식단 · 식사 기록 ─────────────────────────
 
-const WEEKDAY_SHORT = ["일", "월", "화", "수", "목", "금", "토"];
-
 /** 맨 위 날짜 — ‹ ›로 하루씩, 가운데를 누르면 달력 */
 function DayNav({
   date,
@@ -704,7 +702,7 @@ function CalendarSheet({
             // 날짜판
             <div className="flex flex-col gap-4">
               <div className="grid grid-cols-7 text-center text-xs font-semibold">
-                {WEEKDAY_SHORT.map((label, i) => (
+                {WEEKDAYS.map((label, i) => (
                   <span
                     key={label}
                     className={

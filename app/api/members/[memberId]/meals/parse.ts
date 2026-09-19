@@ -5,8 +5,7 @@
   @date : 2026-09-19
 */
 
-import { isValidDate, toNumber, toTrimmed } from "@/lib/api";
-import { kstDay } from "@/lib/kst";
+import { isPastOrToday, toNumber, toTrimmed } from "@/lib/api";
 import { MEAL_MAX, MEAL_SLOTS, type MealSlot } from "@/lib/types";
 
 interface MealInput {
@@ -26,7 +25,7 @@ const GRAM_MAX = 1000;
 
 /** 날짜·끼니·먹은 것, 선택으로 kcal·탄단지. 미래 날짜는 막음 */
 export function parseMeal(body: Record<string, unknown>): ParseResult {
-  if (!isValidDate(body.date) || body.date > kstDay()) {
+  if (!isPastOrToday(body.date)) {
     return { error: "날짜를 선택해 주세요. 미래 날짜는 기록할 수 없습니다." };
   }
   if (!MEAL_SLOTS.includes(body.slot as MealSlot)) return { error: "끼니를 골라 주세요." };

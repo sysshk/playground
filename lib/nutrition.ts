@@ -5,6 +5,8 @@
   @date : 2026-09-12
 */
 
+import { round1 } from "@/lib/utils";
+
 export type Gender = "male" | "female";
 export type ActivityLevel =
   | "sedentary"
@@ -101,10 +103,6 @@ export interface NutritionResult {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
-}
-
-function round1(value: number) {
-  return Math.round(value * 10) / 10;
 }
 
 export function calculateNutrition(input: NutritionInput): NutritionResult {

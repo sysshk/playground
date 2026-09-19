@@ -320,3 +320,6 @@ export interface MemberDetail extends Member {
   /** 식단, 최근 것부터 */
   meals: Meal[];
 }
+
+/** 남은 수업이 이만큼 이하면 재등록 안내가 필요함 */
+export const LOW_SESSIONS = 3;

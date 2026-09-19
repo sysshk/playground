@@ -9,7 +9,7 @@ import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { SIGNUP_ENABLED } from "@/lib/config"
 import { isEmail, PASSWORD_MIN } from "@/lib/account"
-import { toTrimmed } from "@/lib/api"
+import { readBody, toTrimmed } from "@/lib/api"
 
 export async function POST(request: Request) {
   // 화면을 막는 것만으로는 부족함. API로 직접 호출해도 막혀야 함
@@ -21,10 +21,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = await request.json().catch(() => ({}))
-    const email = toTrimmed(body?.email)?.toLowerCase()
-    const password = typeof body?.password === "string" ? body.password : ""
-    const name = toTrimmed(body?.name)
+    const body = await readBody(request)
+    const email = toTrimmed(body.email)?.toLowerCase()
+    const password = typeof body.password === "string" ? body.password : ""
+    const name = toTrimmed(body.name)
 
     if (!email || !isEmail(email)) {
       return NextResponse.json(

@@ -7,7 +7,7 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { badRequest, requireAdminId, serverError, toTrimmed } from "@/lib/api";
+import { badRequest, notFound, readBody, requireAdminId, serverError, toTrimmed } from "@/lib/api";
 
 type Params = { params: Promise<{ memberId: string }> };
 
@@ -18,8 +18,8 @@ export async function PUT(request: Request, { params }: Params) {
   if (error) return error;
 
   try {
-    const body = await request.json().catch(() => ({}));
-    const userId = toTrimmed(body?.userId);
+    const body = await readBody(request);
+    const userId = toTrimmed(body.userId);
     if (!userId) return badRequest("연결할 계정을 골라 주세요.");
 
     const [member, user] = await Promise.all([
@@ -29,8 +29,8 @@ export async function PUT(request: Request, { params }: Params) {
         select: { role: true, memberRecord: { select: { name: true } } },
       }),
     ]);
-    if (!member) return NextResponse.json({ error: "회원을 찾을 수 없습니다." }, { status: 404 });
-    if (!user) return NextResponse.json({ error: "계정을 찾을 수 없습니다." }, { status: 404 });
+    if (!member) return notFound("회원을 찾을 수 없습니다.");
+    if (!user) return notFound("계정을 찾을 수 없습니다.");
     if (member.userId) return badRequest("이미 다른 계정이 연결된 회원입니다. 먼저 해제해 주세요.");
     if (user.role !== "client") return badRequest("회원 권한인 계정만 연결할 수 있습니다.");
     if (user.memberRecord) {
@@ -60,7 +60,7 @@ export async function DELETE(_request: Request, { params }: Params) {
       data: { userId: null },
     });
     if (count === 0) {
-      return NextResponse.json({ error: "연결된 계정이 없습니다." }, { status: 404 });
+      return notFound("연결된 계정이 없습니다.");
     }
     return NextResponse.json({ ok: true });
   } catch (e) {

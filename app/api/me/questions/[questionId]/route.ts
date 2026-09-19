@@ -6,7 +6,7 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireClientMember, serverError } from "@/lib/api";
+import { notFound, requireClientMember, serverError } from "@/lib/api";
 
 type Params = { params: Promise<{ questionId: string }> };
 
@@ -21,10 +21,7 @@ export async function DELETE(_request: Request, { params }: Params) {
       where: { id: questionId, memberId, answer: null },
     });
     if (count === 0) {
-      return NextResponse.json(
-        { error: "질문을 찾을 수 없거나 이미 답이 달렸습니다." },
-        { status: 404 },
-      );
+      return notFound("질문을 찾을 수 없거나 이미 답이 달렸습니다.");
     }
     return NextResponse.json({ ok: true });
   } catch (e) {

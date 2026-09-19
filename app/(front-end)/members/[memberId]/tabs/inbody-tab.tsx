@@ -23,7 +23,8 @@ import { type Gender } from "@/lib/nutrition";
 import { BALANCE_LABEL, isInbody, type Balance, type WeightRecord } from "@/lib/types";
 import { isValidWeight, WEIGHT_RANGE_MESSAGE } from "@/lib/weight";
 import { inbodyStandard, SCALE, scalePosition, type InbodyScale } from "@/lib/inbody";
-import { IconButton, Memo, Section, SectionAction, round1, signed } from "./tab-ui";
+import { round1 } from "@/lib/utils";
+import { IconButton, Memo, Section, SectionAction, signed } from "./tab-ui";
 
 // ── 체중·인바디 ────────────────────────────
 

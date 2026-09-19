@@ -106,6 +106,30 @@ export function isRecordNotFound(error: unknown) {
   );
 }
 
+/**
+ * 남은 수업을 1회 뺌. 0이면 빼지 않고 false
+ * 동시에 두 번 눌러도 음수로 내려가지 않게 조건부로 뺌. scope도 조건에 넣어 소유권 확인을 겸함
+ */
+export async function takeOneSession(
+  tx: Prisma.TransactionClient,
+  memberId: string,
+  scope: MemberScope,
+) {
+  const { count } = await tx.member.updateMany({
+    where: { id: memberId, ...scope, remainingSessions: { gt: 0 } },
+    data: { remainingSessions: { decrement: 1 } },
+  });
+  return count > 0;
+}
+
+/** 지운 수업만큼 남은 수업을 1회 되돌림 */
+export async function giveBackSession(tx: Prisma.TransactionClient, memberId: string) {
+  await tx.member.update({
+    where: { id: memberId },
+    data: { remainingSessions: { increment: 1 } },
+  });
+}
+
 /** 기록한 수업을 같은 날(한국 시각) 그 회원의 아직 기록 안 한 예약에 이음. 여럿이면 이른 것부터 */
 export async function linkSameDayAppointment(
   tx: Prisma.TransactionClient,
@@ -127,6 +151,21 @@ export async function linkSameDayAppointment(
       data: { completionId },
     });
   }
+}
+
+/**
+ * 요청 본문을 객체로 읽음. JSON이 깨졌거나 객체가 아니면 빈 객체
+ * 잘못된 본문이 500이 아니라 각 검증의 400으로 가게 함
+ */
+export async function readBody(request: Request): Promise<Record<string, unknown>> {
+  const body: unknown = await request.json().catch(() => null);
+  return body !== null && typeof body === "object" && !Array.isArray(body)
+    ? (body as Record<string, unknown>)
+    : {};
+}
+
+export function notFound(message: string) {
+  return NextResponse.json({ error: message }, { status: 404 });
 }
 
 export function badRequest(message: string) {
@@ -167,4 +206,9 @@ export function isValidMonth(value: unknown): value is string {
 export function isValidDate(value: unknown): value is string {
   if (typeof value !== "string" || !DATE_PATTERN.test(value)) return false;
   return !Number.isNaN(new Date(`${value}T00:00:00`).getTime());
+}
+
+/** YYYY-MM-DD이고 오늘(한국 날짜) 이후가 아님 */
+export function isPastOrToday(value: unknown): value is string {
+  return isValidDate(value) && value <= kstDay();
 }

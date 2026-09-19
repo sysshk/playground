@@ -6,7 +6,7 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { badRequest, requireOwnedMember, requireTrainerId, serverError } from "@/lib/api";
+import { badRequest, readBody, requireOwnedMember, requireTrainerId, serverError } from "@/lib/api";
 import { parseMeal } from "./parse";
 
 type Params = { params: Promise<{ memberId: string }> };
@@ -21,7 +21,7 @@ export async function POST(request: Request, { params }: Params) {
     const owned = await requireOwnedMember(memberId, scope);
     if (owned.error) return owned.error;
 
-    const parsed = parseMeal(await request.json());
+    const parsed = parseMeal(await readBody(request));
     if ("error" in parsed) return badRequest(parsed.error);
 
     const meal = await prisma.meal.create({ data: { memberId, ...parsed.meal } });

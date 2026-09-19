@@ -1,6 +1,6 @@
 /*
   회원 상세·내 기록 화면 — 탭이 함께 쓰는 틀
-  섹션 머리, 탭 버튼, 아이콘 버튼, 저장 후 다시 받기, 메모 칸, 숫자 글`
+  섹션 머리, 탭 버튼, 아이콘 버튼, 저장 후 다시 받기, 메모 칸, 증감 숫자 표기
 
   @date : 2026-09-19
 */
@@ -253,17 +253,13 @@ export function useSave() {
   return { run, busy: saving || refreshing };
 }
 
-
+/** 코칭 메모 한 줄 */
 export function Memo({ text }: { text: string }) {
   return (
     <p className="whitespace-pre-wrap rounded-r-lg border-l-[3px] border-primary bg-primary-light/40 py-1.5 pr-3 pl-3 text-xs leading-relaxed text-ink">
       {text}
     </p>
   );
-}
-
-export function round1(value: number) {
-  return Math.round(value * 10) / 10;
 }
 
 /** −1.2 / +0.4 / ±0 */

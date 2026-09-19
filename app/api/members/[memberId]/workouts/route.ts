@@ -10,9 +10,11 @@ import {
   badRequest,
   isValidDate,
   linkSameDayAppointment,
+  readBody,
   requireOwnedMember,
   requireTrainerId,
   serverError,
+  takeOneSession,
   toTrimmed,
 } from "@/lib/api";
 import { kstDay } from "@/lib/kst";
@@ -27,9 +29,10 @@ export async function POST(request: Request, { params }: Params) {
   if (error) return error;
 
   try {
-    const body = await request.json();
+    const body = await readBody(request);
+    const date = body.date;
 
-    if (!isValidDate(body.date)) return badRequest("날짜를 선택해 주세요.");
+    if (!isValidDate(date)) return badRequest("날짜를 선택해 주세요.");
 
     const parsed = parseExercises(body.exercises);
     if ("error" in parsed) return badRequest(parsed.error);
@@ -41,32 +44,21 @@ export async function POST(request: Request, { params }: Params) {
 
     const completedAt =
       picked.value ??
-      (body.date === kstDay()
+      (date === kstDay()
         ? new Date()
-        : new Date(`${body.date}T12:00:00+09:00`));
+        : new Date(`${date}T12:00:00+09:00`));
 
     const result = await prisma.$transaction(async (tx) => {
       // 기록 한 건이 곧 수업 한 번임. 차감부터 해서, 못 하면 기록을 만들지 않음
       // 트랜잭션 콜백은 값을 돌려주면 커밋되므로 만든 뒤에 빠져나가면 기록만 남음
-      // scope도 조건에 넣어 소유권 확인을 겸함
-      const { count } = await tx.member.updateMany({
-        where: { id: memberId, ...scope, remainingSessions: { gt: 0 } },
-        data: { remainingSessions: { decrement: 1 } },
-      });
-      if (count === 0) return null;
+      if (!(await takeOneSession(tx, memberId, scope))) return null;
 
       const workout = await tx.workout.create({
         data: {
           memberId,
-          date: body.date,
+          date,
           memo: toTrimmed(body.memo),
           exercises: { create: parsed.exercises },
-        },
-        include: {
-          exercises: {
-            orderBy: { order: "asc" },
-            include: { sets: { orderBy: { order: "asc" } } },
-          },
         },
       });
 

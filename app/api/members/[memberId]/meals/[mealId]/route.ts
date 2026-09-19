@@ -6,7 +6,14 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { badRequest, requireTrainerId, serverError, toTrimmed } from "@/lib/api";
+import {
+  badRequest,
+  notFound,
+  readBody,
+  requireTrainerId,
+  serverError,
+  toTrimmed,
+} from "@/lib/api";
 import { MEAL_COMMENT_MAX } from "@/lib/types";
 
 type Params = { params: Promise<{ memberId: string; mealId: string }> };
@@ -22,7 +29,7 @@ export async function DELETE(_request: Request, { params }: Params) {
       where: { id: mealId, memberId, member: scope },
     });
     if (count === 0) {
-      return NextResponse.json({ error: "식단 기록을 찾을 수 없습니다." }, { status: 404 });
+      return notFound("식단 기록을 찾을 수 없습니다.");
     }
     return NextResponse.json({ ok: true });
   } catch (e) {
@@ -37,7 +44,7 @@ export async function PATCH(request: Request, { params }: Params) {
   if (error) return error;
 
   try {
-    const body = await request.json();
+    const body = await readBody(request);
     const comment = toTrimmed(body.comment);
     if (comment && comment.length > MEAL_COMMENT_MAX) {
       return badRequest(`코멘트는 ${MEAL_COMMENT_MAX}자 이내로 적어 주세요.`);
@@ -49,7 +56,7 @@ export async function PATCH(request: Request, { params }: Params) {
       data: { comment, commentedAt: comment ? new Date() : null },
     });
     if (count === 0) {
-      return NextResponse.json({ error: "식단 기록을 찾을 수 없습니다." }, { status: 404 });
+      return notFound("식단 기록을 찾을 수 없습니다.");
     }
     return NextResponse.json({ ok: true });
   } catch (e) {

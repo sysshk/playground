@@ -6,13 +6,13 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { parseNote } from "./parse";
 import {
   badRequest,
-  isValidDate,
+  readBody,
   requireOwnedMember,
   requireTrainerId,
   serverError,
-  toTrimmed,
 } from "@/lib/api";
 
 type Params = { params: Promise<{ memberId: string }> };
@@ -27,21 +27,12 @@ export async function POST(request: Request, { params }: Params) {
     const owned = await requireOwnedMember(memberId, scope);
     if (owned.error) return owned.error;
 
-    const body = await request.json();
-
-    if (!isValidDate(body.date)) return badRequest("날짜를 선택해 주세요.");
-
-    const pain = toTrimmed(body.pain);
-    const posture = toTrimmed(body.posture);
-    const movement = toTrimmed(body.movement);
-    const homework = toTrimmed(body.homework);
-
-    if (!pain && !posture && !movement && !homework) {
-      return badRequest("코칭 항목을 하나 이상 입력해 주세요.");
-    }
+    const body = await readBody(request);
+    const parsed = parseNote(body);
+    if ("error" in parsed) return badRequest(parsed.error);
 
     const note = await prisma.coachingNote.create({
-      data: { memberId, date: body.date, pain, posture, movement, homework },
+      data: { memberId, ...parsed.note },
     });
 
     return NextResponse.json({ note }, { status: 201 });

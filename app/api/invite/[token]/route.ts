@@ -1,5 +1,6 @@
 /*
   API — 초대 링크 화면: 회원이 링크로 들어와 자기 계정을 만듦 (로그인 없이 부름)
+  지금은 초대 화면이 구글 버튼(준비 중)만 있어 부르는 곳이 없음. 구글 로그인을 붙일 때 계정 잇기·링크 지우기를 다시 씀
 
   @date : 2026-09-15
 */
@@ -8,7 +9,7 @@ import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isEmail, PASSWORD_MIN } from "@/lib/account";
-import { badRequest, serverError, toTrimmed } from "@/lib/api";
+import { badRequest, readBody, serverError, toTrimmed } from "@/lib/api";
 
 type Params = { params: Promise<{ token: string }> };
 
@@ -24,9 +25,9 @@ export async function POST(request: Request, { params }: Params) {
   const { token } = await params;
 
   try {
-    const body = await request.json().catch(() => ({}));
-    const email = toTrimmed(body?.email)?.toLowerCase();
-    const password = typeof body?.password === "string" ? body.password : "";
+    const body = await readBody(request);
+    const email = toTrimmed(body.email)?.toLowerCase();
+    const password = typeof body.password === "string" ? body.password : "";
 
     if (!email || !isEmail(email)) {
       return badRequest("이메일 주소를 정확히 입력해 주세요.");

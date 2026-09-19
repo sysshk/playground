@@ -5,14 +5,13 @@
 */
 
 import { NextResponse } from "next/server";
-import { formatPhone, validatePhone, PHONE_ERROR } from "@/lib/phone"
 import { prisma } from "@/lib/prisma";
+import { parseMember } from "./parse";
 import {
   badRequest,
+  readBody,
   requireTrainerId,
   serverError,
-  toNumber,
-  toTrimmed,
 } from "@/lib/api";
 
 /** 회원 등록 */
@@ -21,30 +20,12 @@ export async function POST(request: Request) {
   if (error) return error;
 
   try {
-    const body = await request.json();
-
-    const name = toTrimmed(body.name);
-    if (!name) return badRequest("이름을 입력해 주세요.");
-
-    const rawPhone = toTrimmed(body.phone);
-    if (!rawPhone) return badRequest("연락처를 입력해 주세요.");
-    if (!validatePhone(rawPhone)) return badRequest(PHONE_ERROR);
-    const phone = formatPhone(rawPhone);
-
-    const remainingSessions = toNumber(body.remainingSessions) ?? 0;
-    if (remainingSessions < 0 || !Number.isInteger(remainingSessions)) {
-      return badRequest("남은 수업은 0 이상의 정수로 입력해 주세요.");
-    }
+    const body = await readBody(request);
+    const parsed = parseMember(body);
+    if ("error" in parsed) return badRequest(parsed.error);
 
     const member = await prisma.member.create({
-      data: {
-        trainerId,
-        name,
-        phone,
-        goal: toTrimmed(body.goal),
-        memo: toTrimmed(body.memo),
-        remainingSessions,
-      },
+      data: { trainerId, ...parsed.member },
       select: { id: true, name: true },
     });
 
@@ -60,8 +41,8 @@ export async function DELETE(request: Request) {
   if (error) return error;
 
   try {
-    const body = await request.json().catch(() => null);
-    const ids = body?.ids;
+    const body = await readBody(request);
+    const ids = body.ids;
     if (
       !Array.isArray(ids) ||
       ids.length === 0 ||

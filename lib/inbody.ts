@@ -6,9 +6,7 @@
 */
 
 import type { Gender } from "@/lib/nutrition";
-
-/** 소수 한 자리 */
-const round1 = (value: number) => Math.round(value * 10) / 10;
+import { round1 } from "@/lib/utils";
 
 /**
  * 인바디 결과지의 표준 범위 — 키·성별로 계산함

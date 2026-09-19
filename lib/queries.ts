@@ -19,7 +19,7 @@ import type {
   Role,
   Workout,
 } from "@/lib/types";
-import { MEAL_DAYS, toRole } from "@/lib/types";
+import { LOW_SESSIONS, MEAL_DAYS, toRole } from "@/lib/types";
 
 function serialize<T>(value: unknown): T {
   return JSON.parse(JSON.stringify(value)) as T;
@@ -80,7 +80,7 @@ export async function getMemberList(
       recentWorkouts,
       // 3회 이하로 남은 회원은 재등록 안내가 필요함
       runningLow: summaries.filter(
-        (m) => m.remainingSessions > 0 && m.remainingSessions <= 3,
+        (m) => m.remainingSessions > 0 && m.remainingSessions <= LOW_SESSIONS,
       ).length,
     },
   });

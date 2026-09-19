@@ -24,7 +24,8 @@ export default function FrontEndLayout({
   const bare = BARE_ROUTES.includes(pathname) || pathname.startsWith('/invite/');
 
   return (
-    <SessionProvider basePath={`${BASE_PATH}/api/auth`}>
+    // 4분마다 세션을 다시 받아 쿠키를 새로 둠. 5분 지난 쿠키면 서버가 요청마다 DB에서 역할을 다시 읽음
+    <SessionProvider basePath={`${BASE_PATH}/api/auth`} refetchInterval={4 * 60}>
       {bare ? children : <FrontSidebar>{children}</FrontSidebar>}
       <Toaster position="bottom-center" />
     </SessionProvider>

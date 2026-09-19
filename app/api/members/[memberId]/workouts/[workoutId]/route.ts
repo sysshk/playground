@@ -8,7 +8,10 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   badRequest,
+  giveBackSession,
   isValidDate,
+  notFound,
+  readBody,
   requireTrainerId,
   serverError,
   toTrimmed,
@@ -24,9 +27,10 @@ export async function PATCH(request: Request, { params }: Params) {
   if (error) return error;
 
   try {
-    const body = await request.json();
+    const body = await readBody(request);
+    const date = body.date;
 
-    if (!isValidDate(body.date)) return badRequest("날짜를 선택해 주세요.");
+    if (!isValidDate(date)) return badRequest("날짜를 선택해 주세요.");
 
     const parsed = parseExercises(body.exercises);
     if ("error" in parsed) return badRequest(parsed.error);
@@ -40,10 +44,7 @@ export async function PATCH(request: Request, { params }: Params) {
       select: { id: true },
     });
     if (!existing) {
-      return NextResponse.json(
-        { error: "운동 기록을 찾을 수 없습니다." },
-        { status: 404 },
-      );
+      return notFound("운동 기록을 찾을 수 없습니다.");
     }
 
     const workout = await prisma.$transaction(async (tx) => {
@@ -53,15 +54,9 @@ export async function PATCH(request: Request, { params }: Params) {
       const workout = await tx.workout.update({
         where: { id: workoutId },
         data: {
-          date: body.date,
+          date,
           memo: toTrimmed(body.memo),
           exercises: { create: parsed.exercises },
-        },
-        include: {
-          exercises: {
-            orderBy: { order: "asc" },
-            include: { sets: { orderBy: { order: "asc" } } },
-          },
         },
       });
 
@@ -99,20 +94,14 @@ export async function DELETE(_request: Request, { params }: Params) {
 
       if (workout.completion) {
         await tx.sessionCompletion.delete({ where: { id: workout.completion.id } });
-        await tx.member.update({
-          where: { id: memberId },
-          data: { remainingSessions: { increment: 1 } },
-        });
+        await giveBackSession(tx, memberId);
       }
       await tx.workout.delete({ where: { id: workoutId } });
       return { refunded: workout.completion !== null };
     });
 
     if (!result) {
-      return NextResponse.json(
-        { error: "운동 기록을 찾을 수 없습니다." },
-        { status: 404 },
-      );
+      return notFound("운동 기록을 찾을 수 없습니다.");
     }
 
     return NextResponse.json({ ok: true, ...result });

@@ -5,20 +5,18 @@
 */
 
 import { NextResponse } from "next/server";
-import { formatPhone, validatePhone, PHONE_ERROR } from "@/lib/phone"
 import { prisma } from "@/lib/prisma";
+import { parseMember } from "../parse";
 import {
   badRequest,
   isRecordNotFound,
+  notFound,
+  readBody,
   requireTrainerId,
   serverError,
-  toNumber,
-  toTrimmed,
 } from "@/lib/api";
 
 type Params = { params: Promise<{ memberId: string }> };
-
-const NOT_FOUND = { error: "회원을 찾을 수 없습니다." };
 
 /** 회원 정보 수정 */
 export async function PATCH(request: Request, { params }: Params) {
@@ -27,37 +25,20 @@ export async function PATCH(request: Request, { params }: Params) {
   if (error) return error;
 
   try {
-    const body = await request.json();
-
-    const name = toTrimmed(body.name);
-    if (!name) return badRequest("이름을 입력해 주세요.");
-
-    const rawPhone = toTrimmed(body.phone);
-    if (!rawPhone) return badRequest("연락처를 입력해 주세요.");
-    if (!validatePhone(rawPhone)) return badRequest(PHONE_ERROR);
-    const phone = formatPhone(rawPhone);
-
-    const remainingSessions = toNumber(body.remainingSessions) ?? 0;
-    if (remainingSessions < 0 || !Number.isInteger(remainingSessions)) {
-      return badRequest("남은 수업은 0 이상의 정수로 입력해 주세요.");
-    }
+    const body = await readBody(request);
+    const parsed = parseMember(body);
+    if ("error" in parsed) return badRequest(parsed.error);
 
     // scope를 조건에 넣어 소유권 확인과 수정을 한 번에 함
     const member = await prisma.member.update({
       where: { id: memberId, ...scope },
-      data: {
-        name,
-        phone,
-        goal: toTrimmed(body.goal),
-        memo: toTrimmed(body.memo),
-        remainingSessions,
-      },
+      data: parsed.member,
       select: { id: true, name: true },
     });
 
     return NextResponse.json({ member });
   } catch (e) {
-    if (isRecordNotFound(e)) return NextResponse.json(NOT_FOUND, { status: 404 });
+    if (isRecordNotFound(e)) return notFound("회원을 찾을 수 없습니다.");
     return serverError("member.PATCH", e);
   }
 }
@@ -73,7 +54,7 @@ export async function DELETE(_request: Request, { params }: Params) {
     const { count } = await prisma.member.deleteMany({
       where: { id: memberId, ...scope },
     });
-    if (count === 0) return NextResponse.json(NOT_FOUND, { status: 404 });
+    if (count === 0) return notFound("회원을 찾을 수 없습니다.");
 
     return NextResponse.json({ ok: true });
   } catch (e) {

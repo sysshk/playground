@@ -16,11 +16,8 @@ import { Icon } from "@/components/custom/icons";
 import { Button } from "@/components/ui/button";
 import { apiFetch, errorMessage, formatDayShort } from "@/lib/client";
 import { kstDay, kstHour } from "@/lib/kst";
-import type { MemberStats, MemberSummary, MonthCalendar } from "@/lib/types";
+import { LOW_SESSIONS, type MemberStats, type MemberSummary, type MonthCalendar } from "@/lib/types";
 import { LessonCalendar } from "./lesson-calendar";
-
-/** 수업이 이만큼 이하로 남으면 재등록 안내가 필요함 */
-const LOW_SESSION_THRESHOLD = 3;
 
 /** 종료 표의 칸 — 이름, 목표(폰에서는 숨김), 받은 수업, 마지막 수업 */
 const ENDED_COLUMNS =
@@ -146,7 +143,7 @@ export function MemberList({
   /** 회원 칸. 진행 중과 종료 목록이 같이 씀 */
   const memberCard = (member: MemberSummary) => {
     const left = member.remainingSessions;
-    const low = left > 0 && left <= LOW_SESSION_THRESHOLD;
+    const low = left > 0 && left <= LOW_SESSIONS;
     const days = daysSince(member.lastCompletedAt, today);
     const stale = left > 0 && days !== null && days >= STALE_DAYS;
     const selected = picked.has(member.id);

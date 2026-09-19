@@ -85,7 +85,8 @@ export function formatHourLabel(hour: number) {
   return hour < 12 ? `오전 ${hour}시` : `오후 ${hour - 12}시`;
 }
 
-const WEEKDAY = ["일", "월", "화", "수", "목", "금", "토"];
+/** 요일 글자. getDay() 순서(일요일부터) */
+export const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
 /** 목록에 쓰는 짧은 날짜 — "9월 11일 (목)". 올해가 아닐 때만 연도를 붙임 */
 function shortLabel(parsed: Date) {
@@ -93,7 +94,7 @@ function shortLabel(parsed: Date) {
     String(parsed.getFullYear()) === kstDay().slice(0, 4)
       ? ""
       : `${parsed.getFullYear()}년 `;
-  return `${year}${parsed.getMonth() + 1}월 ${parsed.getDate()}일 (${WEEKDAY[parsed.getDay()]})`;
+  return `${year}${parsed.getMonth() + 1}월 ${parsed.getDate()}일 (${WEEKDAYS[parsed.getDay()]})`;
 }
 
 /** YYYY-MM-DD → "9월 11일 (목)" */

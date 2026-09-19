@@ -9,6 +9,8 @@ import { prisma } from "@/lib/prisma";
 import {
   badRequest,
   isRecordNotFound,
+  notFound,
+  readBody,
   requireTrainerId,
   serverError,
   toNumber,
@@ -24,7 +26,7 @@ export async function PUT(request: Request, { params }: Params) {
   if (error) return error;
 
   try {
-    const body = await request.json();
+    const body = await readBody(request);
 
     const targetWeight = toNumber(body.targetWeight) ?? null;
     if (targetWeight !== null && !isValidWeight(targetWeight)) {
@@ -41,7 +43,7 @@ export async function PUT(request: Request, { params }: Params) {
     return NextResponse.json({ member });
   } catch (e) {
     if (isRecordNotFound(e)) {
-      return NextResponse.json({ error: "회원을 찾을 수 없습니다." }, { status: 404 });
+      return notFound("회원을 찾을 수 없습니다.");
     }
     return serverError("weightTarget.PUT", e);
   }

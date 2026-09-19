@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import {
   badRequest,
   isValidDate,
+  readBody,
   requireOwnedMember,
   requireTrainerId,
   serverError,
@@ -75,7 +76,7 @@ export async function POST(request: Request, { params }: Params) {
     const owned = await requireOwnedMember(memberId, scope);
     if (owned.error) return owned.error;
 
-    const body = await request.json();
+    const body = await readBody(request);
 
     if (!isValidDate(body.date)) return badRequest("날짜를 선택해 주세요.");
 

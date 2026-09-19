@@ -6,7 +6,15 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { badRequest, isRecordNotFound, requireAdminId, serverError, toTrimmed } from "@/lib/api";
+import {
+  badRequest,
+  isRecordNotFound,
+  notFound,
+  readBody,
+  requireAdminId,
+  serverError,
+  toTrimmed,
+} from "@/lib/api";
 
 type Params = { params: Promise<{ memberId: string }> };
 
@@ -17,8 +25,8 @@ export async function PATCH(request: Request, { params }: Params) {
   if (error) return error;
 
   try {
-    const body = await request.json().catch(() => ({}));
-    const trainerId = toTrimmed(body?.trainerId);
+    const body = await readBody(request);
+    const trainerId = toTrimmed(body.trainerId);
     if (!trainerId) return badRequest("담당 트레이너를 골라 주세요.");
 
     const trainer = await prisma.user.findUnique({
@@ -33,7 +41,7 @@ export async function PATCH(request: Request, { params }: Params) {
     return NextResponse.json({ ok: true });
   } catch (e) {
     if (isRecordNotFound(e)) {
-      return NextResponse.json({ error: "회원을 찾을 수 없습니다." }, { status: 404 });
+      return notFound("회원을 찾을 수 없습니다.");
     }
     return serverError("admin.trainer.PATCH", e);
   }

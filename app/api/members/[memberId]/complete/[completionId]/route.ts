@@ -6,7 +6,7 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireTrainerId, serverError } from "@/lib/api";
+import { giveBackSession, notFound, requireTrainerId, serverError } from "@/lib/api";
 
 type Params = { params: Promise<{ memberId: string; completionId: string }> };
 
@@ -28,19 +28,12 @@ export async function DELETE(_request: Request, { params }: Params) {
 
       if (count === 0) return false;
 
-      // 지운 만큼 수업을 되돌림
-      await tx.member.update({
-        where: { id: memberId },
-        data: { remainingSessions: { increment: 1 } },
-      });
+      await giveBackSession(tx, memberId);
       return true;
     });
 
     if (!refunded) {
-      return NextResponse.json(
-        { error: "수업 완료 내역을 찾을 수 없습니다." },
-        { status: 404 },
-      );
+      return notFound("수업 완료 내역을 찾을 수 없습니다.");
     }
 
     return NextResponse.json({ ok: true });

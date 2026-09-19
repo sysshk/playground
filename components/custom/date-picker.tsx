@@ -47,7 +47,7 @@ const DayCalendar = dynamic<DayCalendarProps>(
   async () => {
     const [{ Calendar }, { ko }] = await Promise.all([
       import("@/components/ui/calendar"),
-      import("react-day-picker/locale"),
+      import("react-day-picker/locale/ko"),
     ]);
     return function DayCalendar({ value, max, onSelect }: DayCalendarProps) {
       const selected = fromKey(value);

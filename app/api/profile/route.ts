@@ -6,7 +6,7 @@
 
 import { NextResponse } from "next/server";
 import { auth } from "@/app/api/auth/auth-config";
-import { badRequest, serverError, toTrimmed } from "@/lib/api";
+import { badRequest, notFound, readBody, serverError, toTrimmed } from "@/lib/api";
 import { formatPhone, validatePhone, PHONE_ERROR } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 
@@ -22,9 +22,9 @@ export async function PATCH(request: Request) {
   if (!userId) return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
 
   try {
-    const body = await request.json().catch(() => ({}));
-    const name = toTrimmed(body?.name);
-    const rawPhone = toTrimmed(body?.phone);
+    const body = await readBody(request);
+    const name = toTrimmed(body.name);
+    const rawPhone = toTrimmed(body.phone);
 
     if (!name) return badRequest("이름을 입력해 주세요.");
     // 인코딩이 깨진 채 들어온 글자(U+FFFD)는 그대로 저장하지 않음
@@ -38,7 +38,7 @@ export async function PATCH(request: Request) {
       where: { id: userId },
       select: { memberRecord: { select: { id: true } } },
     });
-    if (!user) return NextResponse.json({ error: "계정을 찾을 수 없습니다." }, { status: 404 });
+    if (!user) return notFound("계정을 찾을 수 없습니다.");
 
     const member = user.memberRecord;
     if (member && !phone) return badRequest("연락처를 입력해 주세요.");

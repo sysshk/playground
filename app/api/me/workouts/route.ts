@@ -6,8 +6,14 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { badRequest, isValidDate, requireClientMember, serverError, toTrimmed } from "@/lib/api";
-import { kstDay } from "@/lib/kst";
+import {
+  badRequest,
+  isPastOrToday,
+  readBody,
+  requireClientMember,
+  serverError,
+  toTrimmed,
+} from "@/lib/api";
 import { parseExercises } from "@/app/api/members/[memberId]/workouts/parse";
 
 /** 개인 운동 추가 */
@@ -16,9 +22,10 @@ export async function POST(request: Request) {
   if (error) return error;
 
   try {
-    const body = await request.json();
+    const body = await readBody(request);
+    const date = body.date;
 
-    if (!isValidDate(body.date) || body.date > kstDay()) {
+    if (!isPastOrToday(date)) {
       return badRequest("날짜를 선택해 주세요. 미래 날짜는 기록할 수 없습니다.");
     }
 
@@ -28,7 +35,7 @@ export async function POST(request: Request) {
     const workout = await prisma.workout.create({
       data: {
         memberId,
-        date: body.date,
+        date,
         memo: toTrimmed(body.memo),
         byMember: true,
         exercises: { create: parsed.exercises },

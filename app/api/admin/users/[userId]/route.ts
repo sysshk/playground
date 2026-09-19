@@ -6,7 +6,7 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { badRequest, requireAdminId, serverError } from "@/lib/api";
+import { badRequest, notFound, readBody, requireAdminId, serverError } from "@/lib/api";
 
 type Params = { params: Promise<{ userId: string }> };
 
@@ -19,9 +19,9 @@ export async function PATCH(request: Request, { params }: Params) {
   if (error) return error;
 
   try {
-    const body = await request.json();
-    const role = body?.role;
-    if (!ROLES.includes(role)) {
+    const body = await readBody(request);
+    const role = ROLES.find((r) => r === body.role);
+    if (!role) {
       return badRequest("권한은 회원, 트레이너, 관리자 중에서 골라 주세요.");
     }
     // 내 권한을 스스로 내리면 관리자가 한 명도 없게 될 수 있음
@@ -38,7 +38,7 @@ export async function PATCH(request: Request, { params }: Params) {
       },
     });
     if (!user) {
-      return NextResponse.json({ error: "계정을 찾을 수 없습니다." }, { status: 404 });
+      return notFound("계정을 찾을 수 없습니다.");
     }
 
     // 회원 기록에 연결된 계정이 트레이너가 되면 자기 기록을 고칠 수 있게 됨

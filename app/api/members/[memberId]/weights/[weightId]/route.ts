@@ -6,7 +6,7 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireTrainerId, serverError } from "@/lib/api";
+import { notFound, requireTrainerId, serverError } from "@/lib/api";
 
 type Params = { params: Promise<{ memberId: string; weightId: string }> };
 
@@ -23,10 +23,7 @@ export async function DELETE(_request: Request, { params }: Params) {
     });
 
     if (count === 0) {
-      return NextResponse.json(
-        { error: "체중 기록을 찾을 수 없습니다." },
-        { status: 404 },
-      );
+      return notFound("체중 기록을 찾을 수 없습니다.");
     }
 
     return NextResponse.json({ ok: true });

@@ -6,14 +6,20 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { badRequest, isValidDate, requireClientMember, serverError, toTrimmed } from "@/lib/api";
-import { kstDay } from "@/lib/kst";
+import {
+  badRequest,
+  isPastOrToday,
+  notFound,
+  readBody,
+  requireClientMember,
+  serverError,
+  toTrimmed,
+} from "@/lib/api";
 import { parseExercises } from "@/app/api/members/[memberId]/workouts/parse";
 
 type Params = { params: Promise<{ workoutId: string }> };
 
-const notFound = () =>
-  NextResponse.json({ error: "개인 운동 기록을 찾을 수 없습니다." }, { status: 404 });
+const NOT_FOUND = "개인 운동 기록을 찾을 수 없습니다.";
 
 /** 개인 운동 수정 */
 export async function PATCH(request: Request, { params }: Params) {
@@ -22,9 +28,10 @@ export async function PATCH(request: Request, { params }: Params) {
   if (error) return error;
 
   try {
-    const body = await request.json();
+    const body = await readBody(request);
+    const date = body.date;
 
-    if (!isValidDate(body.date) || body.date > kstDay()) {
+    if (!isPastOrToday(date)) {
       return badRequest("날짜를 선택해 주세요. 미래 날짜는 기록할 수 없습니다.");
     }
 
@@ -36,14 +43,14 @@ export async function PATCH(request: Request, { params }: Params) {
       where: { id: workoutId, memberId, byMember: true },
       select: { id: true },
     });
-    if (!existing) return notFound();
+    if (!existing) return notFound(NOT_FOUND);
 
     const workout = await prisma.$transaction(async (tx) => {
       await tx.exercise.deleteMany({ where: { workoutId } });
       return tx.workout.update({
         where: { id: workoutId },
         data: {
-          date: body.date,
+          date,
           memo: toTrimmed(body.memo),
           exercises: { create: parsed.exercises },
         },
@@ -66,7 +73,7 @@ export async function DELETE(_request: Request, { params }: Params) {
     const { count } = await prisma.workout.deleteMany({
       where: { id: workoutId, memberId, byMember: true },
     });
-    if (count === 0) return notFound();
+    if (count === 0) return notFound(NOT_FOUND);
 
     return NextResponse.json({ ok: true });
   } catch (e) {
