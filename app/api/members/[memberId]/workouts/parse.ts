@@ -18,6 +18,7 @@ interface SetInput {
 export interface ExerciseInput {
   name: string;
   order: number;
+  restSeconds: number | null;
   sets: { create: SetInput[] };
 }
 
@@ -102,7 +103,11 @@ export function parseExercises(raw: unknown): ParseResult {
       sets.push({ order: setIndex, reps, weight, weightRight, unit });
     }
 
-    exercises.push({ name, order: index, sets: { create: sets } });
+    // 휴식은 선택. 0~10분 사이 정수 초만 받고 나머지는 비움
+    const rest = toNumber(item?.restSeconds);
+    const restSeconds = rest !== undefined && Number.isInteger(rest) && rest > 0 && rest <= 600 ? rest : null;
+
+    exercises.push({ name, order: index, restSeconds, sets: { create: sets } });
   }
 
   return { exercises };

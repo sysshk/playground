@@ -7,10 +7,10 @@
 
 import type { Prisma } from "@/app/generated/prisma";
 import { prismaRead } from "@/lib/prisma";
-import { kstDay, kstMonthRange } from "@/lib/kst";
+import { kstDay, kstMonthRange, shiftDay } from "@/lib/kst";
 import type {
   CoachingNote,
-  ExerciseSet,
+  Meal,
   MemberDetail,
   MemberStats,
   MemberSummary,
@@ -19,7 +19,7 @@ import type {
   Role,
   Workout,
 } from "@/lib/types";
-import { formatSet, toRole } from "@/lib/types";
+import { MEAL_DAYS, toRole } from "@/lib/types";
 
 function serialize<T>(value: unknown): T {
   return JSON.parse(JSON.stringify(value)) as T;
@@ -50,7 +50,7 @@ export async function getMemberList(
       where: { member: scope, completedAt: { gte: since } },
     }),
     prismaRead.workout.count({
-      where: { member: scope, date: { gte: sinceDate } },
+      where: { member: scope, byMember: false, date: { gte: sinceDate } },
     }),
     prismaRead.member.findMany({
       relationLoadStrategy: "join",
@@ -58,14 +58,16 @@ export async function getMemberList(
       orderBy: { createdAt: "desc" },
       include: {
         weights: { orderBy: [...NEWEST_FIRST], take: 1, select: { weight: true } },
-        _count: { select: { workouts: true, completions: true } },
+        completions: { orderBy: { completedAt: "desc" }, take: 1, select: { completedAt: true } },
+        _count: { select: { workouts: { where: { byMember: false } }, completions: true } },
       },
     }),
   ]);
 
-  const summaries = members.map(({ weights, _count, ...member }) => ({
+  const summaries = members.map(({ weights, completions, _count, ...member }) => ({
     ...member,
     latestWeight: weights[0]?.weight ?? null,
+    lastCompletedAt: completions[0]?.completedAt ?? null,
     workoutCount: _count.workouts,
     completedSessions: _count.completions,
   }));
@@ -150,7 +152,7 @@ export function lessonLimit(raw: string | string[] | undefined) {
   return Math.min(Math.ceil(n / LESSON_PAGE) * LESSON_PAGE, 2000);
 }
 
-function detailInclude(lessons: number) {
+function detailInclude(lessons: number, mealDate: string) {
   return {
     completions: {
       orderBy: { completedAt: "desc" },
@@ -159,7 +161,7 @@ function detailInclude(lessons: number) {
     },
     // 남은 수업이 없을 때 저장해 완료 내역 없이 홀로 남은 기록
     workouts: {
-      where: { completion: null },
+      where: { completion: null, byMember: false },
       orderBy: [...NEWEST_FIRST],
       take: lessons,
       include: WORKOUT_INCLUDE,
@@ -167,9 +169,19 @@ function detailInclude(lessons: number) {
     weights: { orderBy: [...NEWEST_FIRST] },
     notes: { orderBy: [...NEWEST_FIRST] },
     nutrition: true,
-    _count: { select: { completions: true, workouts: { where: { completion: null } } } },
+    questions: { orderBy: { createdAt: "desc" } },
+    meals: {
+      where: { date: { gte: shiftDay(mealDate, -(MEAL_DAYS - 1)), lte: mealDate } },
+      orderBy: [{ date: "desc" }, { createdAt: "asc" }],
+    },
+    _count: {
+      select: { completions: true, workouts: { where: { completion: null, byMember: false } } },
+    },
   } satisfies Prisma.MemberInclude;
 }
+
+/** 개인 운동은 최근 것만 보여 줌 */
+const PERSONAL_LIMIT = 30;
 
 /** 초대 링크는 관리자만 봄. 화면으로 내려보내는 회원 데이터에서 뺌 */
 const DETAIL_OMIT = { inviteToken: true, inviteExpiresAt: true } satisfies Prisma.MemberOmit;
@@ -177,18 +189,30 @@ const DETAIL_OMIT = { inviteToken: true, inviteExpiresAt: true } satisfies Prism
 async function readDetail(
   where: Prisma.MemberWhereInput,
   lessons: number,
+  mealDate: string,
 ): Promise<MemberDetail | null> {
-  const member = await prismaRead.member.findFirst({
-    relationLoadStrategy: "join",
-    where,
-    omit: DETAIL_OMIT,
-    include: detailInclude(lessons),
-  });
+  // 개인 운동도 workouts 관계라 include에 두 번 못 넣음. 따로 읽음
+  const [member, personalWorkouts] = await Promise.all([
+    prismaRead.member.findFirst({
+      relationLoadStrategy: "join",
+      where,
+      omit: DETAIL_OMIT,
+      include: detailInclude(lessons, mealDate),
+    }),
+    prismaRead.workout.findMany({
+      relationLoadStrategy: "join",
+      where: { member: where, byMember: true },
+      orderBy: [...NEWEST_FIRST],
+      take: PERSONAL_LIMIT,
+      include: WORKOUT_INCLUDE,
+    }),
+  ]);
   if (!member) return null;
 
   const { completions, workouts, _count, ...rest } = member;
   return serialize<MemberDetail>({
     ...rest,
+    personalWorkouts,
     completions: completions.map(({ workout: _workout, ...completion }) => completion),
     workouts: [...completions.flatMap((c) => (c.workout ? [c.workout] : [])), ...workouts],
     completionTotal: _count.completions,
@@ -202,16 +226,18 @@ export async function getMemberDetail(
   memberId: string,
   scope: Prisma.MemberWhereInput,
   lessons = LESSON_PAGE,
+  mealDate = kstDay(),
 ): Promise<MemberDetail | null> {
-  return readDetail({ id: memberId, ...scope }, lessons);
+  return readDetail({ id: memberId, ...scope }, lessons, mealDate);
 }
 
 /** 회원 본인 화면 — 이 계정에 연결된 회원 기록. 연결이 없으면 null. */
 export async function getMyRecord(
   userId: string,
   lessons = LESSON_PAGE,
+  mealDate = kstDay(),
 ): Promise<MemberDetail | null> {
-  return readDetail({ userId }, lessons);
+  return readDetail({ userId }, lessons, mealDate);
 }
 
 // ── 계정 관리 ────────────────────────────────
@@ -343,12 +369,7 @@ export interface WorkoutEditorData {
   workout: Workout | null;
   /** 수정할 기록에 연결된 수업 시각. 새 기록이거나 연결된 수업이 없으면 null */
   completedAt: string | null;
-  /** 종목 이름 → 직전 기록 문구 */
-  lastSets: Record<string, string>;
 }
-
-/** 직전 기록을 찾아볼 최근 수업 기록 수 */
-const LAST_SETS_LOOKBACK = 30;
 
 /** 운동 기록 작성·수정 화면. */
 export async function getWorkoutEditor(
@@ -356,7 +377,6 @@ export async function getWorkoutEditor(
   scope: Prisma.MemberWhereInput,
   workoutId?: string,
 ): Promise<WorkoutEditorData | null> {
-  // 직전 기록은 최근 기록에서만 찾음. 전부 읽으면 기록이 쌓일수록 느려짐
   const [member, target] = await Promise.all([
     prismaRead.member.findFirst({
       relationLoadStrategy: "join",
@@ -365,17 +385,12 @@ export async function getWorkoutEditor(
         id: true,
         name: true,
         remainingSessions: true,
-        workouts: {
-          orderBy: [...NEWEST_FIRST],
-          take: LAST_SETS_LOOKBACK,
-          include: WORKOUT_INCLUDE,
-        },
       },
     }),
     workoutId
       ? prismaRead.workout.findFirst({
           relationLoadStrategy: "join",
-          where: { id: workoutId, memberId, member: scope },
+          where: { id: workoutId, memberId, member: scope, byMember: false },
           include: { ...WORKOUT_INCLUDE, completion: { select: { completedAt: true } } },
         })
       : null,
@@ -392,27 +407,39 @@ export async function getWorkoutEditor(
     },
     workout: target ? serialize<Workout>(workout) : null,
     completedAt: completion?.completedAt.toISOString() ?? null,
-    lastSets: lastSetsOf(serialize<Workout[]>(member.workouts), workoutId),
   };
 }
 
-/**
- * 종목별 직전 기록. 무게를 정할 때 지난번 수치를 보러 나갔다 오지 않게
- * 종목 이름 옆에 띄움. workouts는 최신순이라 처음 만난 것이 가장 최근임
- */
-function lastSetsOf(workouts: Workout[], skipId?: string) {
-  const map: Record<string, string> = {};
-  for (const w of workouts) {
-    if (w.id === skipId) continue;
-    for (const e of w.exercises) {
-      if (e.name in map) continue;
-      const heaviest = (s: ExerciseSet) => Math.max(s.weight ?? 0, s.weightRight ?? 0);
-      const top = e.sets.reduce((best, s) => (heaviest(s) > heaviest(best) ? s : best), e.sets[0]);
-      if (!top) continue;
-      map[e.name] = formatSet(top);
-    }
-  }
-  return map;
+/** 회원 본인의 개인 운동 작성·수정 화면. 연결된 회원 기록이 없으면 null */
+export async function getMyWorkoutEditor(
+  userId: string,
+  workoutId?: string,
+): Promise<WorkoutEditorData | null> {
+  const [member, target] = await Promise.all([
+    prismaRead.member.findFirst({
+      relationLoadStrategy: "join",
+      where: { userId },
+      select: {
+        id: true,
+        name: true,
+        remainingSessions: true,
+      },
+    }),
+    workoutId
+      ? prismaRead.workout.findFirst({
+          relationLoadStrategy: "join",
+          where: { id: workoutId, byMember: true, member: { userId } },
+          include: WORKOUT_INCLUDE,
+        })
+      : null,
+  ]);
+  if (!member) return null;
+
+  return {
+    member: { id: member.id, name: member.name, remainingSessions: member.remainingSessions },
+    workout: target ? serialize<Workout>(target) : null,
+    completedAt: null,
+  };
 }
 
 export interface NutritionEditorData {
@@ -443,4 +470,46 @@ export async function getNutritionEditor(
     nutrition: member.nutrition,
     latestWeight: member.weights[0]?.weight ?? null,
   });
+}
+
+// ── 식단 ─────────────────────────────────
+
+export interface MealEditorData {
+  member: { id: string; name: string };
+  meals: Meal[]; // 그날 그 끼니에 이미 적은 것
+}
+
+/** 식단 한 끼 작성 화면 — 그날 그 끼니 기록. where로 담당 회원이나 회원 본인을 가림 */
+async function readMealEditor(
+  where: Prisma.MemberWhereInput,
+  date: string,
+  slot: string,
+): Promise<MealEditorData | null> {
+  const member = await prismaRead.member.findFirst({
+    relationLoadStrategy: "join",
+    where,
+    select: {
+      id: true,
+      name: true,
+      meals: { where: { date, slot }, orderBy: { createdAt: "asc" } },
+    },
+  });
+  if (!member) return null;
+
+  return serialize({ member: { id: member.id, name: member.name }, meals: member.meals });
+}
+
+/** 트레이너가 회원 식단을 적는 화면 */
+export function getMealEditor(
+  memberId: string,
+  scope: Prisma.MemberWhereInput,
+  date: string,
+  slot: string,
+) {
+  return readMealEditor({ id: memberId, ...scope }, date, slot);
+}
+
+/** 회원 본인이 식단을 적는 화면 */
+export function getMyMealEditor(userId: string, date: string, slot: string) {
+  return readMealEditor({ userId }, date, slot);
 }

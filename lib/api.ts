@@ -39,6 +39,32 @@ export async function requireTrainerId(): Promise<Guard> {
   return { trainerId: user.id, role: user.role, scope: memberScope(user), error: null };
 }
 
+/**
+ * 회원 본인만 통과시키고 연결된 회원 기록 id를 돌려줌
+ * 개인 운동·Q&A처럼 회원이 직접 쓰는 API가 씀
+ */
+export async function requireClientMember(): Promise<
+  { memberId: string; error: null } | { memberId: null; error: NextResponse }
+> {
+  const session = await auth();
+  const user = session?.user;
+  const fail = (message: string, status: number) => ({
+    memberId: null,
+    error: NextResponse.json({ error: message }, { status }),
+  });
+
+  if (!user?.id) return fail("로그인이 필요합니다.", 401);
+  if (user.role !== "client") return fail("회원 본인만 쓸 수 있습니다.", 403);
+
+  const member = await prisma.member.findFirst({
+    where: { userId: user.id },
+    select: { id: true },
+  });
+  if (!member) return fail("연결된 회원 기록이 없습니다.", 404);
+
+  return { memberId: member.id, error: null };
+}
+
 /** 관리자만 통과시킴 */
 export async function requireAdminId(): Promise<Guard> {
   const guard = await requireTrainerId();

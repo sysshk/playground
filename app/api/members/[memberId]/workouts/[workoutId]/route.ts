@@ -36,7 +36,7 @@ export async function PATCH(request: Request, { params }: Params) {
 
     // 회원과 트레이너까지 조건에 넣어 소유권 확인을 겸함
     const existing = await prisma.workout.findFirst({
-      where: { id: workoutId, memberId, member: scope },
+      where: { id: workoutId, memberId, member: scope, byMember: false },
       select: { id: true },
     });
     if (!existing) {
@@ -92,7 +92,7 @@ export async function DELETE(_request: Request, { params }: Params) {
     const result = await prisma.$transaction(async (tx) => {
       // 회원과 트레이너까지 조건에 넣어 남의 기록을 지우지 못하게 함
       const workout = await tx.workout.findFirst({
-        where: { id: workoutId, memberId, member: scope },
+        where: { id: workoutId, memberId, member: scope, byMember: false },
         select: { completion: { select: { id: true } } },
       });
       if (!workout) return null;

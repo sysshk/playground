@@ -27,9 +27,26 @@ export const ROLE_HOME: Record<Role, string> = {
   client: "/me",
 };
 
+/** 회원 상세·내 기록의 탭 — 수업, 몸 상태, 식단, 개인 운동, Q&A */
+export const MEMBER_TABS = ["lessons", "body", "diet", "personal", "qna"] as const;
+export type MemberTab = (typeof MEMBER_TABS)[number];
+
+/** 주소의 ?tab= 값. 모르는 값이면 수업 탭 */
+export function toMemberTab(raw: string | string[] | undefined): MemberTab {
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  return MEMBER_TABS.find((tab) => tab === value) ?? "lessons";
+}
+
 /** 모르는 값은 가장 권한이 적은 회원으로 봄 */
 export function toRole(value: unknown): Role {
   return value === "admin" || value === "trainer" ? value : "client";
+}
+
+/** 휴식 초를 "1분 30초"처럼 */
+export function formatRest(seconds: number) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return [m && `${m}분`, s && `${s}초`].filter(Boolean).join(" ") || "0초";
 }
 
 /** 세트 입력 방식 — 무게 하나, 바디웨이트, 좌우 무게 따로 */
@@ -56,6 +73,7 @@ export interface Exercise {
   id: string;
   name: string;
   order: number;
+  restSeconds: number | null; // 세트 사이 휴식 초
   sets: ExerciseSet[];
 }
 
@@ -64,16 +82,114 @@ export interface Workout {
   memberId: string;
   date: string;
   memo: string | null;
+  byMember: boolean; // 회원이 쓴 개인 운동
   createdAt: string;
   exercises: Exercise[];
 }
 
+/** 인바디 신체균형 — 균형, 약간 불균형, 심한 불균형 */
+export type Balance = "balanced" | "slight" | "severe";
+
+export const BALANCE_LABEL: Record<Balance, string> = {
+  balanced: "균형",
+  slight: "약간 불균형",
+  severe: "심한 불균형",
+};
+
+/** 체중 기록. 인바디 칸이 하나라도 차 있으면 인바디 측정임 */
 export interface WeightRecord {
   id: string;
   memberId: string;
   date: string;
   weight: number;
   memo: string | null;
+  createdAt: string;
+  measuredHour: number | null; // 측정 시각 0~23
+  gender: Gender | null;
+  age: number | null;
+  height: number | null; // cm
+  skeletalMuscle: number | null; // 골격근량 kg
+  bodyFatMass: number | null; // 체지방량 kg
+  bodyFatPercent: number | null; // 체지방률 %
+  waistHipRatio: number | null; // 복부지방률
+  visceralFatLevel: number | null; // 내장지방 레벨 (예전 입력)
+  visceralFatArea: number | null; // 내장지방 면적 cm²
+  balanceUpper: Balance | null;
+  balanceLower: Balance | null;
+  balanceUpperLower: Balance | null;
+  leanRightArm: number | null; // 오른팔 근육 kg
+  leanRightArmPct: number | null; // 오른팔 표준 대비 %
+  leanLeftArm: number | null; // 왼팔 근육 kg
+  leanLeftArmPct: number | null; // 왼팔 표준 대비 %
+  leanTrunk: number | null; // 몸통 근육 kg
+  leanTrunkPct: number | null; // 몸통 표준 대비 %
+  leanRightLeg: number | null; // 오른다리 근육 kg
+  leanRightLegPct: number | null; // 오른다리 표준 대비 %
+  leanLeftLeg: number | null; // 왼다리 근육 kg
+  leanLeftLegPct: number | null; // 왼다리 표준 대비 %
+}
+
+/** 인바디 칸이 하나라도 차 있는지. 칸이 없는 옛 응답(undefined)도 빈 칸으로 봄 */
+export const isInbody = (r: WeightRecord) =>
+  r.skeletalMuscle != null ||
+  r.bodyFatMass != null ||
+  r.bodyFatPercent != null ||
+  r.waistHipRatio != null ||
+  r.visceralFatLevel != null ||
+  r.visceralFatArea != null ||
+  r.balanceUpper != null ||
+  r.balanceLower != null ||
+  r.balanceUpperLower != null ||
+  r.leanTrunk != null;
+
+/** 끼니 — 아침, 점심, 저녁, 간식 */
+export const MEAL_SLOTS = ["breakfast", "lunch", "dinner", "snack"] as const;
+export type MealSlot = (typeof MEAL_SLOTS)[number];
+
+export const MEAL_SLOT_LABEL: Record<MealSlot, string> = {
+  breakfast: "아침",
+  lunch: "점심",
+  dinner: "저녁",
+  snack: "간식",
+};
+
+/** 주소의 ?slot= 값. 모르는 값이면 null */
+export function toMealSlot(raw: string | undefined): MealSlot | null {
+  return MEAL_SLOTS.find((slot) => slot === raw) ?? null;
+}
+
+export const MEAL_MAX = 500;
+
+/** 회원 상세가 한 번에 받는 식단 기간 — 고른 날까지 이만큼 */
+export const MEAL_DAYS = 60;
+export const MEAL_COMMENT_MAX = 300;
+
+/** 회원이 적은 식단 한 끼 */
+export interface Meal {
+  id: string;
+  memberId: string;
+  date: string;
+  slot: MealSlot;
+  content: string;
+  comment: string | null; // 트레이너 코멘트
+  commentedAt: string | null;
+  createdAt: string;
+  calories: number | null; // kcal — AI 추정
+  carbs: number | null; // g
+  fat: number | null; // g
+  protein: number | null; // g
+}
+
+export const QUESTION_MAX = 1000;
+export const ANSWER_MAX = 2000;
+
+/** 회원이 묻고 트레이너가 답함 */
+export interface Question {
+  id: string;
+  memberId: string;
+  body: string;
+  answer: string | null;
+  answeredAt: string | null;
   createdAt: string;
 }
 
@@ -142,6 +258,8 @@ export interface MemberSummary extends Member {
   workoutCount: number;
   /** 지금까지 차감한 수업 수. 등록 전체 횟수는 이 값 + remainingSessions */
   completedSessions: number;
+  /** 마지막 수업 시각. 수업 전이면 null */
+  lastCompletedAt: string | null;
 }
 
 /** 달력에 찍는 수업 한 건 */
@@ -195,4 +313,10 @@ export interface MemberDetail extends Member {
   /** 이번에 받아 온 수업 기록 수 */
   lessonLimit: number;
   nutrition: NutritionProfile | null;
+  /** 회원이 쓴 개인 운동, 최신순 */
+  personalWorkouts: Workout[];
+  /** Q&A, 최신순 */
+  questions: Question[];
+  /** 식단, 최근 것부터 */
+  meals: Meal[];
 }

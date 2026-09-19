@@ -2,8 +2,8 @@
 // 트레이너(User) 계정별로 회원/운동기록/체중/코칭메모/영양 데이터를 분리해 보관함
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../app/generated/prisma"
+  provider        = "prisma-client-js"
+  output          = "../app/generated/prisma"
   // 중첩 include를 관계마다 따로 보내지 않고 JOIN 한 번으로 읽음
   previewFeatures = ["relationJoins"]
 }
@@ -77,30 +77,32 @@ model VerificationToken {
 
 /// 회원 (트레이너가 관리하는 PT 회원)
 model Member {
-  id                String   @id @default(cuid())
+  id                String    @id @default(cuid())
   trainerId         String
-  trainer           User     @relation("TrainerMembers", fields: [trainerId], references: [id], onDelete: Cascade)
+  trainer           User      @relation("TrainerMembers", fields: [trainerId], references: [id], onDelete: Cascade)
   /// 회원 본인 로그인 계정. 초대 링크로 가입하면 채워짐
-  userId            String?  @unique
-  user              User?    @relation("MemberAccount", fields: [userId], references: [id], onDelete: SetNull)
+  userId            String?   @unique
+  user              User?     @relation("MemberAccount", fields: [userId], references: [id], onDelete: SetNull)
   /// 아직 안 쓴 초대 링크. 쓰거나 취소하면 비움
-  inviteToken       String?  @unique
+  inviteToken       String?   @unique
   inviteExpiresAt   DateTime?
   name              String
   phone             String
   goal              String? // 체중 감량, 근력 향상 등
   targetWeight      Float? // 목표 체중 kg — 체중 그래프에서 고침
-  remainingSessions Int      @default(0) // 남은 PT 세션
+  remainingSessions Int       @default(0) // 남은 PT 세션
   memo              String? // 특이사항 (컨디션, 일정, 주의사항 등)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
-  workouts    Workout[]
-  weights     WeightRecord[]
-  notes       CoachingNote[]
+  workouts     Workout[]
+  weights      WeightRecord[]
+  notes        CoachingNote[]
   completions  SessionCompletion[]
   appointments Appointment[]
   nutrition    NutritionProfile?
+  questions    Question[]
+  meals        Meal[]
 
   @@index([trainerId, createdAt])
 }
@@ -112,6 +114,8 @@ model Workout {
   member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
   date      String // YYYY-MM-DD
   memo      String? // 폼 체크, 컨디션 등
+  /// 회원이 혼자 한 개인 운동. 수업이 아니라 남은 수업을 차감하지 않음
+  byMember  Boolean  @default(false)
   createdAt DateTime @default(now())
 
   exercises  Exercise[]
@@ -128,6 +132,8 @@ model Exercise {
   workout   Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
   name      String // 종목명 (벤치프레스, 스쿼트 등)
   order     Int     @default(0)
+  /// 세트 사이 휴식 초. 정하지 않았으면 null
+  restSeconds Int?
 
   sets ExerciseSet[]
 
@@ -148,7 +154,7 @@ model ExerciseSet {
   @@index([exerciseId, order])
 }
 
-/// 체중 기록
+/// 체중 기록. 인바디 칸을 채우면 인바디 측정 1회로 봄
 model WeightRecord {
   id        String   @id @default(cuid())
   memberId  String
@@ -157,6 +163,31 @@ model WeightRecord {
   weight    Float
   memo      String? // 공복 측정, 운동 후 측정 등
   createdAt DateTime @default(now())
+
+  // 인바디 — 전부 선택
+  measuredHour      Int? // 측정 시각 0~23
+  gender            String? // male | female
+  age               Int?
+  height            Float? // cm
+  skeletalMuscle    Float? // 골격근량 kg
+  bodyFatMass       Float? // 체지방량 kg
+  bodyFatPercent    Float? // 체지방률 %
+  waistHipRatio     Float? // 복부지방률 (0.85 등)
+  visceralFatLevel  Int? // 내장지방 레벨 1~20
+  visceralFatArea  Float? // 내장지방 면적 cm²
+  balanceUpper      String? // 신체균형 상체 — balanced | slight | severe
+  balanceLower      String? // 신체균형 하체
+  balanceUpperLower String? // 신체균형 상하체
+  leanRightArm      Float? // 부위별 근육 오른팔 kg
+  leanRightArmPct   Float? // 오른팔 표준 대비 %
+  leanLeftArm       Float? // 부위별 근육 왼팔 kg
+  leanLeftArmPct    Float? // 왼팔 표준 대비 %
+  leanTrunk         Float? // 부위별 근육 몸통 kg
+  leanTrunkPct      Float? // 몸통 표준 대비 %
+  leanRightLeg      Float? // 부위별 근육 오른다리 kg
+  leanRightLegPct   Float? // 오른다리 표준 대비 %
+  leanLeftLeg       Float? // 부위별 근육 왼다리 kg
+  leanLeftLegPct    Float? // 왼다리 표준 대비 %
 
   @@index([memberId, date])
 }
@@ -181,12 +212,12 @@ model CoachingNote {
 /// 운동 기록을 저장하면서 차감하면 그 기록과 연결됨
 /// 기록을 지워도 차감 이력은 남음 — 되돌리려면 이력에서 따로 취소함
 model SessionCompletion {
-  id          String   @id @default(cuid())
+  id          String       @id @default(cuid())
   memberId    String
-  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  workoutId   String?  @unique
-  workout     Workout? @relation(fields: [workoutId], references: [id], onDelete: SetNull)
-  completedAt DateTime @default(now())
+  member      Member       @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  workoutId   String?      @unique
+  workout     Workout?     @relation(fields: [workoutId], references: [id], onDelete: SetNull)
+  completedAt DateTime     @default(now())
   /// 운동 기록 없이 직접 차감할 때 남기는 사유 (상담, 체형 평가 등)
   reason      String?
   /// 예약해 둔 수업을 기록했으면 그 예약
@@ -202,15 +233,15 @@ model NutritionProfile {
   member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   // 입력값
-  gender              String // male | female
-  age                 Int
-  height              Float // cm
-  weight              Float // kg
-  bodyFatPercentage   Float?
-  skeletalMuscleMass  Float? // 골격근량 kg
-  leanBodyMass        Float? // 직접 입력한 제지방량 kg
-  activityLevel       String // sedentary | light | moderate | veryActive | extraActive
-  goal                String // loss | maintain | gain
+  gender             String // male | female
+  age                Int
+  height             Float // cm
+  weight             Float // kg
+  bodyFatPercentage  Float?
+  skeletalMuscleMass Float? // 골격근량 kg
+  leanBodyMass       Float? // 직접 입력한 제지방량 kg
+  activityLevel      String // sedentary | light | moderate | veryActive | extraActive
+  goal               String // loss | maintain | gain
 
   // 계산 결과
   calculatedLeanBodyMass Float?
@@ -226,6 +257,38 @@ model NutritionProfile {
   calculationBasis       String[] // 계산 기준 설명 줄들
 
   updatedAt DateTime @updatedAt
+}
+
+/// 회원이 적는 식단 한 끼. 트레이너가 한 줄 코멘트를 달 수 있음
+model Meal {
+  id          String    @id @default(cuid())
+  memberId    String
+  member      Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  date        String // YYYY-MM-DD
+  slot        String // breakfast | lunch | dinner | snack
+  content     String
+  calories    Int? // kcal — AI 추정
+  carbs       Float? // g
+  fat         Float? // g
+  protein     Float? // g
+  comment     String? // 트레이너 코멘트
+  commentedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([memberId, date])
+}
+
+/// 회원이 묻고 트레이너가 답하는 Q&A. 질문 하나에 답 하나
+model Question {
+  id         String    @id @default(cuid())
+  memberId   String
+  member     Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  body       String
+  answer     String?
+  answeredAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([memberId, createdAt])
 }
 
 /// 앞으로 할 수업 예약. 남은 수업은 차감하지 않음

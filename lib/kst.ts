@@ -19,6 +19,18 @@ export function kstDay(at: string | Date = new Date()) {
   return DAY.format(new Date(at));
 }
 
+/** YYYY-MM-DD에 날을 더함 */
+export function shiftDay(day: string, delta: number) {
+  const [y, m, d] = day.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + delta)).toISOString().slice(0, 10);
+}
+
+/** 주소의 날짜 YYYY-MM-DD. 형식이 틀리거나 오늘 이후면 오늘 */
+export function toPastDay(raw: string | undefined) {
+  const today = kstDay();
+  return raw && /^\d{4}-\d{2}-\d{2}$/.test(raw) && raw <= today ? raw : today;
+}
+
 /** 시각 → 한국 자정부터 흐른 분 (0~1439) */
 export function kstMinuteOfDay(at: string | Date) {
   const d = new Date(new Date(at).getTime() + OFFSET);
