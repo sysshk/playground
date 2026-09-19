@@ -1,5 +1,6 @@
 /*
   수업 기록 작성·수정 화면 — 종목·세트 입력과 저장
+  회원 본인의 개인 운동 화면(/me/workouts)도 이 화면을 personal로 씀
 
   @date : 2026-09-12
 */
@@ -7,7 +8,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/custom/confirm-dialog";
 import { DatePicker, HourPicker } from "@/components/custom/date-picker";
@@ -15,7 +16,7 @@ import { Icon } from "@/components/custom/icons";
 import { Button } from "@/components/ui/button";
 import { apiFetch, completedAtFrom, errorMessage, formatDate, today } from "@/lib/client";
 import { kstHour } from "@/lib/kst";
-import { formatSet, type WeightUnit, type Workout } from "@/lib/types";
+import { formatRest, formatSet, type WeightUnit, type Workout } from "@/lib/types";
 import { EditorFrame } from "../../editor-frame";
 import type { ExerciseRow, SetRow, WorkoutPayload } from "./types";
 
@@ -24,6 +25,20 @@ const WEIGHT_STEP = 2.5;
 
 /** 날짜·운동·메모 영역 제목 */
 const SECTION_TITLE = "text-sm font-bold";
+
+/** 세트 사이 쉬는 시간의 이름 — 바꾸려면 여기만 */
+const REST_LABEL = "세트 간 휴식";
+
+/** 휴식 시간 빠른 고르기 (초) */
+const REST_OPTIONS = [30, 60, 90, 120, 180];
+
+/** 휴식 −/+ 10초. 10초 아래로 내리면 "없음", 없음에서 +면 30초부터, 최대 10분 */
+function stepRest(current: number | null, delta: number) {
+  if (current === null) return delta > 0 ? 30 : null;
+  const next = current + delta;
+  if (next < 10) return null;
+  return Math.min(next, 600);
+}
 
 /** 세트 입력 방식 탭 */
 const UNIT_TABS: [WeightUnit, string][] = [
@@ -75,6 +90,7 @@ const text = (n: number | null | undefined) => (n == null ? "" : String(n));
 
 const emptyExercise = (): ExerciseRow => ({
   name: "",
+  restSeconds: null,
   sets: [emptySet()],
   editing: true,
 });
@@ -84,6 +100,7 @@ function toRows(workout: Workout | null): ExerciseRow[] {
   if (!workout || workout.exercises.length === 0) return [emptyExercise()];
   return workout.exercises.map((e) => ({
     name: e.name,
+    restSeconds: e.restSeconds ?? null,
     sets: e.sets.map((s) => ({
       unit: s.unit,
       reps: String(s.reps),
@@ -102,19 +119,20 @@ export function WorkoutEditor({
   member,
   workout,
   completedAt,
-  lastSets,
+  personal = false,
 }: {
   member: { id: string; name: string; remainingSessions: number };
+  /** 회원이 쓰는 개인 운동 — 남은 수업·수업 시각이 없고 /api/me로 저장함 */
+  personal?: boolean;
   /** 주면 수정, 없으면 새 기록 */
   workout: Workout | null;
   /** 수정할 기록에 연결된 수업 시각 */
   completedAt: string | null;
-  /** 종목명 → 직전 기록 문구 ("60kg × 12회") */
-  lastSets: Record<string, string>;
 }) {
   const router = useRouter();
   const memberId = member.id;
-  const back = `/members/${memberId}`;
+  const back = personal ? "/me?tab=personal" : `/members/${memberId}`;
+  const api = personal ? "/api/me/workouts" : `/api/members/${memberId}/workouts`;
 
   const [busy, setBusy] = useState(false);
   const [date, setDate] = useState(() => workout?.date ?? today());
@@ -124,6 +142,14 @@ export function WorkoutEditor({
 
   const [hour, setHour] = useState(() => kstHour(completedAt ?? new Date()));
   const [removing, setRemoving] = useState<number | null>(null);
+  // 휴식 타이머 — 저장하지 않고 화면에서만 셈
+  const [timer, setTimer] = useState<RestTimerState | null>(null);
+  // 타이머는 오늘 새로 적는 수업에서만 — 지난 기록을 고칠 때는 휴식 시간만 고름
+  const live = !workout && date === today();
+  const startRest = (index: number, seconds: number) => {
+    unlockSound();
+    setTimer({ index, total: seconds, endsAt: secondsFromNow(seconds) });
+  };
   // ✕를 한 번 누른 세트 "종목-세트". 3초 안에 한 번 더 눌러야 지워짐
   const [armedSet, setArmedSet] = useState<string | null>(null);
 
@@ -200,8 +226,12 @@ export function WorkoutEditor({
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
-    if (sessionOnly && workout) {
-      setError("종목을 하나 이상 남겨 주세요. 기록을 지우려면 목록에서 삭제하세요.");
+    if (sessionOnly && (workout || personal)) {
+      setError(
+        workout
+          ? "종목을 하나 이상 남겨 주세요. 기록을 지우려면 목록에서 삭제하세요."
+          : "종목을 하나 이상 적어 주세요.",
+      );
       return;
     }
 
@@ -222,7 +252,7 @@ export function WorkoutEditor({
         sets.push(toSet(set));
       }
 
-      exercises.push({ name, sets });
+      exercises.push({ name, restSeconds: row.restSeconds, sets });
     }
 
     const payload: WorkoutPayload = {
@@ -246,16 +276,22 @@ export function WorkoutEditor({
         });
       } else {
         await apiFetch(
-          workout
-            ? `/api/members/${memberId}/workouts/${workout.id}`
-            : `/api/members/${memberId}/workouts`,
+          workout ? `${api}/${workout.id}` : api,
           {
             method: workout ? "PATCH" : "POST",
             body: JSON.stringify(payload),
           },
         );
       }
-      toast(workout ? "수업 기록을 수정했습니다." : "수업 1회를 기록했습니다.");
+      toast(
+        personal
+          ? workout
+            ? "개인 운동을 수정했습니다."
+            : "개인 운동을 기록했습니다."
+          : workout
+            ? "수업 기록을 수정했습니다."
+            : "수업 1회를 기록했습니다.",
+      );
       router.replace(back);
     } catch (e) {
       setError(errorMessage(e, "수업 기록 저장에 실패했습니다."));
@@ -266,15 +302,25 @@ export function WorkoutEditor({
   return (
     <EditorFrame
       back={back}
-      title={workout ? "수업 기록 수정" : "수업 기록"}
-      name={member.name}
+      title={
+        personal
+          ? workout
+            ? "개인 운동 수정"
+            : "개인 운동 기록"
+          : workout
+            ? "수업 기록 수정"
+            : "수업 기록"
+      }
+      name={personal ? "내 기록" : member.name}
       subtitle={
         workout
           ? `${formatDate(workout.date)} 기록을 고칩니다.`
-          : "저장하면 수업 1회가 기록됩니다. 상담·노쇼처럼 운동이 없던 날은 종목을 비우고 메모만 남기세요."
+          : personal
+            ? "혼자 한 운동을 적어 두면 트레이너가 보고 수업에 반영합니다."
+            : "저장하면 수업 1회가 기록됩니다. 상담·노쇼처럼 운동이 없던 날은 종목을 비우고 메모만 남기세요."
       }
       aside={
-        !workout && (
+        !workout && !personal && (
           <p
             className={`flex shrink-0 items-baseline gap-1.5 rounded-xl px-3 py-2 ${
               member.remainingSessions === 0 ? "bg-danger/10" : "bg-primary-light"
@@ -298,7 +344,7 @@ export function WorkoutEditor({
       }
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        {!workout && member.remainingSessions === 0 && (
+        {!workout && !personal && member.remainingSessions === 0 && (
           <p className="rounded-xl bg-danger/10 px-4 py-3 text-sm font-semibold leading-relaxed text-danger">
             남은 수업이 없어 기록을 저장할 수 없습니다. 회원 정보에서 수업 횟수를 먼저 늘려 주세요.
           </p>
@@ -308,7 +354,7 @@ export function WorkoutEditor({
           <h2 className={SECTION_TITLE}>날짜</h2>
           <div className="flex flex-wrap items-center gap-2">
             <DatePicker value={date} onChange={setDate} max={today()} />
-            <HourPicker value={hour} onChange={setHour} ariaLabel="수업 시각" />
+            {!personal && <HourPicker value={hour} onChange={setHour} ariaLabel="수업 시각" />}
           </div>
         </section>
 
@@ -328,11 +374,6 @@ export function WorkoutEditor({
                   placeholder="종목명 (벤치프레스, 스쿼트 등)"
                   aria-label={`${i + 1}번째 종목명`}
                 />
-                {lastSets[row.name.trim()] && (
-                  <span className="shrink-0 rounded-full bg-primary-light px-2 py-0.5 text-2xs font-bold text-primary-dark dark:text-primary-bright">
-                    지난 {lastSets[row.name.trim()]}
-                  </span>
-                )}
                 <button
                   type="button"
                   onClick={() => toggleExercise(i)}
@@ -422,7 +463,7 @@ export function WorkoutEditor({
 
                         {/* 횟수·무게 — 전체 폭은 그대로, 좌우 따로면 셋으로 나눔 */}
                         <div
-                          className={`grid gap-2 @md:max-w-124 ${set.unit === "sides" ? "grid-cols-3" : "grid-cols-2"}`}
+                          className={`grid gap-2 ${set.unit === "sides" ? "grid-cols-3" : "grid-cols-2"}`}
                         >
                           <Stepper
                             label={`${s + 1}세트 횟수`}
@@ -471,6 +512,84 @@ export function WorkoutEditor({
                   )}
                 </ol>
 
+                {/* 세트 간 휴식 — 세트 추가 바로 위. 시간을 정하고, 오늘 수업 중이면 [시작]으로 셈 */}
+                {row.editing && (
+                  <div className="flex flex-col gap-2 px-1">
+                    <div className="flex items-center justify-end gap-2">
+                      <span className="shrink-0 text-sm font-bold text-muted-foreground">{REST_LABEL}</span>
+                      {timer?.index === i ? (
+                        <RestTimer timer={timer} onClose={() => setTimer(null)} />
+                      ) : (
+                        <>
+                          {/* 10초씩 조절 — 세트 칸처럼 숫자 오른쪽에 −/+ */}
+                          <div className="flex h-9 items-center overflow-hidden rounded-lg bg-canvas">
+                            <span className="min-w-18 px-3 text-right text-sm font-extrabold tabular-nums">
+                              {row.restSeconds === null ? (
+                                <span className="font-semibold text-subtle">없음</span>
+                              ) : (
+                                formatRest(row.restSeconds)
+                              )}
+                            </span>
+                            <span className="flex h-full border-l border-line">
+                              <button
+                                type="button"
+                                onClick={() => patchExercise(i, { restSeconds: stepRest(row.restSeconds, -10) })}
+                                disabled={row.restSeconds === null}
+                                aria-label={`${REST_LABEL} 10초 줄이기`}
+                                className="grid h-full w-9 place-items-center text-muted-foreground transition-colors hover:bg-raised hover:text-ink disabled:opacity-30"
+                              >
+                                <Icon name="minus" size={16} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => patchExercise(i, { restSeconds: stepRest(row.restSeconds, 10) })}
+                                aria-label={`${REST_LABEL} 10초 늘리기`}
+                                className="grid h-full w-9 place-items-center text-muted-foreground transition-colors hover:bg-raised hover:text-ink"
+                              >
+                                <Icon name="plus" size={16} />
+                              </button>
+                            </span>
+                          </div>
+                          {/* 오늘 수업 중일 때만 타이머 */}
+                          {live && (
+                            <button
+                              type="button"
+                              onClick={() => row.restSeconds && startRest(i, row.restSeconds)}
+                              disabled={row.restSeconds === null}
+                              className="flex h-9 shrink-0 items-center gap-1 rounded-lg bg-primary px-3.5 text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-35"
+                            >
+                              <Icon name="clock" size={15} />
+                              시작
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                    {timer?.index !== i && (
+                      <>
+                        {/* 빠른 고르기 */}
+                        <div className="flex flex-wrap justify-end gap-1.5">
+                          {REST_OPTIONS.map((sec) => (
+                            <button
+                              key={sec}
+                              type="button"
+                              aria-pressed={row.restSeconds === sec}
+                              onClick={() => patchExercise(i, { restSeconds: row.restSeconds === sec ? null : sec })}
+                              className={`h-9 rounded-lg px-3 text-sm font-bold transition-colors ${
+                                row.restSeconds === sec
+                                  ? "bg-primary-light text-primary-dark dark:text-primary-bright"
+                                  : "bg-canvas text-muted-foreground hover:text-ink"
+                              }`}
+                            >
+                              {formatRest(sec)}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+
                 {row.editing && (
                   <button
                     type="button"
@@ -501,8 +620,8 @@ export function WorkoutEditor({
             className="h-24 w-full resize-none rounded-xl border-[1.5px] border-edge bg-field px-3.5 py-3 text-base outline-none transition-colors placeholder:text-subtle focus:border-primary"
             value={memo}
             onChange={(e) => setMemo(e.target.value)}
-            maxLength={sessionOnly && !workout ? 200 : undefined}
-            placeholder="폼 체크, 컨디션, 상담·노쇼 사유 등"
+            maxLength={sessionOnly && !workout && !personal ? 200 : undefined}
+            placeholder={personal ? "컨디션, 느낀 점, 트레이너에게 남길 말" : "폼 체크, 컨디션, 상담·노쇼 사유 등"}
             aria-label="메모"
           />
         </section>
@@ -531,7 +650,95 @@ export function WorkoutEditor({
           </Button>
         </div>
       </form>
+
     </EditorFrame>
+  );
+}
+
+// ── 휴식 타이머 ─────────────────────────────
+
+type RestTimerState = { index: number; total: number; endsAt: number }; // index — 몇 번째 종목의 휴식인지
+
+/** 지금부터 몇 초 뒤의 시각 (ms) */
+const secondsFromNow = (seconds: number) => Date.now() + seconds * 1000;
+
+let audio: AudioContext | null = null;
+
+/** 아이폰은 사용자가 누른 순간에만 소리를 열어 줌. 타이머를 시작할 때 미리 열어 둠 */
+function unlockSound() {
+  try {
+    audio ??= new AudioContext();
+    void audio.resume();
+  } catch {
+    audio = null;
+  }
+}
+
+/** 삐삐삐 — 휴식 끝 */
+function ring() {
+  if (audio) {
+    [0, 0.35, 0.7].forEach((at) => {
+      const osc = audio!.createOscillator();
+      const gain = audio!.createGain();
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.25, audio!.currentTime + at);
+      gain.gain.exponentialRampToValueAtTime(0.001, audio!.currentTime + at + 0.25);
+      osc.connect(gain).connect(audio!.destination);
+      osc.start(audio!.currentTime + at);
+      osc.stop(audio!.currentTime + at + 0.26);
+    });
+  }
+  // 안드로이드만 진동함. 아이폰·아이패드 브라우저는 막아 둠
+  navigator.vibrate?.([200, 100, 200, 100, 200]);
+}
+
+/** 휴식 타이머 — [시작] 자리에서 시간만 셈. 배경이 줄어들고, 누르면 멈춤. 끝나면 소리·진동·깜빡임 */
+function RestTimer({ timer, onClose }: { timer: RestTimerState; onClose: () => void }) {
+  const [now, setNow] = useState(() => Date.now());
+  const rang = useRef(false);
+  const left = Math.max(0, Math.ceil((timer.endsAt - now) / 1000));
+  const done = left === 0;
+
+  useEffect(() => {
+    rang.current = false;
+    const id = setInterval(() => setNow(Date.now()), 200);
+    return () => clearInterval(id);
+  }, [timer.endsAt]);
+
+  useEffect(() => {
+    if (!done || rang.current) return;
+    rang.current = true;
+    ring();
+    // 끝나고 조금 보여 준 뒤 닫음
+    const id = setTimeout(onClose, 6000);
+    return () => clearTimeout(id);
+  }, [done, onClose]);
+
+  const mm = Math.floor(left / 60);
+  const ss = String(left % 60).padStart(2, "0");
+
+  return (
+    <button
+      type="button"
+      role="timer"
+      aria-live="polite"
+      aria-label={done ? "휴식 끝, 닫기" : `남은 휴식 ${mm}분 ${ss}초, 누르면 멈춤`}
+      onClick={onClose}
+      className={`relative flex h-9 min-w-28 items-center gap-1.5 overflow-hidden rounded-lg bg-primary-light pl-3 pr-2.5 text-primary-dark dark:text-primary-bright ${
+        done ? "animate-pulse" : ""
+      }`}
+    >
+      {/* 남은 시간만큼 배경이 차 있다가 줄어듦 */}
+      <span
+        className="absolute inset-y-0 left-0 bg-primary/25 transition-[width] duration-200 ease-linear"
+        style={{ width: `${done ? 0 : (left / timer.total) * 100}%` }}
+      />
+      <Icon name="clock" size={15} className="relative" />
+      <span className="relative flex-1 text-left text-base font-extrabold tabular-nums">
+        {done ? "끝!" : `${mm}:${ss}`}
+      </span>
+      <Icon name="close" size={14} className="relative opacity-60" />
+    </button>
   );
 }
 

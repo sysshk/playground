@@ -17,6 +17,7 @@ export interface SetRow {
 /** 종목 한 덩어리 */
 export interface ExerciseRow {
   name: string; // 종목명, 비우면 저장할 때 빠짐
+  restSeconds: number | null; // 마지막으로 누른 휴식 타이머 초 — 종목의 휴식 시간으로 저장
   sets: SetRow[];
   editing: boolean; // 펼친 종목 — 끄면 글자만 보여 잘못 눌러도 값이 안 바뀜
 }
@@ -28,6 +29,7 @@ export interface WorkoutPayload {
   completedAt: string; // 수업 시각 — 수정하면 연결된 수업의 시각도 따라감
   exercises: {
     name: string;
+    restSeconds: number | null;
     sets: { reps: number; weight: number | null; weightRight: number | null; unit: WeightUnit }[]; // 세트마다 방식·무게가 다를 수 있음
   }[];
 }

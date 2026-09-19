@@ -54,7 +54,6 @@ async function Screen({ params }: Props) {
       member={data.member}
       workout={data.workout}
       completedAt={data.completedAt}
-      lastSets={data.lastSets}
     />
   );
 }
