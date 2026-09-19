@@ -15,7 +15,7 @@ import { SIGNUP_ENABLED } from "@/lib/config";
 import { ROLE_HOME, type Role } from "@/lib/types";
 
 /** 소개 본문 글자 */
-const BODY = "mt-5 max-w-[520px] text-md leading-[1.8] text-muted-foreground sm:text-lg";
+const BODY = "mt-5 max-w-[520px] text-md leading-[1.8] text-muted-foreground tablet:text-lg";
 /** 시작 버튼 — 로그인했으면 역할에 맞는 첫 화면으로 */
 function startLink(role: Role | null) {
   if (role === "client") return { href: ROLE_HOME.client, label: "내 기록 보기" };
@@ -64,7 +64,7 @@ export default async function HomePage() {
   return (
     <div className="bg-surface">
       {/* ── 히어로 ───────────────────────────── */}
-      <section className="relative isolate min-h-[620px] overflow-hidden bg-hero sm:min-h-[680px]">
+      <section className="relative isolate min-h-[620px] overflow-hidden bg-hero tablet:min-h-[680px]">
         <Image
           src={asset("/images/hero-gym.jpg")}
           alt=""
@@ -76,7 +76,7 @@ export default async function HomePage() {
         {/* 사진 어둡게 */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-black/30" />
 
-        <div className="relative mx-auto flex min-h-[620px] max-w-[1200px] flex-col px-5 sm:min-h-[680px] sm:px-8">
+        <div className="relative mx-auto flex min-h-[620px] max-w-[1200px] flex-col px-5 tablet:min-h-[680px] tablet:px-8">
           <header className="flex items-center justify-between py-6">
             <Logo onDark />
             <ThemeToggle onDark />
@@ -87,13 +87,13 @@ export default async function HomePage() {
               개인 트레이너를 위한 회원 관리
             </span>
 
-            <h1 className="mt-6 max-w-[660px] text-4xl font-extrabold leading-[1.14] tracking-[-0.035em] text-white sm:text-5xl">
+            <h1 className="mt-6 max-w-[660px] text-4xl font-extrabold leading-[1.14] tracking-[-0.035em] text-white tablet:text-5xl">
               오늘 수업은
               <br />
               기억이 아니라 기록으로
             </h1>
 
-            <p className="mt-6 max-w-[560px] text-md leading-[1.75] text-white/70 sm:text-lg">
+            <p className="mt-6 max-w-[560px] text-md leading-[1.75] text-white/70 tablet:text-lg">
               회원 정보, 남은 수업, 운동 기록, 체중, 코칭 메모까지. 수첩과 메신저에
               흩어지던 것들을 수업 중에 바로 정리하세요.
             </p>
@@ -110,10 +110,10 @@ export default async function HomePage() {
 
       {/* ── 숫자 스트립 ───────────────────────── */}
       <section className="bg-hero">
-        <div className="mx-auto grid max-w-[1200px] gap-8 px-5 py-10 sm:grid-cols-3 sm:px-8 sm:py-12">
+        <div className="mx-auto grid max-w-[1200px] gap-8 px-5 py-10 tablet:grid-cols-3 tablet:px-8 tablet:py-12">
           {STATS.map((s) => (
             <div key={s.label}>
-              <p className="text-2xl font-extrabold tracking-[-0.03em] text-white sm:text-3xl">
+              <p className="text-2xl font-extrabold tracking-[-0.03em] text-white tablet:text-3xl">
                 {s.value}
               </p>
               <p className="mt-1.5 text-base text-white/60">{s.label}</p>
@@ -123,10 +123,10 @@ export default async function HomePage() {
       </section>
 
       {/* ── 제품 화면 ─────────────────────────── */}
-      <section className="mx-auto max-w-[1200px] px-5 py-20 sm:px-8 sm:py-28">
-        <div className="grid items-center gap-12 lg:grid-cols-[1fr_460px] lg:gap-20">
+      <section className="mx-auto max-w-[1200px] px-5 py-20 tablet:px-8 tablet:py-28">
+        <div className="grid items-center gap-12 web:grid-cols-[1fr_460px] web:gap-20">
           <div>
-            <h2 className="text-2xl font-extrabold leading-[1.3] tracking-[-0.025em] sm:text-3xl">
+            <h2 className="text-2xl font-extrabold leading-[1.3] tracking-[-0.025em] tablet:text-3xl">
               회원 한 명의 모든 것이
               <br />한 화면에
             </h2>
@@ -140,7 +140,7 @@ export default async function HomePage() {
                 "운동 · 체중 · 코칭 메모를 같은 화면에서 입력",
                 "기록 저장과 함께 수업 완료, 잘못 누르면 이력에서 되돌리기",
               ].map((t) => (
-                <li key={t} className="flex items-start gap-2.5 text-base sm:text-md">
+                <li key={t} className="flex items-start gap-2.5 text-base tablet:text-md">
                   <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary-light text-primary-dark dark:text-primary-bright">
                     <Icon name="check" size={12} />
                   </span>
@@ -160,10 +160,10 @@ export default async function HomePage() {
           key={row.title}
           className={i % 2 === 1 ? "bg-canvas" : "bg-surface"}
         >
-          <div className="mx-auto grid max-w-[1200px] items-center gap-10 px-5 py-16 sm:px-8 sm:py-24 lg:grid-cols-2 lg:gap-16">
+          <div className="mx-auto grid max-w-[1200px] items-center gap-10 px-5 py-16 tablet:px-8 tablet:py-24 web:grid-cols-2 web:gap-16">
             <div
               className={`relative aspect-4/3 max-w-full overflow-hidden rounded-2xl ${
-                i % 2 === 1 ? "lg:order-2" : ""
+                i % 2 === 1 ? "web:order-2" : ""
               }`}
             >
               <Image
@@ -176,7 +176,7 @@ export default async function HomePage() {
             </div>
 
             <div>
-              <h2 className="whitespace-pre-line text-2xl font-extrabold leading-[1.32] tracking-[-0.025em] sm:text-3xl">
+              <h2 className="whitespace-pre-line text-2xl font-extrabold leading-[1.32] tracking-[-0.025em] tablet:text-3xl">
                 {row.title}
               </h2>
               <p className={BODY}>
@@ -186,7 +186,7 @@ export default async function HomePage() {
                 {row.points.map((p) => (
                   <li
                     key={p}
-                    className="flex items-center gap-2.5 text-base font-medium sm:text-md"
+                    className="flex items-center gap-2.5 text-base font-medium tablet:text-md"
                   >
                     <span className="h-1 w-1 rounded-full bg-primary" />
                     {p}
@@ -200,11 +200,11 @@ export default async function HomePage() {
 
       {/* ── 마무리 ───────────────────────────── */}
       <section className="bg-hero">
-        <div className="mx-auto flex max-w-[1200px] flex-col items-center gap-6 px-5 py-20 text-center sm:px-8 sm:py-24">
-          <h2 className="max-w-[560px] text-2xl font-extrabold leading-[1.3] tracking-[-0.025em] text-white sm:text-3xl">
+        <div className="mx-auto flex max-w-[1200px] flex-col items-center gap-6 px-5 py-20 text-center tablet:px-8 tablet:py-24">
+          <h2 className="max-w-[560px] text-2xl font-extrabold leading-[1.3] tracking-[-0.025em] text-white tablet:text-3xl">
             오늘 수업부터 바로 써보세요
           </h2>
-          <p className="max-w-[600px] text-md leading-[1.75] text-white/60 sm:text-lg">
+          <p className="max-w-[600px] text-md leading-[1.75] text-white/60 tablet:text-lg">
             브라우저에서 바로 열립니다. 홈 화면에 추가하면 앱처럼 쓸 수 있습니다.
           </p>
           <Link href={start.href} className={`mt-2 ${CTA} bg-white text-hero hover:bg-white/90`}>
@@ -215,8 +215,8 @@ export default async function HomePage() {
       </section>
 
       <footer className="border-t border-line bg-surface">
-        <div className="mx-auto max-w-[1200px] px-5 py-12 sm:px-8">
-          <div className="flex flex-col gap-10 sm:flex-row sm:justify-between">
+        <div className="mx-auto max-w-[1200px] px-5 py-12 tablet:px-8">
+          <div className="flex flex-col gap-10 tablet:flex-row tablet:justify-between">
             <div className="max-w-[280px]">
               <Logo />
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
@@ -225,7 +225,7 @@ export default async function HomePage() {
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-12 sm:gap-16">
+            <div className="flex flex-wrap gap-12 tablet:gap-16">
               <nav className="flex flex-col gap-2.5">
                 <p className="text-2xs font-bold uppercase tracking-wider text-subtle">
                   서비스

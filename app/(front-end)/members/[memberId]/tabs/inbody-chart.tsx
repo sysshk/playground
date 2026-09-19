@@ -33,7 +33,7 @@ export default function WeightChartCanvas({ stats }: { stats: Stats }) {
   const chart = useMemo(() => buildChart(stats), [stats]);
 
   return (
-    <div className="relative h-56 w-full md:h-64">
+    <div className="relative h-56 w-full tablet:h-64">
       <Chart
         type="line"
         // 플러그인(마지막 값·목표선·안내선)은 차트를 만들 때만 들어가서, 값이 바뀌면 새로 만듦

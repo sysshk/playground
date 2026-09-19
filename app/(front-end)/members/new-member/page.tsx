@@ -41,7 +41,7 @@ export default function NewMemberPage() {
     <div className="mx-auto flex w-full max-w-[560px] flex-col gap-4">
       <Link
         href="/members"
-        className="hidden w-fit items-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-ink lg:flex"
+        className="hidden w-fit items-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-ink web:flex"
       >
         <Icon name="arrowLeft" size={15} />
         회원 목록

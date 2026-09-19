@@ -102,7 +102,7 @@ export default function FrontSidebar({ children }: { children: ReactNode }) {
     html.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
 
-    const wide = window.matchMedia("(min-width: 1024px)");
+    const wide = window.matchMedia("(width >= 64rem)"); // 웹 구간
     const close = () => setDrawerOpen(false);
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
     const onWide = () => wide.matches && close();
@@ -117,10 +117,10 @@ export default function FrontSidebar({ children }: { children: ReactNode }) {
   }, [drawerOpen]);
 
   return (
-    <div className="min-h-screen bg-canvas text-ink lg:flex">
+    <div className="min-h-screen bg-canvas text-ink web:flex">
       {/* 사이드바 */}
       <aside
-        className={`sticky top-0 hidden h-screen shrink-0 overflow-hidden p-3 transition-all duration-300 ease-in-out lg:block ${
+        className={`sticky top-0 hidden h-screen shrink-0 overflow-hidden p-3 transition-all duration-300 ease-in-out web:block ${
           collapsed
             ? "w-[72px]"
             : "w-[287px] border-r-[1.5px] border-edge bg-surface"
@@ -160,14 +160,14 @@ export default function FrontSidebar({ children }: { children: ReactNode }) {
       {/* 서랍 */}
       <div
         inert={!drawerOpen}
-        className={`fixed inset-0 z-50 lg:hidden ${drawerOpen ? "" : "pointer-events-none"}`}
+        className={`fixed inset-0 z-50 web:hidden ${drawerOpen ? "" : "pointer-events-none"}`}
       >
         <button
           type="button"
           aria-label="메뉴 닫기"
           tabIndex={-1}
           onClick={() => setDrawerOpen(false)}
-          className={`absolute inset-0 hidden bg-black/50 transition-opacity duration-300 sm:block ${
+          className={`absolute inset-0 hidden bg-black/50 transition-opacity duration-300 tablet:block ${
             drawerOpen ? "opacity-100" : "opacity-0"
           }`}
         />
@@ -178,13 +178,13 @@ export default function FrontSidebar({ children }: { children: ReactNode }) {
             if (!e.currentTarget.contains(target)) return;
             if (!target.closest("a, button, input")) setDrawerOpen(false);
           }}
-          className={`absolute inset-y-0 left-0 flex w-full flex-col justify-between gap-6 bg-surface pb-4 transition-transform duration-300 ease-out sm:w-[287px] sm:border-r-[1.5px] sm:border-edge ${
+          className={`absolute inset-y-0 left-0 flex w-full flex-col justify-between gap-6 bg-surface pb-4 transition-transform duration-300 ease-out tablet:w-[287px] tablet:border-r-[1.5px] tablet:border-edge ${
             drawerOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
           <div className="flex flex-col gap-4">
             {/* 서랍 머리 */}
-            <div className="flex h-14 items-center gap-1 px-4 sm:h-16 sm:px-6">
+            <div className="flex h-(--bar-h) items-center gap-1 px-(--page-x)">
               <button
                 type="button"
                 onClick={() => setDrawerOpen(false)}
@@ -212,8 +212,8 @@ export default function FrontSidebar({ children }: { children: ReactNode }) {
       </div>
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 border-b-[1.5px] border-edge bg-surface lg:hidden">
-          <div className="mx-auto flex h-14 max-w-[1200px] items-center justify-between gap-3 px-4 sm:h-16 sm:px-6">
+        <header className="sticky top-0 z-30 border-b-[1.5px] border-edge bg-surface web:hidden">
+          <div className="mx-auto flex h-(--bar-h) max-w-[1200px] items-center justify-between gap-3 px-(--page-x)">
             <div className="flex min-w-0 items-center gap-1">
               {loggedIn && (
                 <button
@@ -243,12 +243,12 @@ export default function FrontSidebar({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+        <main className="mx-auto w-full max-w-7xl flex-1 px-(--page-x) py-(--page-y)">
           {children}
         </main>
 
         <footer className="border-t border-line">
-          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-6 sm:px-6 lg:px-8">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-(--page-x) py-6">
             <span className="text-xs text-subtle">
               © {new Date().getFullYear()} PT 매니저
             </span>

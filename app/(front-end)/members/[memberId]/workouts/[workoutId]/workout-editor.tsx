@@ -668,11 +668,11 @@ export function WorkoutEditor({
           onCancel={() => setRemoving(null)}
         />
 
-        <div className="flex gap-2 sm:justify-end">
-          <Button type="button" variant="outline" onClick={() => router.push(back)} className="flex-1 sm:flex-none sm:px-5">
+        <div className="flex gap-2 tablet:justify-end">
+          <Button type="button" variant="outline" onClick={() => router.push(back)} className="flex-1 tablet:flex-none tablet:px-5">
             취소
           </Button>
-          <Button type="submit" loading={busy} className="flex-1 sm:flex-none sm:px-7">
+          <Button type="submit" loading={busy} className="flex-1 tablet:flex-none tablet:px-7">
             {workout ? "수정 저장" : "저장"}
           </Button>
         </div>
@@ -798,7 +798,7 @@ function Stepper({
     <div
       className="flex h-9 min-w-0 items-center overflow-hidden rounded-lg bg-canvas"
     >
-      <label className="flex min-w-0 flex-1 items-baseline justify-end gap-0.5 pl-2 sm:pl-3">
+      <label className="flex min-w-0 flex-1 items-baseline justify-end gap-0.5 pl-2 tablet:pl-3">
         {prefix && (
           <span className="shrink-0 text-xs font-bold text-muted-foreground">{prefix}</span>
         )}

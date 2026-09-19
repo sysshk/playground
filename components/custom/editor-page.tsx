@@ -30,7 +30,7 @@ export function EditorPage({
   return (
     <div className="mx-auto flex w-full max-w-[720px] flex-col gap-4">
       <Breadcrumbs
-        className="-ml-1.5 hidden text-sm lg:flex"
+        className="-ml-1.5 hidden text-sm web:flex"
         items={
           back.startsWith("/me")
             ? [{ label: "내 기록", href: back }, { label: title }]

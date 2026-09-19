@@ -262,15 +262,15 @@ export function AccountManager({
         <Block title="연결 안 된 회원" action={editBar("connect", saveConnect)}>
           <table className={TABLE}>
             <colgroup>
-              <col className="w-[22%] sm:w-[18%]" />
-              <col className="hidden sm:table-column sm:w-[24%]" />
-              <col className="w-[28%] sm:w-[22%]" />
+              <col className="w-[22%] tablet:w-[18%]" />
+              <col className="hidden tablet:table-column tablet:w-[24%]" />
+              <col className="w-[28%] tablet:w-[22%]" />
               <col />
             </colgroup>
             <thead>
               <tr>
                 <th scope="col" className={TH}>이름</th>
-                <th scope="col" className={`${TH} hidden sm:table-cell`}>연락처</th>
+                <th scope="col" className={`${TH} hidden tablet:table-cell`}>연락처</th>
                 <th scope="col" className={TH}>담당</th>
                 <th scope="col" className={TH}>앱 계정</th>
               </tr>
@@ -288,7 +288,7 @@ export function AccountManager({
                   <td className={`${TD} font-bold text-ink`}>
                     <Truncate>{member.name}</Truncate>
                   </td>
-                  <td className={`${TD} hidden tabular-nums text-muted-foreground sm:table-cell`}>
+                  <td className={`${TD} hidden tabular-nums text-muted-foreground tablet:table-cell`}>
                     <Truncate>{formatPhone(member.phone)}</Truncate>
                   </td>
                   <td className={TD}>
@@ -694,7 +694,7 @@ function TextButton({
 
 function InviteBox({ name, url, onClose }: { name: string; url: string; onClose: () => void }) {
   return (
-    <div role="status" className="flex flex-col gap-3 rounded-xl border border-primary bg-primary-light px-4 py-4 sm:px-5 dark:border-edge dark:bg-surface">
+    <div role="status" className="flex flex-col gap-3 rounded-xl border border-primary bg-primary-light px-4 py-4 tablet:px-5 dark:border-edge dark:bg-surface">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="flex items-center gap-1.5 text-sm font-bold text-ink">
@@ -714,8 +714,8 @@ function InviteBox({ name, url, onClose }: { name: string; url: string; onClose:
           <Icon name="close" size={16} />
         </button>
       </div>
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
-        <code className="min-w-0 flex-1 select-all break-all rounded-lg border border-line bg-field px-3 py-2 font-mono text-xs text-ink sm:text-sm">
+      <div className="flex flex-col gap-2 tablet:flex-row tablet:items-stretch">
+        <code className="min-w-0 flex-1 select-all break-all rounded-lg border border-line bg-field px-3 py-2 font-mono text-xs text-ink tablet:text-sm">
           {url}
         </code>
         <button

@@ -334,7 +334,7 @@ export function NutritionEditor({
 
         {error && <p className="text-sm text-danger">{error}</p>}
 
-        <div className="mt-2 flex gap-2.5 sm:justify-end">
+        <div className="mt-2 flex gap-2.5 tablet:justify-end">
           <Button
             type="button"
             variant="outline"
@@ -343,7 +343,7 @@ export function NutritionEditor({
           >
             취소
           </Button>
-          <Button type="submit" loading={busy} className="flex-1 sm:flex-none sm:px-7">
+          <Button type="submit" loading={busy} className="flex-1 tablet:flex-none tablet:px-7">
             계산하고 저장
           </Button>
         </div>

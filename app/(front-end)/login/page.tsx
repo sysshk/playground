@@ -58,7 +58,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative isolate flex min-h-screen flex-col bg-surface px-5 sm:px-8">
+    <div className="relative isolate flex min-h-screen flex-col bg-surface px-5 tablet:px-8">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(70%_55%_at_50%_30%,#dce9fd_0%,rgb(234_242_254/0.55)_45%,transparent_100%)] dark:bg-[radial-gradient(70%_55%_at_50%_30%,rgb(59_130_246/0.18)_0%,rgb(59_130_246/0.06)_45%,transparent_100%)]"

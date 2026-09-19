@@ -24,7 +24,7 @@ const LOW_SESSION_THRESHOLD = 3;
 
 /** 종료 표의 칸 — 이름, 목표(폰에서는 숨김), 받은 수업, 마지막 수업 */
 const ENDED_COLUMNS =
-  "grid-cols-[minmax(0,1fr)_auto_auto] sm:grid-cols-[minmax(0,8rem)_minmax(0,1fr)_auto_auto]";
+  "grid-cols-[minmax(0,1fr)_auto_auto] tablet:grid-cols-[minmax(0,8rem)_minmax(0,1fr)_auto_auto]";
 
 /** 마지막 수업이 이만큼 지나면 연락이 필요한 회원으로 봄 */
 const STALE_DAYS = 14;
@@ -207,7 +207,7 @@ export function MemberList({
     );
   };
 
-  const grid = "grid grid-cols-2 gap-2 sm:grid-cols-3";
+  const grid = "grid grid-cols-2 gap-2 tablet:grid-cols-3";
 
   /** 종료한 회원 한 줄. 계속 쌓이는 목록이라 표처럼 한 줄씩 */
   const endedRow = (member: MemberSummary) => {
@@ -215,7 +215,7 @@ export function MemberList({
     const cells = (
       <>
         <span className="truncate font-bold group-hover:text-primary">{member.name}</span>
-        <span className="hidden truncate text-subtle sm:block">{member.goal ?? "—"}</span>
+        <span className="hidden truncate text-subtle tablet:block">{member.goal ?? "—"}</span>
         <span className="text-right tabular-nums text-muted-foreground">{member.completedSessions}회</span>
         <span className="text-right tabular-nums text-muted-foreground">
           {member.lastCompletedAt ? formatDayShort(member.lastCompletedAt) : "—"}
@@ -254,7 +254,7 @@ export function MemberList({
         <div>
           <h1
             suppressHydrationWarning
-            className="text-2xl font-extrabold tracking-[-0.025em] sm:text-3xl"
+            className="text-2xl font-extrabold tracking-[-0.025em] tablet:text-3xl"
           >
             {greetingAt(now, trainerName)}
           </h1>
@@ -271,7 +271,7 @@ export function MemberList({
       </div>
 
       {/* ── 지표 ───────────────────────────── */}
-      <div className="grid grid-cols-2 gap-x-4 gap-y-5 border-y border-line py-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-5 border-y border-line py-4 tablet:grid-cols-4">
         {kpis.map((kpi) => (
           <div key={kpi.label} className="flex flex-col gap-1">
             <p className="flex items-baseline gap-1">
@@ -312,7 +312,7 @@ export function MemberList({
             )}
           </div>
           {total > 0 && (
-            <div className="relative w-full sm:w-[280px]">
+            <div className="relative w-full tablet:w-[280px]">
               <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-subtle">
                 <Icon name="search" size={16} />
               </span>
@@ -382,7 +382,7 @@ export function MemberList({
                 className={`grid ${ENDED_COLUMNS} gap-3 border-b border-line px-2 pb-1.5 text-2xs font-semibold text-subtle`}
               >
                 <span>이름</span>
-                <span className="hidden sm:block">목표</span>
+                <span className="hidden tablet:block">목표</span>
                 <span className="text-right">받은 수업</span>
                 <span className="text-right">마지막 수업</span>
               </div>

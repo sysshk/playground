@@ -331,10 +331,10 @@ export function SetGrid({ exercises }: { exercises: Exercise[] }) {
             <div key={exercise.id} className="contents">
               {/* 폰에서는 이름과 배지를 두 줄로 쌓아 종목 칸 폭을 줄임 */}
               <span
-                className={`${body} ${pinName} flex max-w-36 flex-col items-start justify-center gap-1 pl-1 pr-2 text-sm font-medium md:max-w-none md:font-semibold md:flex-row md:items-center md:justify-start md:gap-2`}
+                className={`${body} ${pinName} flex max-w-36 flex-col items-start justify-center gap-1 pl-1 pr-2 text-xs font-medium tablet:max-w-none tablet:text-sm tablet:font-semibold tablet:flex-row tablet:items-center tablet:justify-start tablet:gap-2`}
               >
-                <span className="whitespace-normal md:whitespace-nowrap">
-                  <span className="mr-1.5 text-xs font-semibold text-subtle">{index + 1}</span>
+                <span className="whitespace-normal tablet:whitespace-nowrap">
+                  <span className="mr-1.5 text-2xs font-semibold text-subtle tablet:text-xs">{index + 1}</span>
                   {exercise.name}
                 </span>
                 {bodyweightOnly && <BodyweightBadge />}
@@ -354,7 +354,7 @@ export function SetGrid({ exercises }: { exercises: Exercise[] }) {
                 );
               })}
               {hasRest && (
-                <span className={`${body} flex items-center justify-center px-2.5 text-xs font-bold text-muted-foreground`}>
+                <span className={`${body} flex items-center justify-center px-2.5 text-2xs font-bold text-muted-foreground tablet:text-xs`}>
                   {exercise.restSeconds != null ? formatRest(exercise.restSeconds) : <span className="text-line-strong">—</span>}
                 </span>
               )}
@@ -387,7 +387,7 @@ function SetChip({
       ) : (
         <>
           {set.unit === "bodyweight" ? (
-            <span className="mr-1 text-xs font-bold text-ink">바디웨이트</span>
+            <span className="mr-1 text-2xs font-bold text-ink tablet:text-xs">바디웨이트</span>
           ) : set.unit === "sides" ? (
             <>
               <Num>{set.weight}</Num>
@@ -412,7 +412,7 @@ function SetChip({
 }
 
 function Num({ children }: { children: React.ReactNode }) {
-  return <span className="text-sm font-semibold text-ink md:font-bold">{children}</span>;
+  return <span className="text-xs font-semibold text-ink tablet:text-sm tablet:font-bold">{children}</span>;
 }
 
 function Unit({ children }: { children: React.ReactNode }) {

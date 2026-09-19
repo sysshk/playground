@@ -188,7 +188,7 @@ export function MemberTabs({
         ref={barRef}
         role="tablist"
         aria-label="회원 기록"
-        className="sticky top-14 z-20 flex w-full border-b border-line bg-canvas sm:top-16 lg:top-0"
+        className="sticky top-(--bar-h) z-20 flex w-full border-b border-line bg-canvas"
       >
         {MEMBER_TABS.map((key) => (
           <button

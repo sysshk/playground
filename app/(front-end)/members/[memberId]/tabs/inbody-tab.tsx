@@ -353,7 +353,7 @@ function InbodyForm({
       </div>
 
       {/* 수치 */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2 tablet:grid-cols-3">
         {INBODY_FIELDS.map(([key, label, unit, example]) => (
           <label key={key} className="flex flex-col gap-1">
             <span className="text-2xs font-bold text-subtle">
@@ -469,7 +469,7 @@ function InbodyForm({
 
 /** 막대 줄의 칸 — 이름, 막대, 값, 표준 범위(폰에서는 숨김) */
 const INBODY_ROW =
-  "grid grid-cols-[4.5rem_minmax(0,1fr)_4.5rem] items-end gap-2 sm:grid-cols-[5rem_minmax(0,1fr)_4.5rem_6.5rem] sm:gap-3";
+  "grid grid-cols-[4.5rem_minmax(0,1fr)_4.5rem] items-end gap-2 tablet:grid-cols-[5rem_minmax(0,1fr)_4.5rem_6.5rem] tablet:gap-3";
 
 /**
  * 막대 묶음의 머리 — 표준이하·표준·표준이상
@@ -519,7 +519,7 @@ function InbodyBarHeader({
       {heading}
       {zoneRow}
       <span />
-      <span className="hidden text-right text-2xs font-bold text-subtle sm:block">
+      <span className="hidden text-right text-2xs font-bold text-subtle tablet:block">
         {rangeLabel}
       </span>
     </div>
@@ -569,7 +569,7 @@ function InbodyBar({
             <span
               key={tick}
               className={`absolute top-0 -translate-x-1/2 text-[10px] leading-none tabular-nums text-subtle ${
-                i % 2 === 1 ? "hidden sm:block" : ""
+                i % 2 === 1 ? "hidden tablet:block" : ""
               } ${i === 0 ? "translate-x-0" : ""} ${i === last ? "-translate-x-full" : ""}`}
               style={{ left: `${(i / last) * 100}%` }}
             >
@@ -608,7 +608,7 @@ function InbodyBar({
           </span>
         )}
       </span>
-      <span className="hidden text-right text-2xs leading-none text-subtle tabular-nums sm:block">
+      <span className="hidden text-right text-2xs leading-none text-subtle tabular-nums tablet:block">
         {range}
       </span>
     </div>
@@ -739,7 +739,7 @@ function InbodyResultCard({
     .join(" · ");
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-line p-4 md:p-5">
+    <div className="flex flex-col gap-4 rounded-xl border border-line p-4 tablet:p-5">
       {/* 측정 정보 */}
       <div className="flex items-start justify-between gap-3">
         <p className="flex min-w-0 flex-col gap-0.5">
@@ -769,7 +769,7 @@ function InbodyResultCard({
       </div>
 
       {/* 지난 측정 대비 변화 */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 tablet:grid-cols-4">
         {changes.map(([label, now, before, unit]) => {
           const delta =
             now !== null && before !== null ? round1(now - before) : null;
@@ -942,7 +942,7 @@ function InbodyResultCard({
 // 캔버스는 브라우저에서만 그리고, 그래프 라이브러리는 화면이 뜬 뒤에 받음
 const ChartCanvas = dynamic(() => import("./inbody-chart"), {
   ssr: false,
-  loading: () => <div className="h-52 w-full md:h-60" />,
+  loading: () => <div className="h-52 w-full tablet:h-60" />,
 });
 
 /** 체중 기록이 있으면 보이는 박스. 기록은 최신순으로 받음 */
@@ -969,7 +969,7 @@ export function WeightChartCard({
   const hasInbody = stats.muscle.length > 0 || stats.fat.length > 0;
 
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-line p-4 md:p-5">
+    <div className="flex flex-col gap-2 rounded-xl border border-line p-4 tablet:p-5">
       {/* 현재 체중·목표 — 한 줄 */}
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <p className="flex items-baseline gap-2">

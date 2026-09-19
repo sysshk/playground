@@ -258,7 +258,7 @@ export function LessonCalendar({
           return (
             <div
               key={day}
-              className={`${edge} flex min-h-14 min-w-0 flex-col gap-0.5 p-1 sm:min-h-22 sm:p-1.5`}
+              className={`${edge} flex min-h-14 min-w-0 flex-col gap-0.5 p-1 tablet:min-h-22 tablet:p-1.5`}
             >
               <span className="mb-0.5 flex min-w-0 flex-wrap items-center gap-x-1">
                 <span

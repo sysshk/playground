@@ -161,7 +161,7 @@ function DietCard({
   children: ReactNode;
 }) {
   return (
-    <section className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-4 sm:p-5">
+    <section className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-4 tablet:p-5">
       {title && (
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-base font-extrabold tracking-[-0.02em]">{title}</h2>
@@ -602,7 +602,7 @@ function DayNav({
 
 /** 폰에서는 아래에서 올라오는 시트, 넓은 화면에서는 가운데 창 */
 const SHEET =
-  "max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:max-h-[88dvh] max-sm:w-full max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-b-none max-sm:pb-[max(1.5rem,env(safe-area-inset-bottom))] max-sm:data-open:slide-in-from-bottom max-sm:data-open:zoom-in-100";
+  "max-tablet:top-auto max-tablet:bottom-0 max-tablet:left-0 max-tablet:max-h-[88dvh] max-tablet:w-full max-tablet:max-w-none max-tablet:translate-x-0 max-tablet:translate-y-0 max-tablet:rounded-b-none max-tablet:pb-[max(1.5rem,env(safe-area-inset-bottom))] max-tablet:data-open:slide-in-from-bottom max-tablet:data-open:zoom-in-100";
 
 /**
  * 달력 시트 — 날짜판(6주 고정)과 월 선택판. 제목을 누르면 월 선택판, ‹ ›는 한 해씩

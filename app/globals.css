@@ -5,10 +5,16 @@
 /* 다크 변형 */
 @custom-variant dark (&:is(.dark *));
 
+/* 화면 구간 — 폰 · tablet: 768px~ · web: 1024px~ */
+@theme {
+  --breakpoint-*: initial;
+  --breakpoint-tablet: 48rem;
+  --breakpoint-web: 64rem;
+}
+
 /* 라이트 색 */
 :root {
   color-scheme: light;
-  --radius: 0.75rem;
 
   --background: #f7f8fa;
   --foreground: #12120f;
@@ -46,7 +52,6 @@
   --subtle: #8a8a85;
   --line-strong: #c9c9c4;
   --edge: #cdccc6;
-  --inverse: #12120f;
 
   /* 상태 */
   --danger-dark: #8f1e18;
@@ -60,10 +65,9 @@
   --fat: #d9484f;
   --protein: #b07d00;
 
-  /* 히어로·칩 */
+  /* 히어로 */
   --hero: #12120f;
   --hero-foreground: #f2f3f5;
-  --chip: #ebebe8;
 }
 
 /* 다크 색 */
@@ -106,7 +110,6 @@
   --subtle: #80868f;
   --line-strong: #3a3e45;
   --edge: #33363c;
-  --inverse: #ededf0;
 
   /* 상태 */
   --danger-dark: #fca5a5;
@@ -120,10 +123,81 @@
   --fat: #f2777c;
   --protein: #e8c547;
 
-  /* 히어로·칩 */
+  /* 히어로 */
   --hero: #1a1c20;
   --hero-foreground: #f2f3f5;
-  --chip: #26292e;
+}
+
+/* ── 구간별 크기 — 폰 · 태블릿 768px~ · 웹 1024px~ ── */
+
+/* 폰 */
+:root {
+  /* 틀 */
+  --page-x: 1rem; /* 본문 좌우 여백 */
+  --page-y: 1.25rem; /* 본문 위아래 여백 */
+  --bar-h: 3.5rem; /* 상단 바 높이. 웹은 사이드바라 0 */
+
+  /* 글자 크기 */
+  --fs-2xs: 11px;
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-base: 14px;
+  --fs-md: 15px;
+  --fs-lg: 16px;
+  --fs-xl: 18px;
+  --fs-2xl: 22px;
+  --fs-3xl: 27px;
+  --fs-4xl: 34px;
+  --fs-5xl: 42px;
+  --fs-6xl: 52px;
+}
+
+/* 태블릿 */
+@media (width >= 48rem) {
+  :root {
+    /* 틀 */
+    --page-x: 1.5rem;
+    --page-y: 1.75rem;
+    --bar-h: 4rem;
+
+    /* 글자 크기 */
+    --fs-2xs: 13px;
+    --fs-xs: 14px;
+    --fs-sm: 14px;
+    --fs-base: 15px;
+    --fs-md: 16px;
+    --fs-lg: 18px;
+    --fs-xl: 22px;
+    --fs-2xl: 28px;
+    --fs-3xl: 34px;
+    --fs-4xl: 44px;
+    --fs-5xl: 54px;
+    --fs-6xl: 68px;
+  }
+}
+
+/* 웹 */
+@media (width >= 64rem) {
+  :root {
+    /* 틀 */
+    --page-x: 2rem;
+    --page-y: 1.75rem;
+    --bar-h: 0px;
+
+    /* 글자 크기 */
+    --fs-2xs: 13px;
+    --fs-xs: 14px;
+    --fs-sm: 14px;
+    --fs-base: 15px;
+    --fs-md: 16px;
+    --fs-lg: 18px;
+    --fs-xl: 22px;
+    --fs-2xl: 28px;
+    --fs-3xl: 34px;
+    --fs-4xl: 44px;
+    --fs-5xl: 54px;
+    --fs-6xl: 68px;
+  }
 }
 
 /* Tailwind 색 이름 */
@@ -165,7 +239,6 @@
   --color-subtle: var(--subtle);
   --color-line-strong: var(--line-strong);
   --color-edge: var(--edge);
-  --color-inverse: var(--inverse);
   --color-danger-dark: var(--danger-dark);
   --color-warning: var(--warning);
   --color-goal: var(--goal);
@@ -174,10 +247,14 @@
   --color-protein: var(--protein);
   --color-hero: var(--hero);
   --color-hero-foreground: var(--hero-foreground);
-  --color-chip: var(--chip);
 }
 
 /* 모서리 */
+:root {
+  --radius: 0.75rem;
+}
+
+/* 모서리·글자 이름 */
 @theme inline {
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -185,62 +262,41 @@
   --radius-xl: calc(var(--radius) * 1.4);
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-card: 16px;
+
+  --text-2xs: var(--fs-2xs);
+  --text-2xs--line-height: 1.45;
+  --text-xs: var(--fs-xs);
+  --text-xs--line-height: 1.55;
+  --text-sm: var(--fs-sm);
+  --text-sm--line-height: 1.6;
+  --text-base: var(--fs-base);
+  --text-base--line-height: 1.65;
+  --text-md: var(--fs-md);
+  --text-md--line-height: 1.7;
+  --text-lg: var(--fs-lg);
+  --text-lg--line-height: 1.7;
+  --text-xl: var(--fs-xl);
+  --text-xl--line-height: 1.45;
+  --text-2xl: var(--fs-2xl);
+  --text-2xl--line-height: 1.35;
+  --text-3xl: var(--fs-3xl);
+  --text-3xl--line-height: 1.28;
+  --text-4xl: var(--fs-4xl);
+  --text-4xl--line-height: 1.22;
+  --text-5xl: var(--fs-5xl);
+  --text-5xl--line-height: 1.16;
+  --text-6xl: var(--fs-6xl);
+  --text-6xl--line-height: 1.12;
 }
 
-/* 그림자·글자 */
+/* 그림자·글꼴 */
 @theme {
-  /* 그림자 */
   --shadow-card: none;
   --shadow-raised: 0 2px 6px rgba(18, 18, 15, 0.05);
   --shadow-float: 0 12px 32px rgba(18, 18, 15, 0.14);
 
-  /* 글자 크기 — 폰 */
-  --text-2xs: 11px;
-  --text-2xs--line-height: 1.45;
-  --text-xs: 12px;
-  --text-xs--line-height: 1.55;
-  --text-sm: 13px;
-  --text-sm--line-height: 1.6;
-  --text-base: 14px;
-  --text-base--line-height: 1.65;
-  --text-md: 15px;
-  --text-md--line-height: 1.7;
-  --text-lg: 16px;
-  --text-lg--line-height: 1.7;
-  --text-xl: 18px;
-  --text-xl--line-height: 1.45;
-  --text-2xl: 22px;
-  --text-2xl--line-height: 1.35;
-  --text-3xl: 27px;
-  --text-3xl--line-height: 1.28;
-  --text-4xl: 34px;
-  --text-4xl--line-height: 1.22;
-  --text-5xl: 42px;
-  --text-5xl--line-height: 1.16;
-  --text-6xl: 52px;
-  --text-6xl--line-height: 1.12;
-
   --font-sans: "Pretendard Variable", Pretendard, -apple-system,
     BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-}
-
-/* 태블릿·데스크톱 글자 크기 */
-@media (min-width: 768px) {
-  :root {
-    --text-2xs: 13px;
-    --text-xs: 14px;
-    --text-sm: 14px;
-    --text-base: 15px;
-    --text-md: 16px;
-    --text-lg: 18px;
-    --text-xl: 22px;
-    --text-2xl: 28px;
-    --text-3xl: 34px;
-    --text-4xl: 44px;
-    --text-5xl: 54px;
-    --text-6xl: 68px;
-  }
 }
 
 /* 리셋 */

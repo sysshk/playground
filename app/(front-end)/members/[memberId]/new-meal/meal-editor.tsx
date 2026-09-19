@@ -208,12 +208,12 @@ export function MealEditor({
 
         {error && <p className="text-sm text-danger">{error}</p>}
 
-        <div className="mt-2 flex gap-2.5 sm:justify-end">
+        <div className="mt-2 flex gap-2.5 tablet:justify-end">
           <Button
             type="button"
             variant="outline"
             onClick={() => router.push(back)}
-            className="flex-1 sm:flex-none sm:px-5"
+            className="flex-1 tablet:flex-none tablet:px-5"
           >
             취소
           </Button>
@@ -221,7 +221,7 @@ export function MealEditor({
             type="submit"
             loading={saving}
             disabled={!ready || refreshing}
-            className="flex-1 sm:flex-none sm:px-7"
+            className="flex-1 tablet:flex-none tablet:px-7"
           >
             저장
           </Button>

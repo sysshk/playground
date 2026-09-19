@@ -141,9 +141,9 @@ export function MemberDetailView({
   const confirm = pending ? pendingCopy(pending, memberId) : null;
 
   return (
-    <div className="mx-auto -mt-5 flex w-full max-w-[760px] flex-col gap-7 sm:-mt-7 lg:mt-0">
+    <div className="mx-auto -mt-(--page-y) flex w-full max-w-[760px] flex-col gap-7 web:mt-0">
       <Breadcrumbs
-        className="-ml-1.5 hidden text-sm lg:flex"
+        className="-ml-1.5 hidden text-sm web:flex"
         items={[{ label: "회원", href: "/members" }, { label: member.name }]}
       />
 
@@ -329,7 +329,7 @@ function MemberSummary({
             editing ? "text-ink" : "text-primary hover:text-primary-dark"
           }`}
         >
-          <Icon name="pencil" className="size-3.5 sm:size-[15px] lg:size-4" />
+          <Icon name="pencil" className="size-3.5 tablet:size-[15px] web:size-4" />
         </button>
       </div>
 

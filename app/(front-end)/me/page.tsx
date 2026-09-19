@@ -39,11 +39,11 @@ export default async function MyRecordPage({
   const latestWeight = member.weights[0]?.weight ?? null;
 
   return (
-    <div className="mx-auto -mt-5 flex w-full max-w-[760px] flex-col gap-7 sm:-mt-7 lg:mt-0">
+    <div className="mx-auto -mt-(--page-y) flex w-full max-w-[760px] flex-col gap-7 web:mt-0">
       <MemberTabs
         initial={toMemberTab(tab)}
         header={
-          <section className="flex flex-col gap-4 rounded-2xl border border-line bg-surface px-5 py-5 text-ink sm:px-6 sm:py-6">
+          <section className="flex flex-col gap-4 rounded-2xl border border-line bg-surface px-5 py-5 text-ink tablet:px-6 tablet:py-6">
             <div>
               <p className="text-sm font-semibold text-muted-foreground">{member.name}님의 PT 기록</p>
               <p className="mt-1 text-3xl font-extrabold tracking-[-0.03em]">
