@@ -36,7 +36,7 @@ async function Screen({ params }: Props) {
   if (!data) {
     return (
       <EditorMissing
-        back={`/members/${memberId}`}
+        back={`/members/${memberId}?tab=diet`}
         title="영양 계산"
         message="회원을 찾을 수 없습니다."
       />

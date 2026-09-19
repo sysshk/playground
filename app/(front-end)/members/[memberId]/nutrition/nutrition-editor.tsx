@@ -94,7 +94,7 @@ export function NutritionEditor({
   latestWeight: number | null;
 }) {
   const router = useRouter();
-  const back = `/members/${member.id}`;
+  const back = `/members/${member.id}?tab=diet`;
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState<FormState>(() =>
     toFormState(nutrition, latestWeight),

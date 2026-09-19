@@ -1,5 +1,5 @@
 /*
-  회원 상세 화면 — 머리(회원 정보·수정), 수업 기록·코칭 메모·체중·영양 섹션 조립, 삭제 확인 창
+  회원 상세 화면 — 머리(회원 정보·수정), 탭(PT·몸 상태·식단·개인 운동·Q&A) 조립, 삭제 확인 창
   데이터는 서버 화면(page.tsx)이 읽어 넘기고, 저장·삭제 뒤에는 router.refresh로 다시 받음
 
   @date : 2026-09-12
@@ -7,23 +7,34 @@
 
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { Breadcrumbs } from "@/components/custom/breadcrumbs";
 import { ConfirmDialog } from "@/components/custom/confirm-dialog";
 import { Icon } from "@/components/custom/icons";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { apiFetch, errorMessage, formatDate, formatDayHour, formatDayShort } from "@/lib/client";
 import { formatPhone } from "@/lib/phone";
-import type { CoachingNote, MemberDetail, SessionCompletion, Workout } from "@/lib/types";
+import type {
+  CoachingNote,
+  MemberDetail,
+  MemberTab,
+  SessionCompletion,
+  Workout,
+} from "@/lib/types";
 import MemberForm, { type MemberPayload } from "../member-form";
 import {
+  DietSection,
   IconButton,
   LessonHistory,
+  MemberTabs,
   NoteSection,
   NutritionPanel,
+  PersonalWorkoutSection,
+  QuestionSection,
   WeightSection,
-  type WeightPayload,
+  type InbodyPayload,
 } from "./member-sections";
 
 /** 화면에 펼쳐져 있는 입력 폼. 한 번에 하나만 열어 둠 */
@@ -32,7 +43,16 @@ type OpenForm =
   | { kind: "weight" }
   | null;
 
-export function MemberDetailView({ member }: { member: MemberDetail }) {
+export function MemberDetailView({
+  member,
+  initialTab,
+  initialDate,
+}: {
+  member: MemberDetail;
+  /** 주소의 ?tab= 로 여는 탭 */
+  initialTab: MemberTab;
+  initialDate: string; // 주소의 ?date= — 식단 탭이 여는 날
+}) {
   const router = useRouter();
   const memberId = member.id;
   const [refreshing, startRefresh] = useTransition();
@@ -102,12 +122,12 @@ export function MemberDetailView({ member }: { member: MemberDetail }) {
       "회원 정보 수정에 실패했습니다.",
     );
 
-  const handleAddWeight = (payload: WeightPayload) =>
+  const handleAddWeight = (payload: InbodyPayload) =>
     save(
       `/api/members/${memberId}/weights`,
       { method: "POST", body: JSON.stringify(payload) },
-      "체중을 기록했습니다.",
-      "체중 기록 저장에 실패했습니다.",
+      "체중·인바디를 기록했습니다.",
+      "기록 저장에 실패했습니다.",
     );
 
   // 그래프 위에서 바로 고치는 칸이라 오류를 띄울 폼이 없음. 실패는 토스트로 알림
@@ -128,13 +148,10 @@ export function MemberDetailView({ member }: { member: MemberDetail }) {
 
   return (
     <div className="mx-auto flex w-full max-w-[760px] flex-col gap-7">
-      <Link
-        href="/members"
-        className="hidden w-fit items-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-ink lg:flex"
-      >
-        <Icon name="arrowLeft" size={15} />
-        회원 목록
-      </Link>
+      <Breadcrumbs
+        className="-ml-1.5 hidden text-sm lg:flex"
+        items={[{ label: "회원", href: "/members" }, { label: member.name }]}
+      />
 
       <MemberSummary
         member={member}
@@ -150,45 +167,74 @@ export function MemberDetailView({ member }: { member: MemberDetail }) {
         onCancel={() => setOpen(null)}
       />
 
-      <LessonHistory
-        id="sessions"
-        memberId={member.id}
-        completions={member.completions}
-        workouts={member.workouts}
-        completionTotal={member.completionTotal}
-        lessonTotal={member.lessonTotal}
-        lessonLimit={member.lessonLimit}
-        busy={locked}
-        onDeleteWorkout={(workout, completionId) =>
-          setPending({ type: "deleteWorkout", workout, refunds: completionId !== undefined })
-        }
-        onDeleteCompletion={(completion) =>
-          setPending({ type: "cancelCompletion", completion })
-        }
+      <MemberTabs
+        initial={initialTab}
+        badges={{ qna: member.questions.filter((q) => !q.answer).length }}
+        panels={{
+          lessons: (
+            <>
+              <LessonHistory
+                id="sessions"
+                memberId={member.id}
+                completions={member.completions}
+                workouts={member.workouts}
+                completionTotal={member.completionTotal}
+                lessonTotal={member.lessonTotal}
+                lessonLimit={member.lessonLimit}
+                busy={locked}
+                onDeleteWorkout={(workout, completionId) =>
+                  setPending({ type: "deleteWorkout", workout, refunds: completionId !== undefined })
+                }
+                onDeleteCompletion={(completion) =>
+                  setPending({ type: "cancelCompletion", completion })
+                }
+              />
+              <NoteSection
+                memberId={member.id}
+                notes={member.notes}
+                onDelete={(note) => setPending({ type: "deleteNote", note })}
+              />
+            </>
+          ),
+          body: (
+            <>
+              <WeightSection
+                weights={member.weights}
+                targetWeight={member.targetWeight}
+                defaults={{
+                  gender: member.nutrition?.gender ?? null,
+                  age: member.nutrition?.age ?? null,
+                  height: member.nutrition?.height ?? null,
+                }}
+                formOpen={open?.kind === "weight"}
+                busy={locked}
+                serverError={formError}
+                onToggle={() => show(open?.kind === "weight" ? null : { kind: "weight" })}
+                onSubmit={handleAddWeight}
+                onSaveGoal={handleSaveGoal}
+                onCancel={() => setOpen(null)}
+                onDelete={(record) =>
+                  setPending({ type: "deleteWeight", id: record.id, date: record.date })
+                }
+              />
+            </>
+          ),
+          diet: (
+            <>
+              <DietSection
+                memberId={member.id}
+                meals={member.meals}
+                nutrition={member.nutrition}
+                role="trainer"
+                initialDate={initialDate}
+              />
+              <NutritionPanel memberId={member.id} nutrition={member.nutrition} />
+            </>
+          ),
+          personal: <PersonalWorkoutSection workouts={member.personalWorkouts} />,
+          qna: <QuestionSection memberId={member.id} questions={member.questions} role="trainer" />,
+        }}
       />
-
-      <NoteSection
-        memberId={member.id}
-        notes={member.notes}
-        onDelete={(note) => setPending({ type: "deleteNote", note })}
-      />
-
-      <WeightSection
-        weights={member.weights}
-        targetWeight={member.targetWeight}
-        formOpen={open?.kind === "weight"}
-        busy={locked}
-        serverError={formError}
-        onToggle={() => show(open?.kind === "weight" ? null : { kind: "weight" })}
-        onSubmit={handleAddWeight}
-        onSaveGoal={handleSaveGoal}
-        onCancel={() => setOpen(null)}
-        onDelete={(record) =>
-          setPending({ type: "deleteWeight", id: record.id, date: record.date })
-        }
-      />
-
-      <NutritionPanel memberId={member.id} nutrition={member.nutrition} />
 
       <ConfirmDialog
         open={pending !== null}
@@ -245,8 +291,8 @@ function MemberSummary({
                 {member.goal}
               </span>
             )}
+            <span className="text-sm font-medium text-muted-foreground">{formatPhone(member.phone)}</span>
           </div>
-          <p className="text-sm font-medium text-ink">{formatPhone(member.phone)}</p>
           <p className="flex flex-wrap items-baseline gap-x-1.5 text-sm text-muted-foreground">
             <span className="font-bold text-ink">남은 수업</span>
             <span
@@ -273,6 +319,11 @@ function MemberSummary({
               남은 수업을 다 썼습니다. 재등록이 필요합니다.
             </p>
           )}
+          {member.memo && (
+            <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+              <span className="font-bold text-ink">특이사항</span> : {member.memo}
+            </p>
+          )}
         </div>
         <IconButton
           icon="pencil"
@@ -282,8 +333,17 @@ function MemberSummary({
         />
       </div>
 
-      {editing ? (
-        <div className="rounded-2xl border-[1.5px] border-edge bg-surface p-5">
+      {/* 회원 정보 수정 창 */}
+      <Dialog
+        open={editing}
+        onOpenChange={(next) => {
+          if (!next) onCancel();
+        }}
+      >
+        <DialogContent dismissOnOutsideClick className="max-h-[90dvh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>회원 정보 수정</DialogTitle>
+          </DialogHeader>
           <MemberForm
             member={member}
             submitLabel="수정하기"
@@ -292,14 +352,8 @@ function MemberSummary({
             onSubmit={onSubmit}
             onCancel={onCancel}
           />
-        </div>
-      ) : (
-        member.memo && (
-          <p className="whitespace-pre-wrap rounded-r-lg border-l-[3px] border-primary bg-primary-light/40 py-2 pl-3 pr-3 text-sm leading-relaxed text-ink">
-            {member.memo}
-          </p>
-        )
-      )}
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
@@ -334,7 +388,7 @@ function pendingCopy(pending: PendingAction, memberId: string) {
       return {
         title: "체중 기록 삭제",
         message: `${formatDate(pending.date)} 체중 기록을 삭제하시겠습니까?`,
-        hint: "삭제된 기록은 복구할 수 없습니다.",
+        hint: "같은 날 적은 인바디 수치도 함께 지워지고 복구할 수 없습니다.",
         url: `${path}/weights/${pending.id}`,
         ok: "체중 기록을 삭제했습니다.",
         fail: "체중 기록 삭제에 실패했습니다.",

@@ -1,5 +1,6 @@
 /*
-  회원 상세·내 기록 화면 — 체중 그래프 캔버스 (Chart.js 설정·점 숫자·목표선)
+  회원 상세·내 기록 화면 — 체중·인바디 그래프 캔버스
+  체중은 굵은 선과 채움(왼쪽 축), 골격근량·체지방량은 가는 선(오른쪽 축). 목표선·끝 값·세로 안내선
   그래프 라이브러리가 커서 member-sections가 화면이 뜬 뒤에 이 파일을 따로 받음
 
   @date : 2026-09-15
@@ -9,7 +10,9 @@
 
 import {
   Chart as ChartJS,
+  Filler,
   LinearScale,
+  LineController,
   LineElement,
   PointElement,
   Tooltip,
@@ -18,31 +21,28 @@ import {
   type Plugin,
 } from "chart.js";
 import { useMemo } from "react";
-import { Line } from "react-chartjs-2";
+import { Chart } from "react-chartjs-2";
 import { formatDateShort } from "@/lib/client";
 import { signed, type Stats } from "./member-sections";
 
-ChartJS.register(LinearScale, PointElement, LineElement, Tooltip);
+ChartJS.register(LinearScale, LineController, LineElement, PointElement, Tooltip, Filler);
 
-/** 점 위 숫자는 이 개수까지만 모두 붙이고, 넘으면 최신 값만 붙임 */
-const LABEL_ALL_LIMIT = 8;
-
+/** 체중·인바디 그래프 */
 export default function WeightChartCanvas({ stats }: { stats: Stats }) {
   const chart = useMemo(() => buildChart(stats), [stats]);
 
   return (
-    <div className="relative h-48 w-full md:h-56">
-      {chart && (
-        <Line
-          // 플러그인(점 숫자·목표선)은 차트를 만들 때만 들어가서, 값이 바뀌면 새로 만듦
-          redraw
-          data={chart.data}
-          options={chart.options}
-          plugins={chart.plugins}
-          aria-label="날짜별 체중 변화 그래프"
-          role="img"
-        />
-      )}
+    <div className="relative h-56 w-full md:h-64">
+      <Chart
+        type="line"
+        // 플러그인(마지막 값·목표선·안내선)은 차트를 만들 때만 들어가서, 값이 바뀌면 새로 만듦
+        redraw
+        data={chart.data}
+        options={chart.options}
+        plugins={chart.plugins}
+        aria-label="날짜별 체중·골격근량·체지방량 선 그래프"
+        role="img"
+      />
     </div>
   );
 }
@@ -55,7 +55,6 @@ type Colors = {
   ink: string;
   subtle: string;
   goal: string;
-  line: string;
   hero: string;
   heroInk: string;
   font: string;
@@ -71,7 +70,6 @@ function readColors(): Colors {
     ink: read("--foreground"),
     subtle: read("--color-subtle"),
     goal: read("--color-goal"),
-    line: read("--border"),
     hero: read("--color-hero"),
     heroInk: read("--color-hero-foreground"),
     font: getComputedStyle(document.body).fontFamily,
@@ -86,61 +84,137 @@ function withAlpha(hex: string, alpha: number) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-function buildChart(stats: Stats): {
-  data: ChartData<"line", { x: number; y: number }[]>;
-  options: ChartOptions<"line">;
-  plugins: Plugin<"line">[];
-} {
+/** 값 범위를 눈금 간격에 맞춰 위아래로 넓힘 — 눈금이 5~6개쯤 되게 */
+function niceRange(min: number, max: number) {
+  const range = max - min;
+  const step = range <= 2.5 ? 0.5 : range <= 5 ? 1 : range <= 10 ? 2 : range <= 25 ? 5 : 10;
+  return {
+    step,
+    min: Math.floor((min - step * 0.5) / step) * step,
+    max: Math.ceil((max + step * 0.5) / step) * step,
+  };
+}
+
+/** 선 아래를 위에서 아래로 옅어지게 채움 */
+function fadeFill(color: string, strength: number) {
+  return (context: { chart: ChartJS }) => {
+    const { ctx, chartArea } = context.chart;
+    if (!chartArea) return withAlpha(color, strength / 2);
+    const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+    gradient.addColorStop(0, withAlpha(color, strength));
+    gradient.addColorStop(1, withAlpha(color, 0));
+    return gradient;
+  };
+}
+
+/** 날짜(ms) → YYYY-MM-DD */
+function dayOf(time: number) {
+  const d = new Date(time);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** 누른 날짜에 세로 안내선 */
+function crosshair(color: string): Plugin<"line"> {
+  return {
+    id: "crosshair",
+    afterDatasetsDraw: (chart) => {
+      const active = chart.getActiveElements()[0];
+      if (!active) return;
+      const { ctx, chartArea } = chart;
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(active.element.x, chartArea.top);
+      ctx.lineTo(active.element.x, chartArea.bottom);
+      ctx.stroke();
+      ctx.restore();
+    },
+  };
+}
+
+function buildChart(stats: Stats) {
   const colors = readColors();
-  const { points, first, last, goal } = stats;
+  const { points, first, last, goal, muscle, fat } = stats;
   const lastIndex = points.length - 1;
   // 기록이 하루뿐이면 폭이 0이라 하루 폭을 줌
   const span = Math.max(last.time - first.time, 86_400_000);
-  // 목표선이 보이도록 세로 범위에 목표도 넣음
-  const min = Math.min(stats.min, goal?.target ?? Infinity);
-  const max = Math.max(stats.max, goal?.target ?? -Infinity);
-  // 눈금 간격을 범위에 맞춰 고르고, 위아래 끝도 그 간격에 맞춰 자름
-  const range = max - min;
-  const step = range <= 3 ? 0.5 : range <= 6 ? 1 : range <= 12 ? 2 : 5;
-  const yMin = Math.floor((min - step * 0.5) / step) * step;
-  const yMax = Math.ceil((max + step * 0.5) / step) * step;
+  const hasInbody = muscle.length > 0 || fat.length > 0;
 
-  const data = {
+  // 왼쪽 — 체중과 목표
+  const left = niceRange(
+    Math.min(stats.min, goal?.target ?? Infinity),
+    Math.max(stats.max, goal?.target ?? -Infinity),
+  );
+  // 오른쪽 — 골격근량·체지방량
+  const inbodyValues = [...muscle, ...fat].map((p) => p.value);
+  const right = hasInbody ? niceRange(Math.min(...inbodyValues), Math.max(...inbodyValues)) : null;
+
+  const lines = [
+    ["골격근량", muscle, colors.ink],
+    ["체지방량", fat, colors.goal],
+  ] as const;
+
+  const data: ChartData<"line", { x: number; y: number }[]> = {
     datasets: [
       {
-        data: points.map((point) => ({ x: point.time, y: point.weight })),
+        type: "line",
+        label: "체중",
+        yAxisID: "y",
+        data: points.map((p) => ({ x: p.time, y: p.weight })),
+        // 세 선 중 주인공 — 가장 굵게, 아래를 옅게 채움
         borderColor: colors.primary,
-        borderWidth: 2,
-        pointRadius: 5,
-        pointBorderWidth: 2.5,
+        borderWidth: 3.5,
+        tension: 0.3,
+        fill: "start",
+        backgroundColor: fadeFill(colors.primary, 0.28),
+        pointRadius: points.map((_, i) => (i === lastIndex ? 5 : 3)),
+        pointBorderWidth: 2,
         pointBorderColor: colors.primary,
-        pointBackgroundColor: points.map((_, i) =>
-          i === lastIndex ? colors.primary : colors.card,
-        ),
-        pointHoverRadius: 7,
-        pointHoverBackgroundColor: colors.primary,
-        pointHitRadius: 20,
+        pointBackgroundColor: points.map((_, i) => (i === lastIndex ? colors.primary : colors.card)),
+        pointHoverRadius: 6,
+        pointHitRadius: 16,
+        order: 1,
       },
+      ...lines
+        .filter(([, series]) => series.length > 0)
+        .map(([label, series, color]) => ({
+          type: "line" as const,
+          label,
+          yAxisID: "y1",
+          data: series.map((p) => ({ x: p.time, y: p.value })),
+          borderColor: color,
+          borderWidth: 2,
+          tension: 0.3,
+          pointRadius: 3.5,
+          pointBorderWidth: 2,
+          pointBorderColor: color,
+          pointBackgroundColor: color,
+          pointHoverRadius: 6,
+          pointHitRadius: 16,
+          order: 0,
+        })),
     ],
   };
 
+  const tick = { color: colors.subtle, font: { family: colors.font, size: 11 }, padding: 6 };
   const options: ChartOptions<"line"> = {
     responsive: true,
     maintainAspectRatio: false,
-    layout: { padding: { top: 24, right: 12, left: 4 } },
-    interaction: { mode: "nearest", axis: "x", intersect: false },
+    layout: { padding: { top: 26, right: 4, left: 4 } },
+    interaction: { mode: "x", intersect: false },
     scales: {
       x: {
         type: "linear",
-        min: first.time - span * 0.08,
-        max: last.time + span * 0.08,
+        min: first.time - span * 0.05,
+        max: last.time + span * 0.05,
         afterBuildTicks: (axis) => {
-          axis.ticks = points.map((point) => ({ value: point.time }));
+          axis.ticks = points.map((p) => ({ value: p.time }));
         },
         ticks: {
-          color: colors.subtle,
+          ...tick,
           font: { family: colors.font, size: 11, weight: 600 },
-          padding: 8,
           autoSkipPadding: 20,
           maxRotation: 0,
           callback: (value) => {
@@ -152,18 +226,25 @@ function buildChart(stats: Stats): {
         border: { display: false },
       },
       y: {
-        min: yMin,
-        max: yMax,
-        ticks: {
-          stepSize: step,
-          color: colors.subtle,
-          font: { family: colors.font, size: 11 },
-          padding: 8,
-          callback: (value) => (Number.isInteger(value) ? `${value}` : Number(value).toFixed(1)),
-        },
-        grid: { color: colors.line, drawTicks: false },
-        border: { display: false, dash: [3, 4] },
+        position: "left",
+        min: left.min,
+        max: left.max,
+        ticks: { ...tick, stepSize: left.step },
+        grid: { color: withAlpha(colors.subtle, 0.15), drawTicks: false },
+        border: { display: false },
       },
+      ...(right
+        ? {
+            y1: {
+              position: "right" as const,
+              min: right.min,
+              max: right.max,
+              ticks: { ...tick, stepSize: right.step },
+              grid: { display: false },
+              border: { display: false },
+            },
+          }
+        : {}),
     },
     plugins: {
       legend: { display: false },
@@ -172,39 +253,50 @@ function buildChart(stats: Stats): {
         titleColor: withAlpha(colors.heroInk, 0.65),
         bodyColor: colors.heroInk,
         titleFont: { family: colors.font, size: 11, weight: "normal" },
-        bodyFont: { family: colors.font, size: 14, weight: "bold" },
+        bodyFont: { family: colors.font, size: 13, weight: "bold" },
         padding: { x: 12, y: 8 },
         cornerRadius: 10,
         caretSize: 0,
-        displayColors: false,
-        yAlign: "bottom",
+        boxPadding: 4,
+        displayColors: hasInbody,
         callbacks: {
-          title: (items) => formatDateShort(points[items[0].dataIndex].date),
+          title: (items) => formatDateShort(dayOf(Number(items[0].parsed.x ?? 0))),
           label: (item) => {
+            if (item.datasetIndex > 0) return `${item.dataset.label} ${item.parsed.y}kg`;
             const point = points[item.dataIndex];
             return point.delta === null
-              ? `${point.weight}kg`
-              : `${point.weight}kg  ${signed(point.delta)}`;
+              ? `체중 ${point.weight}kg`
+              : `체중 ${point.weight}kg  ${signed(point.delta)}`;
           },
         },
       },
     },
   };
 
-  const pointLabels: Plugin<"line"> = {
-    id: "weightPointLabels",
+  // 숫자는 마지막 체중 점에만 — 나머지는 누르면 말풍선으로 봄
+  const lastLabel: Plugin<"line"> = {
+    id: "weightLastLabel",
     afterDatasetsDraw: (chart) => {
+      const element = chart.getDatasetMeta(0).data[lastIndex];
+      if (!element) return;
       const { ctx } = chart;
+      const text = `${last.weight}kg`;
       ctx.save();
+      ctx.font = `800 12px ${colors.font}`;
+      const width = ctx.measureText(text).width + 12;
+      const x = Math.min(
+        Math.max(element.x, chart.chartArea.left + width / 2),
+        chart.chartArea.right - width / 2,
+      );
+      const y = element.y - 18;
+      ctx.fillStyle = colors.primary;
+      ctx.beginPath();
+      ctx.roundRect(x - width / 2, y - 10, width, 20, 10);
+      ctx.fill();
+      ctx.fillStyle = colors.card;
       ctx.textAlign = "center";
-      ctx.textBaseline = "bottom";
-      chart.getDatasetMeta(0).data.forEach((element, i) => {
-        const isLast = i === lastIndex;
-        if (points.length > LABEL_ALL_LIMIT && !isLast) return;
-        ctx.font = `${isLast ? 800 : 700} ${isLast ? 13 : 12}px ${colors.font}`;
-        ctx.fillStyle = isLast ? colors.primary : colors.ink;
-        ctx.fillText(`${points[i].weight}`, element.x, element.y - 10);
-      });
+      ctx.textBaseline = "middle";
+      ctx.fillText(text, x, y + 0.5);
       ctx.restore();
     },
   };
@@ -215,36 +307,49 @@ function buildChart(stats: Stats): {
       if (!goal) return;
       const { ctx, chartArea } = chart;
       const y = chart.scales.y.getPixelForValue(goal.target);
-      const text = `목표 ${goal.target}kg`;
-
       ctx.save();
-      ctx.font = `800 11px ${colors.font}`;
-      const width = ctx.measureText(text).width + 14;
-      const height = 20;
-      const left = chartArea.right - width;
-
-      // 점선
       ctx.strokeStyle = colors.goal;
-      ctx.lineWidth = 2;
-      ctx.setLineDash([6, 4]);
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([5, 4]);
       ctx.beginPath();
       ctx.moveTo(chartArea.left, y);
-      ctx.lineTo(left - 4, y);
+      ctx.lineTo(chartArea.right, y);
       ctx.stroke();
-
-      // 이름표
       ctx.setLineDash([]);
+      ctx.font = `800 11px ${colors.font}`;
       ctx.fillStyle = colors.goal;
-      ctx.beginPath();
-      ctx.roundRect(left, y - height / 2, width, height, height / 2);
-      ctx.fill();
-      ctx.fillStyle = "#ffffff";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(text, left + width / 2, y + 0.5);
+      ctx.textAlign = "left";
+      ctx.textBaseline = "bottom";
+      ctx.fillText(`목표 ${goal.target}kg`, chartArea.left + 4, y - 4);
       ctx.restore();
     },
   };
 
-  return { data, options, plugins: [goalLine, pointLabels] };
+  // 선 끝에 지금 값 — 오른쪽 축을 읽지 않아도 되게
+  const lineEndLabels: Plugin<"line"> = {
+    id: "lineEndLabels",
+    afterDatasetsDraw: (chart) => {
+      const { ctx } = chart;
+      ctx.save();
+      ctx.font = `800 12px ${colors.font}`;
+      ctx.textBaseline = "middle";
+      chart.data.datasets.forEach((dataset, index) => {
+        if (index === 0) return;
+        const elements = chart.getDatasetMeta(index).data;
+        const end = elements[elements.length - 1];
+        const value = (dataset.data[dataset.data.length - 1] as { y: number } | undefined)?.y;
+        if (!end || value === undefined) return;
+        const color = (dataset as { borderColor?: string }).borderColor ?? colors.ink;
+        const text = value.toFixed(1);
+        const width = ctx.measureText(text).width;
+        // 오른쪽 끝을 넘으면 점의 왼쪽에 둠
+        const x = end.x + 8 + width > chart.chartArea.right ? end.x - 8 - width : end.x + 8;
+        ctx.fillStyle = color;
+        ctx.fillText(text, x, end.y - 10);
+      });
+      ctx.restore();
+    },
+  };
+
+  return { data, options, plugins: [goalLine, crosshair(colors.subtle), lastLabel, lineEndLabels] };
 }

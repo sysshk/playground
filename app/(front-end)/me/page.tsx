@@ -1,26 +1,34 @@
 /*
-  회원 본인 화면 (서버) — 초대 링크로 연결된 내 PT 기록을 읽기 전용으로 보여 줌
+  회원 본인 화면 (서버) — 초대 링크로 연결된 내 PT 기록
+  수업·몸 상태는 보기만 하고, 식단·개인 운동·Q&A는 직접 씀
 
   @date : 2026-09-15
 */
 
 import { EmptyState } from "@/components/custom/empty-state";
 import { requireClient } from "@/lib/auth";
+import { toPastDay } from "@/lib/kst";
 import { getMyRecord, lessonLimit } from "@/lib/queries";
+import { toMemberTab } from "@/lib/types";
 import {
+  DietSection,
   LessonHistory,
+  MemberTabs,
   NoteSection,
   NutritionPanel,
+  PersonalWorkoutSection,
+  QuestionSection,
   WeightSection,
 } from "../members/[memberId]/member-sections";
 
 export default async function MyRecordPage({
   searchParams,
 }: {
-  searchParams: Promise<{ lessons?: string }>;
+  searchParams: Promise<{ lessons?: string; tab?: string; date?: string }>;
 }) {
-  const [viewer, { lessons }] = await Promise.all([requireClient(), searchParams]);
-  const member = await getMyRecord(viewer.id, lessonLimit(lessons));
+  const [viewer, { lessons, tab, date }] = await Promise.all([requireClient(), searchParams]);
+  const mealDate = toPastDay(date);
+  const member = await getMyRecord(viewer.id, lessonLimit(lessons), mealDate);
 
   if (!member) {
     return (
@@ -56,21 +64,44 @@ export default async function MyRecordPage({
         </dl>
       </section>
 
-      <WeightSection readOnly weights={member.weights} targetWeight={member.targetWeight} />
-
-      <LessonHistory
-        readOnly
-        memberId={member.id}
-        completions={member.completions}
-        workouts={member.workouts}
-        completionTotal={member.completionTotal}
-        lessonTotal={member.lessonTotal}
-        lessonLimit={member.lessonLimit}
+      <MemberTabs
+        initial={toMemberTab(tab)}
+        panels={{
+          lessons: (
+            <>
+              <LessonHistory
+                readOnly
+                memberId={member.id}
+                completions={member.completions}
+                workouts={member.workouts}
+                completionTotal={member.completionTotal}
+                lessonTotal={member.lessonTotal}
+                lessonLimit={member.lessonLimit}
+              />
+              <NoteSection readOnly memberId={member.id} notes={member.notes} />
+            </>
+          ),
+          body: (
+            <>
+              <WeightSection readOnly weights={member.weights} targetWeight={member.targetWeight} />
+            </>
+          ),
+          diet: (
+            <>
+              <DietSection
+                memberId={member.id}
+                meals={member.meals}
+                nutrition={member.nutrition}
+                role="member"
+                initialDate={mealDate}
+              />
+              <NutritionPanel readOnly memberId={member.id} nutrition={member.nutrition} />
+            </>
+          ),
+          personal: <PersonalWorkoutSection editable workouts={member.personalWorkouts} />,
+          qna: <QuestionSection memberId={member.id} questions={member.questions} role="member" />,
+        }}
       />
-
-      <NoteSection readOnly memberId={member.id} notes={member.notes} />
-
-      <NutritionPanel readOnly memberId={member.id} nutrition={member.nutrition} />
     </div>
   );
 }
