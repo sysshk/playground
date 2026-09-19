@@ -9,7 +9,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition, type ReactNode } from "react";
+import { useRef, useState, useTransition, type ReactNode } from "react";
 import { toast } from "sonner";
 import { Icon, type IconName } from "@/components/custom/icons";
 import { apiFetch, errorMessage } from "@/lib/client";
@@ -153,14 +153,18 @@ const TAB_LABEL: Record<MemberTab, string> = {
 export function MemberTabs({
   initial,
   badges = {},
+  header,
   panels,
 }: {
   initial: MemberTab;
   /** 탭 이름 옆 숫자 — 답을 기다리는 질문 수 등 */
   badges?: Partial<Record<MemberTab, number>>;
+  /** 탭 줄 아래, 어느 탭에서나 보이는 회원 정보 */
+  header?: ReactNode;
   panels: Record<MemberTab, ReactNode>;
 }) {
   const [tab, setTab] = useState(initial);
+  const barRef = useRef<HTMLDivElement>(null);
 
   const select = (next: MemberTab) => {
     setTab(next);
@@ -168,14 +172,23 @@ export function MemberTabs({
     if (next === "lessons") url.searchParams.delete("tab");
     else url.searchParams.set("tab", next);
     window.history.replaceState(null, "", url);
+
+    // 탭 줄이 위에 붙어 있을 때 바꾸면 새 탭의 처음부터 보이게
+    const bar = barRef.current;
+    const wrap = bar?.parentElement;
+    if (!bar || !wrap) return;
+    const stuckAt = parseFloat(getComputedStyle(bar).top) || 0;
+    const wrapTop = wrap.getBoundingClientRect().top;
+    if (wrapTop < stuckAt) window.scrollBy({ top: wrapTop - stuckAt });
   };
 
   return (
     <div className="flex flex-col gap-6">
       <div
+        ref={barRef}
         role="tablist"
         aria-label="회원 기록"
-        className="flex w-full border-b border-line"
+        className="sticky top-14 z-20 flex w-full border-b border-line bg-canvas sm:top-16 lg:top-0"
       >
         {MEMBER_TABS.map((key) => (
           <button
@@ -199,6 +212,7 @@ export function MemberTabs({
           </button>
         ))}
       </div>
+      {header}
       <div
         role="tabpanel"
         aria-label={TAB_LABEL[tab]}

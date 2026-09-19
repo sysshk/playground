@@ -69,10 +69,10 @@ function readColors(): Colors {
     primary: read("--primary"),
     card: read("--card"),
     ink: read("--foreground"),
-    subtle: read("--color-subtle"),
-    goal: read("--color-goal"),
-    hero: read("--color-hero"),
-    heroInk: read("--color-hero-foreground"),
+    subtle: read("--subtle"),
+    goal: read("--goal"),
+    hero: read("--hero"),
+    heroInk: read("--hero-foreground"),
     font: getComputedStyle(document.body).fontFamily,
   };
 }

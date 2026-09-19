@@ -39,29 +39,29 @@ export default async function MyRecordPage({
   const latestWeight = member.weights[0]?.weight ?? null;
 
   return (
-    <div className="mx-auto flex w-full max-w-[760px] flex-col gap-7">
-      {/* 요약 */}
-      <section className="flex flex-col gap-4 rounded-2xl border border-line bg-surface px-5 py-5 text-ink sm:px-6 sm:py-6">
-        <div>
-          <p className="text-sm font-semibold text-muted-foreground">{member.name}님의 PT 기록</p>
-          <p className="mt-1 text-3xl font-extrabold tracking-[-0.03em]">
-            남은 수업{" "}
-            <span className="tabular-nums text-primary">{member.remainingSessions}</span>
-            <span className="ml-0.5 text-lg">회</span>
-          </p>
-        </div>
-        <dl className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-          <Stat label="받은 수업" value={`${member.completionTotal}회`} />
-          <Stat label="최근 체중" value={latestWeight === null ? "—" : `${latestWeight}kg`} />
-          {member.targetWeight !== null && (
-            <Stat label="목표 체중" value={`${member.targetWeight}kg`} />
-          )}
-          {member.goal && <Stat label="목표" value={member.goal} />}
-        </dl>
-      </section>
-
+    <div className="mx-auto -mt-5 flex w-full max-w-[760px] flex-col gap-7 sm:-mt-7 lg:mt-0">
       <MemberTabs
         initial={toMemberTab(tab)}
+        header={
+          <section className="flex flex-col gap-4 rounded-2xl border border-line bg-surface px-5 py-5 text-ink sm:px-6 sm:py-6">
+            <div>
+              <p className="text-sm font-semibold text-muted-foreground">{member.name}님의 PT 기록</p>
+              <p className="mt-1 text-3xl font-extrabold tracking-[-0.03em]">
+                남은 수업{" "}
+                <span className="tabular-nums text-primary">{member.remainingSessions}</span>
+                <span className="ml-0.5 text-lg">회</span>
+              </p>
+            </div>
+            <dl className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+              <Stat label="받은 수업" value={`${member.completionTotal}회`} />
+              <Stat label="최근 체중" value={latestWeight === null ? "—" : `${latestWeight}kg`} />
+              {member.targetWeight !== null && (
+                <Stat label="목표 체중" value={`${member.targetWeight}kg`} />
+              )}
+              {member.goal && <Stat label="목표" value={member.goal} />}
+            </dl>
+          </section>
+        }
         panels={{
           lessons: (
             <>

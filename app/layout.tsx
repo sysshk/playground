@@ -29,10 +29,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1, // 아이폰에서 16px 미만 입력칸을 누를 때 화면이 확대되는 것 막음
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f3f3f1" },
-    { media: "(prefers-color-scheme: dark)", color: "#0e0f11" },
-  ],
+  colorScheme: "light dark", // 폰 브라우저가 다크 모드로 색을 강제로 바꾸지 않게 함
+  themeColor: "#f7f8fa", // 브라우저 윗줄 색. 다크로 고르면 테마 스크립트가 바꿈
 };
 
 export default function RootLayout({

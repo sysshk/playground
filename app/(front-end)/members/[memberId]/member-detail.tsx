@@ -29,7 +29,7 @@ import { WeightSection, type InbodyPayload } from "./tabs/inbody-tab";
 import { PersonalWorkoutSection } from "./tabs/personal-tab";
 import { LessonHistory, NoteSection } from "./tabs/pt-tab";
 import { QuestionSection } from "./tabs/qna-tab";
-import { IconButton, MemberTabs } from "./tabs/tab-ui";
+import { MemberTabs } from "./tabs/tab-ui";
 
 /** 화면에 펼쳐져 있는 입력 폼. 한 번에 하나만 열어 둠 */
 type OpenForm =
@@ -141,29 +141,30 @@ export function MemberDetailView({
   const confirm = pending ? pendingCopy(pending, memberId) : null;
 
   return (
-    <div className="mx-auto flex w-full max-w-[760px] flex-col gap-7">
+    <div className="mx-auto -mt-5 flex w-full max-w-[760px] flex-col gap-7 sm:-mt-7 lg:mt-0">
       <Breadcrumbs
         className="-ml-1.5 hidden text-sm lg:flex"
         items={[{ label: "회원", href: "/members" }, { label: member.name }]}
       />
 
-      <MemberSummary
-        member={member}
-        totalSessions={totalSessions}
-        lastCompletedAt={lastCompletedAt}
-        editing={open?.kind === "member"}
-        busy={locked}
-        serverError={formError}
-        onToggleEdit={() =>
-          show(open?.kind === "member" ? null : { kind: "member" })
-        }
-        onSubmit={handleEditMember}
-        onCancel={() => setOpen(null)}
-      />
-
       <MemberTabs
         initial={initialTab}
         badges={{ qna: member.questions.filter((q) => !q.answer).length }}
+        header={
+          <MemberSummary
+            member={member}
+            totalSessions={totalSessions}
+            lastCompletedAt={lastCompletedAt}
+            editing={open?.kind === "member"}
+            busy={locked}
+            serverError={formError}
+            onToggleEdit={() =>
+              show(open?.kind === "member" ? null : { kind: "member" })
+            }
+            onSubmit={handleEditMember}
+            onCancel={() => setOpen(null)}
+          />
+        }
         panels={{
           lessons: (
             <>
@@ -274,8 +275,8 @@ function MemberSummary({
 
   return (
     <section className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-col gap-1.5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-2.5">
             <h1 className="text-xl font-extrabold tracking-[-0.03em]">
               {member.name}
@@ -319,12 +320,17 @@ function MemberSummary({
             </p>
           )}
         </div>
-        <IconButton
-          icon="pencil"
-          label="회원 정보 수정"
+        <button
+          type="button"
           onClick={onToggleEdit}
-          active={editing}
-        />
+          aria-label="회원 정보 수정"
+          title="회원 정보 수정"
+          className={`-mr-2 -mt-1.5 grid size-10 shrink-0 place-items-center transition-colors ${
+            editing ? "text-ink" : "text-primary hover:text-primary-dark"
+          }`}
+        >
+          <Icon name="pencil" className="size-3.5 sm:size-[15px] lg:size-4" />
+        </button>
       </div>
 
       {/* 회원 정보 수정 창 */}

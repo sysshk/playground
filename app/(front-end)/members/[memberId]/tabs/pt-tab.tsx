@@ -295,8 +295,7 @@ export function SetGrid({ exercises }: { exercises: Exercise[] }) {
   const head =
     "border-line pb-1.5 text-2xs font-semibold whitespace-nowrap text-subtle";
   const body = "border-t border-line py-2 whitespace-nowrap";
-  const pinNo = "sticky left-0 z-10 border-r bg-canvas";
-  const pinName = "sticky left-7 z-10 border-r bg-canvas";
+  const pinName = "sticky left-0 z-10 border-r bg-canvas";
   const divider = (i: number) => (i < columns - 1 || hasRest ? "border-r" : "");
 
   return (
@@ -304,15 +303,14 @@ export function SetGrid({ exercises }: { exercises: Exercise[] }) {
       <div
         className={`grid w-max tabular-nums ${
           hasRest
-            ? "grid-cols-[1.75rem_max-content_repeat(var(--sets),minmax(4rem,max-content))_max-content]"
-            : "grid-cols-[1.75rem_max-content_repeat(var(--sets),minmax(4rem,max-content))]"
+            ? "grid-cols-[max-content_repeat(var(--sets),minmax(4rem,max-content))_max-content]"
+            : "grid-cols-[max-content_repeat(var(--sets),minmax(4rem,max-content))]"
         }`}
         style={{ "--sets": columns } as React.CSSProperties}
       >
         {/* 머리 */}
         <div className="contents">
-          <span className={`${head} ${pinNo} text-center`}>No</span>
-          <span className={`${head} ${pinName} pl-3 pr-2`}>종목</span>
+          <span className={`${head} ${pinName} pl-1 pr-2`}>종목</span>
           {Array.from({ length: columns }, (_, i) => (
             <span
               key={i}
@@ -331,16 +329,12 @@ export function SetGrid({ exercises }: { exercises: Exercise[] }) {
 
           return (
             <div key={exercise.id} className="contents">
-              <span
-                className={`${body} ${pinNo} text-center text-xs font-semibold text-subtle`}
-              >
-                {index + 1}
-              </span>
               {/* 폰에서는 이름과 배지를 두 줄로 쌓아 종목 칸 폭을 줄임 */}
               <span
-                className={`${body} ${pinName} flex max-w-36 flex-col items-start justify-center gap-1 pl-3 pr-2 text-sm font-semibold md:max-w-none md:flex-row md:items-center md:justify-start md:gap-2`}
+                className={`${body} ${pinName} flex max-w-36 flex-col items-start justify-center gap-1 pl-1 pr-2 text-sm font-medium md:max-w-none md:font-semibold md:flex-row md:items-center md:justify-start md:gap-2`}
               >
                 <span className="whitespace-normal md:whitespace-nowrap">
+                  <span className="mr-1.5 text-xs font-semibold text-subtle">{index + 1}</span>
                   {exercise.name}
                 </span>
                 {bodyweightOnly && <BodyweightBadge />}
@@ -372,7 +366,7 @@ export function SetGrid({ exercises }: { exercises: Exercise[] }) {
   );
 }
 
-/** 세트 하나 — "60kg × 12회", 좌우면 "좌 10 우 12.5kg × 12회", 바디웨이트면 "12회" */
+/** 세트 하나 — "60kg × 12회", 좌우면 "10/12.5kg × 12회"(왼쪽/오른쪽), 바디웨이트면 "12회" */
 function SetChip({
   set,
   bodyweightOnly,
@@ -381,7 +375,10 @@ function SetChip({
   bodyweightOnly: boolean;
 }) {
   return (
-    <span className="inline-flex items-baseline rounded-md bg-raised px-1.5 py-0.5">
+    <span
+      title={set.unit === "sides" ? `좌 ${set.weight}kg · 우 ${set.weightRight}kg` : undefined}
+      className="inline-flex items-baseline rounded-md bg-raised px-1.5 py-0.5"
+    >
       {bodyweightOnly ? (
         <>
           <Num>{set.reps}</Num>
@@ -393,9 +390,8 @@ function SetChip({
             <span className="mr-1 text-xs font-bold text-ink">바디웨이트</span>
           ) : set.unit === "sides" ? (
             <>
-              <Side>좌</Side>
               <Num>{set.weight}</Num>
-              <Side className="ml-1">우</Side>
+              <span className="mx-px text-2xs text-subtle">/</span>
               <Num>{set.weightRight}</Num>
               <Unit>kg</Unit>
               <span className="mx-0.5 text-2xs text-subtle">×</span>
@@ -416,26 +412,12 @@ function SetChip({
 }
 
 function Num({ children }: { children: React.ReactNode }) {
-  return <span className="text-sm font-bold text-ink">{children}</span>;
+  return <span className="text-sm font-semibold text-ink md:font-bold">{children}</span>;
 }
 
 function Unit({ children }: { children: React.ReactNode }) {
   return (
     <span className="ml-px text-2xs font-semibold text-subtle">{children}</span>
-  );
-}
-
-function Side({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <span className={`mr-0.5 text-2xs font-semibold text-subtle ${className}`}>
-      {children}
-    </span>
   );
 }
 
