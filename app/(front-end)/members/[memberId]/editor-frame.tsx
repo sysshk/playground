@@ -6,7 +6,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Icon } from "@/components/custom/icons";
+import { Breadcrumbs } from "@/components/custom/breadcrumbs";
 import { Button } from "@/components/ui/button";
 
 /** 회원 아래 작성 화면(운동 기록·코칭 메모·영양 계산)이 함께 쓰는 껍데기. */
@@ -28,13 +28,18 @@ export function EditorFrame({
 }) {
   return (
     <div className="mx-auto flex w-full max-w-[720px] flex-col gap-4">
-      <Link
-        href={back}
-        className="hidden w-fit items-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-ink lg:flex"
-      >
-        <Icon name="arrowLeft" size={15} />
-        {name ?? "회원"}
-      </Link>
+      <Breadcrumbs
+        className="-ml-1.5 hidden text-sm lg:flex"
+        items={
+          back.startsWith("/me")
+            ? [{ label: "내 기록", href: back }, { label: title }]
+            : [
+                { label: "회원", href: "/members" },
+                { label: name ?? "회원 상세", href: back },
+                { label: title },
+              ]
+        }
+      />
 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1">

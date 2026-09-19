@@ -7,9 +7,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { useCallback, useState, useSyncExternalStore, type ReactNode } from "react";
+import { Suspense, useCallback, useState, useSyncExternalStore, type ReactNode } from "react";
+import { Breadcrumbs, type Crumb } from "@/components/custom/breadcrumbs";
 import { ConfirmDialog } from "@/components/custom/confirm-dialog";
 import { Icon, type IconName } from "@/components/custom/icons";
 import { LogoMark } from "@/components/custom/logo";
@@ -33,24 +34,48 @@ const OPEN_WIDTH = 287;
 
 const INNER_WIDTH = OPEN_WIDTH - 24;
 
-const BACK =
-  "flex min-w-0 items-center gap-1.5 rounded-lg px-2 py-1.5 text-base font-bold text-muted-foreground transition-colors hover:bg-raised hover:text-ink";
+/** 작성 화면 → [이름, 돌아갈 탭]. 탭이 없으면 PT 탭 */
+const SUB_PAGES: Record<string, [string, string?]> = {
+  nutrition: ["영양 계산", "diet"],
+  meals: ["식단 기록", "diet"],
+  workouts: ["수업 기록"],
+  notes: ["코칭 메모"],
+};
 
-/** 폰 상단 바 내용. 뒤로 가기는 한 단계 위로만 보냄 */
-function topBar(pathname: string) {
-  if (pathname === "/members") return { label: "회원" };
-  if (pathname === "/accounts") return { label: "계정 관리" };
-  if (pathname === "/me") return { label: "내 기록" };
-  if (pathname === "/profile") return { label: "내 정보" };
+/**
+ * 폰 상단 바의 경로. 앞 단계를 누르면 그 화면으로, 작성 화면에서는 들어온 탭으로 돌아감
+ * 식단 기록은 주소의 ?date=까지 넘겨 그 날짜로 돌아감
+ */
+function crumbs(pathname: string, date: string | null): Crumb[] {
+  if (pathname === "/members") return [{ label: "회원" }];
+  if (pathname === "/accounts") return [{ label: "계정 관리" }];
+  if (pathname === "/me") return [{ label: "내 기록" }];
+  if (pathname === "/profile") return [{ label: "내 정보" }];
 
   const seg = pathname.split("/").filter(Boolean);
-  if (seg[0] !== "members") return { label: "PT 매니저" };
+  const day = date ? `&date=${date}` : "";
 
-  // /members/new, /members/:id → 목록으로
-  if (seg.length === 2) return { href: "/members", label: "회원 목록" };
+  if (seg[0] === "me") {
+    if (seg[1] === "meals") {
+      return [{ label: "내 기록", href: `/me?tab=diet${day}` }, { label: "식단 기록" }];
+    }
+    return [{ label: "내 기록", href: "/me?tab=personal" }, { label: "개인 운동" }];
+  }
+  if (seg[0] !== "members") return [{ label: "PT 매니저" }];
 
-  // /members/:id/... → 그 회원으로
-  return { href: `/members/${seg[1]}`, label: "회원" };
+  const list = { label: "회원", href: "/members" };
+  if (seg[1] === "new") return [list, { label: "새 회원" }];
+  if (seg.length === 2) return [list, { label: "회원 상세" }];
+
+  const [label, tab] = SUB_PAGES[seg[2]] ?? ["작성"];
+  const query = tab ? `?tab=${tab}${seg[2] === "meals" ? day : ""}` : "";
+  return [list, { label: "회원 상세", href: `/members/${seg[1]}${query}` }, { label }];
+}
+
+/** 상단 바 경로 — ?date=를 읽으려고 따로 둠 */
+function HeaderCrumbs({ pathname }: { pathname: string }) {
+  const date = useSearchParams().get("date");
+  return <Breadcrumbs items={crumbs(pathname, date)} />;
 }
 
 /** 로그인한 사람이 쓰는 셸 — 사이드바·상단 바·본문 자리·푸터까지 함께 그림 */
@@ -60,7 +85,6 @@ export default function FrontSidebar({ children }: { children: ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [collapsed, setCollapsed] = useStoredFlag("pt.sidebar-collapsed");
 
-  const bar = topBar(pathname);
   const loggedIn = status === "authenticated";
 
   return (
@@ -168,16 +192,9 @@ export default function FrontSidebar({ children }: { children: ReactNode }) {
                 </button>
               )}
 
-              {bar.href ? (
-                <Link href={bar.href} className={BACK}>
-                  <Icon name="arrowLeft" size={17} />
-                  <span className="truncate">{bar.label}</span>
-                </Link>
-              ) : (
-                <span className="truncate px-2 text-base font-extrabold tracking-[-0.02em]">
-                  {bar.label}
-                </span>
-              )}
+              <Suspense fallback={<Breadcrumbs items={crumbs(pathname, null)} />}>
+                <HeaderCrumbs pathname={pathname} />
+              </Suspense>
             </div>
 
             {!loggedIn && status !== "loading" && (

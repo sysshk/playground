@@ -73,6 +73,9 @@
   --color-danger-dark: #fca5a5;
   --color-warning: #d9a441;
   --color-goal: #f07a3a;
+  --color-carbs: #b794f6;
+  --color-fat: #f2777c;
+  --color-protein: #e8c547;
 
   --color-hero: #1a1c20;
   --color-chip: #26292e;
@@ -132,6 +135,11 @@
   /* 체중 그래프의 목표 체중 */
   --color-goal: #e8590c;
 
+  /* 식단의 탄수화물·지방·단백질 */
+  --color-carbs: #7c4ddb;
+  --color-fat: #d9484f;
+  --color-protein: #b07d00;
+
   /* 카드 바깥 테두리 */
   --color-edge: #cdccc6;
 
@@ -153,9 +161,9 @@
   --radius-card: 16px;
 
   /* 글자 크기 */
-  --text-2xs: 11px;
+  --text-2xs: 12px;
   --text-2xs--line-height: 1.45;
-  --text-xs: 12px;
+  --text-xs: 13px;
   --text-xs--line-height: 1.55;
   --text-sm: 13px;
   --text-sm--line-height: 1.6;
@@ -185,8 +193,8 @@
 /* 태블릿·데스크톱 글자 크기 */
 @media (min-width: 768px) {
   :root {
-    --text-2xs: 12px;
-    --text-xs: 13px;
+    --text-2xs: 13px;
+    --text-xs: 14px;
     --text-sm: 14px;
     --text-base: 15px;
     --text-md: 16px;
