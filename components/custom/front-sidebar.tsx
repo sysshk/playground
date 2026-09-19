@@ -9,7 +9,14 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { Suspense, useCallback, useState, useSyncExternalStore, type ReactNode } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import { Breadcrumbs, type Crumb } from "@/components/custom/breadcrumbs";
 import { ConfirmDialog } from "@/components/custom/confirm-dialog";
 import { Icon, type IconName } from "@/components/custom/icons";
@@ -87,6 +94,28 @@ export default function FrontSidebar({ children }: { children: ReactNode }) {
 
   const loggedIn = status === "authenticated";
 
+  // 서랍이 열린 동안 뒤 페이지 스크롤 막기, Esc·넓은 화면이면 닫기
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const html = document.documentElement;
+    const prev = [html.style.overflow, document.body.style.overflow];
+    html.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+
+    const wide = window.matchMedia("(min-width: 1024px)");
+    const close = () => setDrawerOpen(false);
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
+    const onWide = () => wide.matches && close();
+    window.addEventListener("keydown", onKey);
+    wide.addEventListener("change", onWide);
+
+    return () => {
+      [html.style.overflow, document.body.style.overflow] = prev;
+      window.removeEventListener("keydown", onKey);
+      wide.removeEventListener("change", onWide);
+    };
+  }, [drawerOpen]);
+
   return (
     <div className="min-h-screen bg-canvas text-ink lg:flex">
       {/* 사이드바 */}
@@ -143,6 +172,12 @@ export default function FrontSidebar({ children }: { children: ReactNode }) {
           }`}
         />
         <aside
+          onClick={(e) => {
+            // 버튼·링크가 아닌 빈 곳을 누르면 닫음
+            const target = e.target as Element;
+            if (!e.currentTarget.contains(target)) return;
+            if (!target.closest("a, button, input")) setDrawerOpen(false);
+          }}
           className={`absolute inset-y-0 left-0 flex w-full flex-col justify-between gap-6 bg-surface pb-4 transition-transform duration-300 ease-out sm:w-[287px] sm:border-r-[1.5px] sm:border-edge ${
             drawerOpen ? "translate-x-0" : "-translate-x-full"
           }`}
